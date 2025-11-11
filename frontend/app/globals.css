@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply min-h-screen bg-megga-gradient text-white antialiased;
+}
+
+.container-app {
+  @apply mx-auto w-full max-w-[430px] px-5;
+}
