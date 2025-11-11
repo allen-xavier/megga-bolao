@@ -14,12 +14,18 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6 rounded-2xl bg-slate-900/60 p-6 ring-1 ring-white/10">
-      <div>
-        <h1 className="text-2xl font-semibold text-white">Dados cadastrais</h1>
-        <p className="text-sm text-slate-300">Atualize suas informações pessoais, endereço e chave Pix.</p>
-      </div>
-      <ProfileForm user={session.user} />
+    <div className="space-y-6">
+      <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <div>
+          <h1 className="text-2xl font-semibold">Dados cadastrais</h1>
+          <p className="text-sm text-white/60">
+            Atualize suas informações pessoais, endereço, telefone e chave Pix para depósitos e saques.
+          </p>
+        </div>
+      </section>
+      <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <ProfileForm user={session.user} />
+      </section>
     </div>
   );
 }

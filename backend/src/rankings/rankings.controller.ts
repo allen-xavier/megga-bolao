@@ -11,7 +11,7 @@ export class RankingsController {
   }
 
   @Get('bolao/:id')
-  byBolao(@Param('id') id: string) {
-    return this.rankingsService.getRankingForBolao(id);
+  byBolao(@Param('id') id: string, @Query('limit') limit?: string) {
+    return this.rankingsService.getRankingForBolao(id, limit ? parseInt(limit, 10) : undefined);
   }
 }

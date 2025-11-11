@@ -22,37 +22,39 @@ const features = [
 export default function HomePage() {
   return (
     <div className="space-y-8">
-      <section className="grid gap-4 rounded-2xl bg-slate-900/60 p-6 shadow-lg ring-1 ring-white/10 md:grid-cols-3">
+      <section className="grid gap-4 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5 md:grid-cols-3">
         {features.map((feature) => (
-          <article key={feature.name} className="flex flex-col gap-3 rounded-xl bg-slate-900/60 p-4 ring-1 ring-white/5">
-            <feature.icon className="h-8 w-8 text-primary-400" />
-            <h2 className="text-lg font-semibold text-white">{feature.name}</h2>
-            <p className="text-sm text-slate-300">{feature.description}</p>
+          <article key={feature.name} className="flex flex-col gap-3 rounded-2xl bg-white/5 p-4">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-megga-purple/70 text-megga-yellow">
+              <feature.icon className="h-6 w-6" />
+            </span>
+            <h2 className="text-lg font-semibold">{feature.name}</h2>
+            <p className="text-sm text-white/70">{feature.description}</p>
           </article>
         ))}
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl bg-slate-900/60 p-6 ring-1 ring-white/5">
-          <h3 className="text-xl font-semibold text-white">Comece pelo painel</h3>
-          <p className="mt-2 text-sm text-slate-300">
+        <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+          <h3 className="text-xl font-semibold">Comece pelo painel</h3>
+          <p className="mt-2 text-sm text-white/70">
             Explore os bolões em andamento, faça apostas, acompanhe sua posição no ranking e gerencie sua carteira.
           </p>
           <Link
             href="/dashboard"
-            className="mt-4 inline-flex items-center justify-center rounded-full bg-primary-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:bg-primary-600"
+            className="mt-4 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-sm font-semibold text-white transition hover:opacity-95"
           >
             Ir para o dashboard
           </Link>
         </div>
-        <div className="rounded-2xl bg-slate-900/60 p-6 ring-1 ring-white/5">
-          <h3 className="text-xl font-semibold text-white">Não tem conta?</h3>
-          <p className="mt-2 text-sm text-slate-300">
+        <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+          <h3 className="text-xl font-semibold">Não tem conta?</h3>
+          <p className="mt-2 text-sm text-white/70">
             Cadastre-se e valide seu número de WhatsApp para receber códigos em tempo real.
           </p>
           <Link
             href="/login"
-            className="mt-4 inline-flex items-center justify-center rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-primary-400 hover:text-primary-200"
+            className="mt-4 inline-flex items-center justify-center rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
           >
             Acessar / Criar conta
           </Link>

@@ -22,31 +22,66 @@ export function WalletSummary() {
   });
 
   if (isLoading) {
-    return <div className="rounded-2xl bg-slate-900/60 p-6">Carregando carteira...</div>;
+    return <div className="rounded-3xl bg-megga-navy/60 p-6 text-sm text-white/60">Carregando carteira...</div>;
   }
 
+  const balance = Number(data?.balance ?? 0).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  const locked = Number(data?.locked ?? 0).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   return (
-    <section className="grid gap-4 rounded-2xl bg-slate-900/60 p-6 ring-1 ring-white/10 md:grid-cols-3">
-      <div className="rounded-xl bg-primary-500/20 p-4 text-white">
-        <p className="text-sm uppercase tracking-widest text-primary-100">Saldo disponível</p>
-        <p className="mt-2 text-3xl font-semibold">R$ {Number(data?.balance ?? 0).toFixed(2)}</p>
+    <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">Minha carteira</h2>
+        <span className="rounded-full bg-megga-purple/80 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-white/70">
+          SuitPay conectado
+        </span>
       </div>
-      <div className="rounded-xl bg-slate-950/60 p-4 text-white ring-1 ring-white/10">
-        <p className="text-sm uppercase tracking-widest text-slate-300">Saldo em processamento</p>
-        <p className="mt-2 text-2xl font-semibold text-slate-100">R$ {Number(data?.locked ?? 0).toFixed(2)}</p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl bg-gradient-to-br from-megga-magenta via-megga-purple to-megga-teal px-5 py-4 shadow">
+          <span className="text-[11px] uppercase tracking-[0.3em] text-white/70">Saldo disponível</span>
+          <p className="mt-3 text-3xl font-semibold text-white">R$ {balance}</p>
+        </div>
+        <div className="rounded-2xl bg-white/5 px-5 py-4">
+          <span className="text-[11px] uppercase tracking-[0.3em] text-white/60">Em processamento</span>
+          <p className="mt-3 text-2xl font-semibold text-megga-yellow">R$ {locked}</p>
+        </div>
       </div>
-      <div className="rounded-xl bg-slate-950/60 p-4 ring-1 ring-white/10">
-        <p className="text-sm font-semibold text-white">Últimos movimentos</p>
-        <ul className="mt-2 space-y-2 text-sm text-slate-300">
-          {data?.statements?.slice(0, 3).map((item) => (
-            <li key={item.id} className="flex items-center justify-between">
-              <span>{item.description}</span>
-              <span className={Number(item.amount) >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-                {Number(item.amount) >= 0 ? '+' : ''}R$ {Number(item.amount).toFixed(2)}
-              </span>
+      <div className="mt-5 rounded-2xl bg-white/5 p-4">
+        <p className="text-[11px] uppercase tracking-[0.3em] text-white/60">Últimos movimentos</p>
+        <ul className="mt-3 space-y-3 text-sm">
+          {data?.statements?.slice(0, 3).map((item) => {
+            const amount = Number(item.amount);
+            const formattedAmount = amount.toLocaleString('pt-BR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
+            return (
+              <li key={item.id} className="flex items-center justify-between rounded-xl bg-megga-surface/80 px-4 py-3">
+                <div>
+                  <p className="font-medium text-white/90">{item.description}</p>
+                  <p className="text-xs text-white/50">{new Date(item.createdAt).toLocaleString('pt-BR')}</p>
+                </div>
+                <span
+                  className={`text-sm font-semibold ${
+                    amount >= 0 ? 'text-megga-lime' : 'text-megga-rose'
+                  }`}
+                >
+                  {amount >= 0 ? '+' : '-'}R$ {formattedAmount}
+                </span>
+              </li>
+            );
+          })}
+          {(!data || (data.statements?.length ?? 0) === 0) && (
+            <li className="rounded-xl bg-megga-surface/60 px-4 py-3 text-sm text-white/60">
+              Nenhuma movimentação registrada recentemente.
             </li>
-          ))}
-          {data?.statements?.length === 0 && <li>Nenhum lançamento recente.</li>}
+          )}
         </ul>
       </div>
     </section>

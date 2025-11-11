@@ -12,25 +12,54 @@ interface Bet {
   };
 }
 
+function formatLocation(bet: Bet) {
+  if (!bet.user?.city || !bet.user?.state) {
+    return 'Cidade não informada';
+  }
+  return `${bet.user.city} - ${bet.user.state}`;
+}
+
 export function BetsList({ bets }: { bets: Bet[] }) {
   if (bets.length === 0) {
-    return <p className="text-sm text-slate-400">Nenhuma aposta registrada ainda.</p>;
+    return <p className="text-sm text-white/60">Nenhuma aposta registrada ainda.</p>;
   }
 
   return (
-    <ul className="grid gap-3 md:grid-cols-2">
-      {bets.map((bet) => (
-        <li key={bet.id} className="space-y-2 rounded-xl bg-slate-950/60 p-4 ring-1 ring-white/5">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>{new Date(bet.createdAt).toLocaleString('pt-BR')}</span>
-            {bet.isSurprise && <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-emerald-300">Surpresinha</span>}
-          </div>
-          <p className="font-mono text-sm tracking-widest text-white">{bet.numbers?.join(' • ')}</p>
-          <p className="text-xs text-slate-400">
-            {bet.user?.fullName?.split(' ')[0]} - {bet.user?.city}/{bet.user?.state}
-          </p>
-        </li>
-      ))}
-    </ul>
+    <div className="overflow-hidden rounded-3xl bg-megga-navy/80 text-white shadow-lg ring-1 ring-white/5">
+      <header className="grid grid-cols-[auto,1fr,auto] items-center gap-3 bg-megga-purple/70 px-5 py-3 text-[11px] uppercase tracking-[0.24em] text-white/70">
+        <span>Nº</span>
+        <span>Apostador</span>
+        <span>Jogos</span>
+      </header>
+      <ul className="divide-y divide-white/5">
+        {bets.map((bet, index) => (
+          <li key={bet.id} className="grid grid-cols-[auto,1fr,auto] gap-3 px-5 py-4 text-sm">
+            <span className="font-semibold text-white/80">{String(index + 1).padStart(4, '0')}</span>
+            <div className="space-y-2">
+              <div>
+                <p className="font-medium text-white/90">{bet.user?.fullName?.split(' ')[0] ?? 'Apostador'}</p>
+                <p className="text-xs text-white/50">{formatLocation(bet)}</p>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {bet.numbers?.map((number, idx) => (
+                  <span
+                    key={`${bet.id}-${number}-${idx}`}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold text-megga-yellow"
+                  >
+                    {number.toString().padStart(2, '0')}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col items-end justify-between text-right text-xs text-white/60">
+              <span className="rounded-full bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.24em]">
+                {bet.isSurprise ? 'Surpresinha' : 'Manual'}
+              </span>
+              <span>{new Date(bet.createdAt).toLocaleDateString('pt-BR')}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
