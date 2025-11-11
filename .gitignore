@@ -20,6 +20,7 @@ backend/.nestjs*
 
 # Prisma
 backend/prisma/*.db
+storage/
 
 # Misc
 .DS_Store

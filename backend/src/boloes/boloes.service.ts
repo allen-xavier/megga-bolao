@@ -9,7 +9,7 @@ export class BoloesService {
 
   async list() {
     return this.prisma.bolao.findMany({
-      include: { prizes: true },
+      include: { prizes: true, transparency: true },
       orderBy: { startsAt: 'asc' },
     });
   }
@@ -19,7 +19,9 @@ export class BoloesService {
       where: { id },
       include: {
         prizes: true,
+        transparency: true,
         bets: {
+          orderBy: { createdAt: 'desc' },
           include: {
             user: { select: { id: true, fullName: true, city: true, state: true } },
           },

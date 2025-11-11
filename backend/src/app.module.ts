@@ -10,6 +10,8 @@ import { PaymentsModule } from './payments/payments.module';
 import { RankingsModule } from './rankings/rankings.module';
 import { WalletModule } from './wallet/wallet.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { BetsModule } from './bets/bets.module';
+import { TransparencyModule } from './transparency/transparency.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     RankingsModule,
     WalletModule,
     NotificationsModule,
+    BetsModule,
+    TransparencyModule,
   ],
 })
 export class AppModule {}

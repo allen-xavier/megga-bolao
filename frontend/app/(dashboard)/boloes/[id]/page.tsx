@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import { api } from '@/lib/api';
 import { BetsList } from '@/components/bets-list';
+import { PlaceBetForm } from '@/components/place-bet-form';
+import { TransparencyDownload } from '@/components/transparency-download';
 
 async function getBolao(id: string) {
   try {
@@ -25,6 +27,8 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   }
 
   const startsAt = new Date(bolao.startsAt);
+  const ticketPrice = Number(bolao.ticketPrice ?? 0);
+  const hasTransparency = Boolean(bolao.transparency);
 
   return (
     <div className="space-y-6">
@@ -47,7 +51,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
             </div>
             <div className="rounded-2xl bg-gradient-to-br from-megga-magenta via-megga-purple to-megga-teal px-5 py-4 text-right shadow">
               <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Valor da cota</p>
-              <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(Number(bolao.ticketPrice))}</p>
+              <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(ticketPrice)}</p>
             </div>
           </header>
           <div className="grid grid-cols-2 gap-3 text-xs uppercase tracking-[0.28em] text-white/60">
@@ -69,6 +73,8 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
           </nav>
         </div>
       </section>
+
+      <PlaceBetForm bolaoId={bolao.id} ticketPrice={ticketPrice} />
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
         <header>
@@ -98,11 +104,9 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
       </section>
 
       <section className="space-y-4">
-        <header className="flex items-center justify-between">
+        <header className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-lg font-semibold text-white">Lista de apostadores</h2>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-white/60">
-            Transparência
-          </span>
+          <TransparencyDownload bolaoId={bolao.id} hasFile={hasTransparency} />
         </header>
         <BetsList bets={bolao.bets ?? []} />
       </section>

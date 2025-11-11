@@ -64,12 +64,20 @@ async function main() {
     },
   });
 
+  const transparency = await prisma.transparencyFile.create({
+    data: {
+      bolaoId: bolao.id,
+      filePath: `transparency/bolao-${bolao.id}.csv`,
+    },
+  });
+
   await prisma.bet.create({
     data: {
       userId: user.id,
       bolaoId: bolao.id,
       numbers: [1, 5, 12, 22, 34, 42, 48, 53, 55, 60],
       isSurprise: false,
+      transparency: { connect: { id: transparency.id } },
     },
   });
 

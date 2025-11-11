@@ -88,20 +88,21 @@ model WalletStatement {
 }
 
 model Bolao {
-  id                String      @id @default(cuid())
+  id                String             @id @default(cuid())
   name              String
   startsAt          DateTime
-  ticketPrice       Decimal      @db.Decimal(12, 2)
+  ticketPrice       Decimal            @db.Decimal(12, 2)
   minimumQuotas     Int
-  guaranteedPrize   Decimal?     @default(0.0) @db.Decimal(12, 2)
-  commissionPercent Decimal      @default(0.0) @db.Decimal(5, 2)
-  promotional       Boolean      @default(false)
-  createdBy         User         @relation("BolaoCreator", fields: [createdById], references: [id])
+  guaranteedPrize   Decimal?           @default(0.0) @db.Decimal(12, 2)
+  commissionPercent Decimal            @default(0.0) @db.Decimal(5, 2)
+  promotional       Boolean            @default(false)
+  createdBy         User               @relation("BolaoCreator", fields: [createdById], references: [id])
   createdById       String
   prizes            Prize[]
   bets              Bet[]
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  transparency      TransparencyFile?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   closedAt          DateTime?
 }
 
@@ -140,6 +141,8 @@ model Bet {
 
 model TransparencyFile {
   id        String   @id @default(cuid())
+  bolao     Bolao    @relation(fields: [bolaoId], references: [id])
+  bolaoId   String   @unique
   filePath  String
   createdAt DateTime @default(now())
   bets      Bet[]

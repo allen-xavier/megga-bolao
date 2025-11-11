@@ -74,6 +74,7 @@ Aplicação acessível em `http://localhost:3000`.
 - **Autenticação**: login por telefone + senha, geração de tokens JWT (access/refresh) e endpoint para envio de código WhatsApp (stub Evolution API).
 - **Usuários**: cadastro validado, atualização de perfil e suporte a perfis (Admin, Supervisor, Usuário).
 - **Bolões**: criação, listagem e atualização de configurações de prêmios com validação de percentuais.
+- **Apostas**: registro de apostas com 10 dezenas ou modo surpresinha, debitando automaticamente a carteira e gerando arquivo CSV de transparência por bolão.
 - **Sorteios**: registro manual por administradores/supervisores com gatilho para recálculo de ranking.
 - **Pagamentos e Carteira**: requisições de depósito/saque, fluxo de aprovação e extrato financeiro.
 - **Rankings**: agregação de apostas globais e por bolão.
@@ -85,6 +86,7 @@ Aplicação acessível em `http://localhost:3000`.
 - **Autenticação**: formulário com duplo estágio (credenciais + código), integrado ao NextAuth (JWT).
 - **Dashboard**: cartões com saldo, bolões ativos e ranking de apostadores.
 - **Detalhe do bolão**: lista de premiações, apostas e transparência.
+- **Apostas**: formulário interativo para seleção manual ou surpresinha, com atualização automática do ranking e saldo.
 - **Perfil**: formulário completo para atualização de dados pessoais e chave Pix.
 - **PWA**: manifest padrão e configuração via `next-pwa` (gera service worker em build).
 
