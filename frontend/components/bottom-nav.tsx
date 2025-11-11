@@ -5,44 +5,48 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
   {
-    label: 'Minhas Apostas',
-    href: '/apostas',
+    label: 'Bolões',
+    href: '/dashboard',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
-        <path
-          d="M5 5h14a1 1 0 0 1 1 1v12l-8-4-8 4V6a1 1 0 0 1 1-1z"
-          fill="currentColor"
-        />
+        <path d="M4 7h16v10H4z" fill="currentColor" opacity="0.2" />
+        <path d="M4 7h16M8 7V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M8 12h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
   {
-    label: 'Depositar',
-    href: '/carteira/depositar',
+    label: 'Tickets',
+    href: '/tickets',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
         <path
-          d="M12 3v14m0 0-4-4m4 4 4-4M5 21h14"
+          d="M5 5h14a1 1 0 0 1 1 1v4.5a1.5 1.5 0 0 0 0 3V18a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4.5a1.5 1.5 0 0 0 0-3V6a1 1 0 0 1 1-1z"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth="1.8"
         />
+        <path d="M9 9h6m-6 6h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
   },
   {
-    label: 'Sacar',
-    href: '/carteira/sacar',
+    label: 'SuitPay',
+    href: '/suitpay',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
         <path
-          d="M12 21V7m0 0 4 4m-4-4-4 4M5 3h14"
+          d="M4.5 7A2.5 2.5 0 0 1 7 4.5h10A2.5 2.5 0 0 1 19.5 7v10A2.5 2.5 0 0 1 17 19.5H7A2.5 2.5 0 0 1 4.5 17z"
+          fill="none"
           stroke="currentColor"
+          strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth="1.8"
         />
+        <path d="M9 9.5h6V12a3 3 0 0 1-3 3H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="9" cy="9" r="1" fill="currentColor" />
       </svg>
     ),
   },
@@ -51,13 +55,7 @@ const navItems = [
     href: '/mais',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
-        <path
-          d="M12 5v14m-7-7h14"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.8"
-        />
+        <path d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
@@ -70,7 +68,7 @@ export function BottomNav() {
     <nav className="fixed bottom-6 left-1/2 w-[calc(100%-2.5rem)] max-w-[410px] -translate-x-1/2 rounded-3xl border border-white/5 bg-megga-surface/95 px-4 py-3 text-white shadow-glow backdrop-blur">
       <ul className="grid grid-cols-4 gap-2 text-center text-[11px] font-medium">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');
           return (
             <li key={item.href}>
               <Link
