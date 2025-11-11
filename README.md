@@ -44,6 +44,28 @@ nginx/     # Configuração do proxy reverso
 
 3. A API executa migrations e cria um usuário administrador padrão (`+55 11 99999-9999`, senha `admin123`) através do seed automático.
 
+## Deploy via Portainer
+
+Caso utilize o Portainer com uma stack Git, siga as instruções abaixo para evitar erros de autenticação como `Invalid username or token. Password authentication is not supported for Git operations.`:
+
+1. **Configure um token ou chave de implantação**
+   - Para repositórios privados no GitHub, gere um **Personal Access Token (PAT)** com o escopo `repo`.
+   - Como alternativa, crie uma **Deploy Key SSH** somente leitura e registre-a no repositório.
+
+2. **Cadastre o repositório na stack**
+   - Em **Stacks → Add stack → Git repository**, informe a URL do repositório.
+   - Clique em **Authentication** e forneça o PAT (no campo de senha) ou a chave SSH correspondente.
+
+3. **Defina o arquivo de variáveis**
+   - Marque **Use environment variables file** e aponte para `./.env.example` (ou outro `.env` customizado).
+   - Ajuste os valores sensíveis direto na interface do Portainer, se necessário.
+
+4. **Implante e monitore**
+   - Após clicar em **Deploy the stack**, acompanhe os logs dos containers para verificar migrations e seeds.
+   - Acesse a aplicação via host configurado (porta 80 → frontend via Nginx, `/api` → backend).
+
+Esses passos garantem que o Portainer consiga clonar o repositório e levantar a stack sem falhas de autenticação.
+
 ## Desenvolvimento Local (sem Docker)
 
 ### Backend
