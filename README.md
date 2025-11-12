@@ -66,6 +66,22 @@ Caso utilize o Portainer com uma stack Git, siga as instruções abaixo para evi
 
 Esses passos garantem que o Portainer consiga clonar o repositório e levantar a stack sem falhas de autenticação.
 
+### Erro `http2: frame too large` ao construir imagens
+
+Algumas instâncias do Portainer/BuildKit falham ao transmitir logs longos durante o `npm ci`, resultando no erro:
+
+```
+Failed to deploy a stack: compose build operation failed: listing workers for Build: failed to list workers: Unavailable: connection error: desc = "error reading server preface: http2: failed reading the frame payload: http2: frame too large"
+```
+
+Para contornar o problema, os `Dockerfile`s do backend e do frontend foram ajustados para executar a instalação do npm sem barras de progresso ou logs verbosos. Certifique-se de atualizar o Portainer para a versão mais recente da stack (pull do repositório) e, se ainda assim o erro persistir, limpe builds anteriores em **Stacks → (sua stack) → Recreate** marcando a opção **Pull latest image**.
+
+Também é recomendado:
+
+- Garantir que o agente do Portainer esteja executando Docker `23.0+`.
+- Reiniciar o serviço `docker buildx`/daemon após uma falha de build persistente.
+- Validar que não existam proxies HTTPS interceptando o tráfego entre o Portainer e o Docker Engine.
+
 ## Desenvolvimento Local (sem Docker)
 
 ### Backend
