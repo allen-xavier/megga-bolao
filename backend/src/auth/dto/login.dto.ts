@@ -1,9 +1,11 @@
-import { IsString } from 'class-validator';
+import { IsString, Matches, MinLength } from 'class-validator';
 
 export class LoginDto {
   @IsString()
-  phone: string;
+  @Matches(/^\+?\d{10,14}$/)
+  phone!: string;
 
   @IsString()
-  password: string;
+  @MinLength(6)
+  password!: string;
 }

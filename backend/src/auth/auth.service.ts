@@ -2,6 +2,7 @@ import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
+import { Prisma, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -13,10 +14,17 @@ interface AuthPayload {
   role: UserRole;
 }
 
-interface AuthTokens {
+export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
 }
+
+export interface AuthResult {
+  user: SafeUser;
+  tokens: AuthTokens;
+}
+
+type SafeUser = Omit<User, 'passwordHash'>;
 
 @Injectable()
 export class AuthService {
@@ -26,14 +34,19 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
-  async register(dto: RegisterUserDto) {
+  async register(dto: RegisterUserDto): Promise<AuthResult> {
+    const uniqueFilters: Prisma.UserWhereInput[] = [
+      { phone: dto.phone },
+      { cpf: dto.cpf },
+    ];
+
+    if (dto.email) {
+      uniqueFilters.push({ email: dto.email });
+    }
+
     const existing = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { phone: dto.phone },
-          { cpf: dto.cpf },
-          dto.email ? { email: dto.email } : undefined,
-        ].filter(Boolean) as any,
+        OR: uniqueFilters,
       },
     });
 
@@ -69,7 +82,7 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<AuthResult> {
     const user = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
 
     if (!user) {
@@ -87,7 +100,7 @@ export class AuthService {
     };
   }
 
-  async refresh(dto: RefreshTokenDto) {
+  async refresh(dto: RefreshTokenDto): Promise<AuthResult> {
     try {
       const payload = await this.jwtService.verifyAsync<AuthPayload>(dto.refreshToken, {
         secret: this.config.get<string>('jwt.refreshSecret'),
@@ -115,7 +128,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private toSafeUser(user: any) {
+  private toSafeUser(user: User): SafeUser {
     const { passwordHash, ...safeUser } = user;
     return safeUser;
   }

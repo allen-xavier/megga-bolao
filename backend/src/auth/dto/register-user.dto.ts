@@ -3,34 +3,34 @@ import { UserRole } from '../../users/entities/user.entity';
 
 export class RegisterUserDto {
   @IsString()
-  fullName: string;
+  fullName!: string;
 
   @IsString()
   @Matches(/^\+?\d{10,14}$/)
-  phone: string;
+  phone!: string;
 
   @IsString()
   @Matches(/^\d{11}$/)
-  cpf: string;
+  cpf!: string;
 
   @IsString()
-  cep: string;
+  cep!: string;
 
   @IsString()
-  address: string;
+  address!: string;
 
   @IsString()
-  city: string;
+  city!: string;
 
   @IsString()
-  state: string;
+  state!: string;
 
   @IsString()
-  pixKey: string;
+  pixKey!: string;
 
   @IsString()
   @Length(6, 50)
-  password: string;
+  password!: string;
 
   @IsOptional()
   @IsEmail()

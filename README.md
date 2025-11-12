@@ -44,44 +44,6 @@ nginx/     # Configuração do proxy reverso
 
 3. A API executa migrations e cria um usuário administrador padrão (`+55 11 99999-9999`, senha `admin123`) através do seed automático.
 
-## Deploy via Portainer
-
-Caso utilize o Portainer com uma stack Git, siga as instruções abaixo para evitar erros de autenticação como `Invalid username or token. Password authentication is not supported for Git operations.`:
-
-1. **Configure um token ou chave de implantação**
-   - Para repositórios privados no GitHub, gere um **Personal Access Token (PAT)** com o escopo `repo`.
-   - Como alternativa, crie uma **Deploy Key SSH** somente leitura e registre-a no repositório.
-
-2. **Cadastre o repositório na stack**
-   - Em **Stacks → Add stack → Git repository**, informe a URL do repositório.
-   - Clique em **Authentication** e forneça o PAT (no campo de senha) ou a chave SSH correspondente.
-
-3. **Defina o arquivo de variáveis**
-   - Marque **Use environment variables file** e aponte para `./.env.example` (ou outro `.env` customizado).
-   - Ajuste os valores sensíveis direto na interface do Portainer, se necessário.
-
-4. **Implante e monitore**
-   - Após clicar em **Deploy the stack**, acompanhe os logs dos containers para verificar migrations e seeds.
-   - Acesse a aplicação via host configurado (porta 80 → frontend via Nginx, `/api` → backend).
-
-Esses passos garantem que o Portainer consiga clonar o repositório e levantar a stack sem falhas de autenticação.
-
-### Erro `http2: frame too large` ao construir imagens
-
-Algumas instâncias do Portainer/BuildKit falham ao transmitir logs longos durante o `npm ci`, resultando no erro:
-
-```
-Failed to deploy a stack: compose build operation failed: listing workers for Build: failed to list workers: Unavailable: connection error: desc = "error reading server preface: http2: failed reading the frame payload: http2: frame too large"
-```
-
-Para contornar o problema, os `Dockerfile`s do backend e do frontend foram ajustados para executar a instalação do npm sem barras de progresso ou logs verbosos. Certifique-se de atualizar o Portainer para a versão mais recente da stack (pull do repositório) e, se ainda assim o erro persistir, limpe builds anteriores em **Stacks → (sua stack) → Recreate** marcando a opção **Pull latest image**.
-
-Também é recomendado:
-
-- Garantir que o agente do Portainer esteja executando Docker `23.0+`.
-- Reiniciar o serviço `docker buildx`/daemon após uma falha de build persistente.
-- Validar que não existam proxies HTTPS interceptando o tráfego entre o Portainer e o Docker Engine.
-
 ## Desenvolvimento Local (sem Docker)
 
 ### Backend

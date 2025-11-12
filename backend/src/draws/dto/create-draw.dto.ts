@@ -2,7 +2,7 @@ import { ArrayMaxSize, ArrayMinSize, IsArray, IsDateString, IsInt, IsOptional, I
 
 export class CreateDrawDto {
   @IsDateString()
-  drawnAt: string;
+  drawnAt!: string;
 
   @IsArray()
   @ArrayMinSize(6)
@@ -10,7 +10,7 @@ export class CreateDrawDto {
   @IsInt({ each: true })
   @Min(1, { each: true })
   @Max(60, { each: true })
-  numbers: number[];
+  numbers!: number[];
 
   @IsOptional()
   @IsString()

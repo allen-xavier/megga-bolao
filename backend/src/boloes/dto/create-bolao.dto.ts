@@ -17,20 +17,20 @@ import { CreatePrizeDto } from './create-prize.dto';
 export class CreateBolaoDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsDateString()
-  startsAt: string;
+  startsAt!: string;
 
   @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  ticketPrice: number;
+  ticketPrice!: number;
 
   @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  minimumQuotas: number;
+  minimumQuotas!: number;
 
   @IsOptional()
   @Type(() => Number)
@@ -51,5 +51,5 @@ export class CreateBolaoDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreatePrizeDto)
-  prizes: CreatePrizeDto[];
+  prizes!: CreatePrizeDto[];
 }

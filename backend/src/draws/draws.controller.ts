@@ -17,7 +17,7 @@ export class DrawsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() dto: CreateDrawDto, @CurrentUser() user: UserProfile) {
-    if (![UserRole.ADMIN, UserRole.SUPERVISOR].includes(user.role)) {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERVISOR) {
       throw new ForbiddenException('Apenas administradores ou supervisores podem lançar sorteios');
     }
     return this.drawsService.create(dto, user.id);

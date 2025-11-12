@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
-interface RankingEntry {
+export interface RankingEntry {
   userId: string;
   fullName: string;
   city: string;
@@ -12,10 +12,14 @@ interface RankingEntry {
   lastBetAt: Date;
 }
 
-interface RankingSnapshot {
+export interface RankingSnapshot {
   lastDraw: { id: string; drawnAt: Date; numbers: number[] } | null;
   entries: RankingEntry[];
 }
+
+export type BolaoRankingSnapshot = RankingSnapshot & {
+  bolao?: { id: string; name: string } | null;
+};
 
 @Injectable()
 export class RankingsService {
@@ -46,7 +50,7 @@ export class RankingsService {
     };
   }
 
-  async getRankingForBolao(bolaoId: string, limit = 50): Promise<RankingSnapshot & { bolao?: { id: string; name: string } | null }> {
+  async getRankingForBolao(bolaoId: string, limit = 50): Promise<BolaoRankingSnapshot> {
     const [lastDraw, bolao] = await Promise.all([
       this.prisma.draw.findFirst({ orderBy: { drawnAt: 'desc' } }),
       this.prisma.bolao.findUnique({ where: { id: bolaoId }, select: { id: true, name: true } }),

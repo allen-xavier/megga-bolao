@@ -1,8 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { PaymentType } from '@prisma/client';
+import { PaymentType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBetDto } from './dto/create-bet.dto';
 import { TransparencyService } from '../transparency/transparency.service';
+
+type BetWithUser = Prisma.BetGetPayload<{
+  include: { user: { select: { fullName: true; city: true; state: true } } };
+}>;
 
 @Injectable()
 export class BetsService {
@@ -60,20 +64,18 @@ export class BetsService {
         },
       });
 
-      const bet = await tx.bet.create({
-        data: {
-          bolaoId,
-          userId,
-          numbers,
-          isSurprise: dto.isSurprise ?? false,
-          transparency: {
-            connect: { id: transparency.id },
+        const bet = (await tx.bet.create({
+          data: {
+            bolaoId,
+            userId,
+            numbers,
+            isSurprise: dto.isSurprise ?? false,
+            transparencyId: transparency.id,
           },
-        },
-        include: {
-          user: { select: { fullName: true, city: true, state: true } },
-        },
-      });
+          include: {
+            user: { select: { fullName: true, city: true, state: true } },
+          },
+        })) as BetWithUser;
 
       return { bet, wallet: updatedWallet, transparency };
     });

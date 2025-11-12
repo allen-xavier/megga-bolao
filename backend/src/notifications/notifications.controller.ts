@@ -4,10 +4,10 @@ import { NotificationsService } from './notifications.service';
 
 class SendCodeDto {
   @IsString()
-  phone: string;
+  phone!: string;
 
   @IsString()
-  code: string;
+  code!: string;
 }
 
 @Controller('notifications')

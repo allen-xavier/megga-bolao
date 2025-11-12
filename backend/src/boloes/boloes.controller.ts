@@ -48,7 +48,7 @@ export class BoloesController {
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() dto: UpdateBolaoDto, @CurrentUser() user: UserProfile) {
-    if (![UserRole.ADMIN, UserRole.SUPERVISOR].includes(user.role)) {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERVISOR) {
       throw new ForbiddenException('Usuário sem permissão');
     }
     return this.boloesService.update(id, dto);

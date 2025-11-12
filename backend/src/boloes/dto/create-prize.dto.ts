@@ -4,7 +4,7 @@ import { PrizeType } from '@prisma/client';
 
 export class CreatePrizeDto {
   @IsEnum(PrizeType)
-  type: PrizeType;
+  type!: PrizeType;
 
   @IsOptional()
   @Type(() => Number)
