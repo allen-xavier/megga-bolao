@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: megga-bolao-db
     restart: always
     environment:
       POSTGRES_USER: megga
@@ -18,7 +17,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: megga-bolao-redis
     restart: always
     command: ["redis-server", "--appendonly", "yes"]
     environment:
@@ -29,7 +27,6 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: megga-bolao-backend
     restart: always
     env_file:
       - ./.env.example
@@ -60,7 +57,6 @@ services:
   frontend:
     build:
       context: ./frontend
-    container_name: megga-bolao-frontend
     restart: always
     environment:
       NEXT_PUBLIC_API_BASE: http://localhost:8080/api
@@ -73,7 +69,6 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: megga-bolao-nginx
     restart: always
     depends_on:
       - frontend
