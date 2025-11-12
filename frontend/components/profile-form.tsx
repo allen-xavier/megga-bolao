@@ -4,7 +4,7 @@ import { useState, type ChangeEvent } from 'react';
 import { api } from '@/lib/api';
 import { ArrowPathIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   fullName: string;
   phone: string;

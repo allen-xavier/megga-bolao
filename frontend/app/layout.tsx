@@ -1,15 +1,8 @@
 import type { Metadata } from 'next';
-import { Poppins } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
 import { TopBar } from '@/components/top-bar';
 import { BottomNav } from '@/components/bottom-nav';
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-display',
-});
 
 export const metadata: Metadata = {
   title: 'Megga Bolão',
@@ -18,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={poppins.variable}>
+    <html lang="pt-BR">
       <body className="font-display">
         <Providers>
           <div className="flex min-h-screen w-full flex-col items-center bg-megga-gradient">

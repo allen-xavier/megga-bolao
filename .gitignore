@@ -11,6 +11,8 @@ npm-debug.log*
 backend/dist/
 frontend/.next/
 frontend/out/
+frontend/public/sw.js
+frontend/public/workbox-*.js
 backend/.nestjs*
 
 # Env files

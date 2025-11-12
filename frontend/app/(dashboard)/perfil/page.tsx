@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth-options';
-import { ProfileForm } from '@/components/profile-form';
+import { ProfileForm, type UserProfile } from '@/components/profile-form';
 
 export const metadata = {
   title: 'Meu Perfil - Megga Bolão',
@@ -9,9 +9,10 @@ export const metadata = {
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user) {
     redirect('/login');
   }
+  const user = session.user as UserProfile;
 
   return (
     <div className="space-y-6">
@@ -24,7 +25,7 @@ export default async function ProfilePage() {
         </div>
       </section>
       <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <ProfileForm user={session.user} />
+        <ProfileForm user={user} />
       </section>
     </div>
   );
