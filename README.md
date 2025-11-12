@@ -39,8 +39,11 @@ nginx/     # Configuração do proxy reverso
 
    Serviços expostos:
 
-   - Frontend: http://localhost
-   - Backend: http://localhost:3001/api
+   - Frontend (via Nginx): http://localhost:8080
+   - Backend direto: http://localhost:3001/api
+   - Backend pelo proxy: http://localhost:8080/api
+
+   > Se a porta 8080 estiver ocupada no host, ajuste o mapeamento do serviço `nginx` em `docker-compose.dev.yml` (linha `8080:80`).
 
 3. A API executa migrations e cria um usuário administrador padrão (`+55 11 99999-9999`, senha `admin123`) através do seed automático.
 
