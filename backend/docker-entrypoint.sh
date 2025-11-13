@@ -47,11 +47,58 @@ else
     local attempt=1
     local max_attempts=${1:-30}
     local sleep_seconds=${2:-2}
-    local connection_url_no_query="${DATABASE_URL%%\?*}"
 
-    echo "[backend] Aguardando disponibilidade do banco de dados..."
+    local parsed
+    if ! parsed=$(node <<'NODE'
+const { DATABASE_URL } = process.env;
+try {
+  const url = new URL(DATABASE_URL);
+  const encode = (value = '') => Buffer.from(value, 'utf8').toString('base64');
+  const payload = [url.hostname, url.port || '5432', url.pathname.slice(1), url.username, url.password]
+    .map(encode)
+    .join(' ');
+  process.stdout.write(payload);
+} catch (error) {
+  process.stderr.write(error.message);
+  process.exit(1);
+}
+NODE
+); then
+      echo "[backend] Não foi possível interpretar DATABASE_URL: ${parsed}" >&2
+      return 1
+    fi
 
-    until PGCONNECT_TIMEOUT=5 psql "${connection_url_no_query}" -c 'SELECT 1;' >/dev/null 2>&1; do
+    local host_b64 port_b64 db_b64 user_b64 pass_b64
+    read -r host_b64 port_b64 db_b64 user_b64 pass_b64 <<<"${parsed}"
+
+    decode() {
+      if [ -z "$1" ]; then
+        echo ""
+      else
+        printf '%s' "$1" | base64 --decode
+      fi
+    }
+
+    local db_host db_port db_name db_user db_pass
+    db_host=$(decode "$host_b64")
+    db_port=$(decode "$port_b64")
+    if [ -z "$db_port" ]; then
+      db_port="5432"
+    fi
+    db_name=$(decode "$db_b64")
+    db_user=$(decode "$user_b64")
+    db_pass=$(decode "$pass_b64")
+
+    if [ -z "$db_host" ] || [ -z "$db_name" ]; then
+      echo "[backend] Informações insuficientes para aguardar pelo banco." >&2
+      return 1
+    fi
+
+    export PGPASSWORD="$db_pass"
+
+    echo "[backend] Aguardando disponibilidade do banco de dados (${db_host}:${db_port}/${db_name})..."
+
+    until pg_isready -h "$db_host" -p "$db_port" -d "$db_name" -U "$db_user" >/dev/null 2>&1; do
       echo "[backend] Banco indisponível (tentativa ${attempt}/${max_attempts}). Aguardando ${sleep_seconds}s..."
 
       if (( attempt >= max_attempts )); then
