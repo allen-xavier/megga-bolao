@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --font-display: 'Poppins', 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  @apply min-h-screen bg-megga-gradient text-white antialiased;
+}
+
+.container-app {
+  @apply mx-auto w-full max-w-[430px] px-5;
+}
