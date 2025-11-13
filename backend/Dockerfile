@@ -2,7 +2,7 @@ ARG NODE_IMAGE=node:20-bullseye
 
 FROM ${NODE_IMAGE} AS base
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && apt-get install -y --no-install-recommends openssl ca-certificates postgresql-client \
   && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps

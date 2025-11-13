@@ -1,20 +1,47 @@
 #!/bin/bash
 set -euo pipefail
 
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo "[backend] DATABASE_URL is not defined. Unable to start." >&2
+  exit 1
+fi
+
 if [ -n "${TZ:-}" ]; then
   ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone || true
 fi
+
+readarray -t DB_INFO < <(node <<'NODE'
+const { URL } = require('url');
+const dbUrl = new URL(process.env.DATABASE_URL);
+const dbName = dbUrl.pathname.replace(/^\//, '').split('?')[0] || process.env.DB_NAME || '';
+console.log(dbUrl.username || process.env.DB_USER || '');
+console.log(dbUrl.password || process.env.DB_PASSWORD || '');
+console.log(dbUrl.hostname || process.env.DB_HOST || 'localhost');
+console.log(dbUrl.port || process.env.DB_PORT || '5432');
+console.log(dbName);
+NODE
+)
+
+DB_USER="${DB_INFO[0]:-postgres}"
+DB_PASSWORD="${DB_INFO[1]:-}"
+DB_HOST="${DB_INFO[2]:-localhost}"
+DB_PORT="${DB_INFO[3]:-5432}"
+DB_NAME="${DB_INFO[4]:-postgres}"
+
+export PGPASSWORD="${DB_PASSWORD}"
 
 wait_for_db() {
   local attempt=1
   local max_attempts=${1:-20}
   local sleep_seconds=${2:-3}
 
-  echo "[backend] Waiting for database to accept connections..."
+  echo "[backend] Waiting for database (${DB_HOST}:${DB_PORT}/${DB_NAME}) to accept connections..."
   while (( attempt <= max_attempts )); do
-    if npx prisma db execute --schema prisma/schema.prisma --script "SELECT 1" >/dev/null 2>&1; then
-      echo "[backend] Database connection established."
-      return 0
+    if pg_isready -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" >/dev/null 2>&1; then
+      if psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" -Atqc 'SELECT 1;' >/dev/null 2>&1; then
+        echo "[backend] Database connection established."
+        return 0
+      fi
     fi
 
     echo "[backend] Database not ready (attempt ${attempt}/${max_attempts}). Retrying in ${sleep_seconds}s..."
@@ -29,7 +56,7 @@ wait_for_db() {
 run_migrations() {
   local attempt=1
   local max_attempts=${1:-5}
-  local sleep_seconds=${2:-3}
+  local sleep_seconds=${2:-5}
 
   echo "[backend] Running database migrations..."
   while (( attempt <= max_attempts )); do
@@ -38,16 +65,22 @@ run_migrations() {
       return 0
     fi
 
-    echo "[backend] Migration attempt ${attempt}/${max_attempts} failed. Retrying in ${sleep_seconds}s..."
+    echo "[backend] Migration attempt ${attempt}/${max_attempts} failed."
     attempt=$(( attempt + 1 ))
-    sleep "${sleep_seconds}"
+
+    if (( attempt <= max_attempts )); then
+      echo "[backend] Re-checking database health before retrying migrations..."
+      wait_for_db 10 "${sleep_seconds}"
+      echo "[backend] Retrying migrations in ${sleep_seconds}s..."
+      sleep "${sleep_seconds}"
+    fi
   done
 
   echo "[backend] Failed to apply migrations after ${max_attempts} attempts."
   return 1
 }
 
-wait_for_db 40 3
+wait_for_db 60 2
 run_migrations 5 5
 
 echo "[backend] Ensuring admin seed..."
