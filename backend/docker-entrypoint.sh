@@ -1,6 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
+is_truthy() {
+  case "$1" in
+    1|true|TRUE|yes|YES|on|ON) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 if [ -z "${DATABASE_URL:-}" ]; then
   echo "[backend] DATABASE_URL is not defined. Unable to start." >&2
   exit 1
@@ -80,8 +87,17 @@ run_migrations() {
   return 1
 }
 
-wait_for_db 60 2
-run_migrations 5 5
+if is_truthy "${SKIP_DB_WAIT:-0}"; then
+  echo "[backend] SKIP_DB_WAIT habilitado. Pulando verificação do banco."
+else
+  wait_for_db 60 2
+fi
+
+if is_truthy "${SKIP_MIGRATIONS:-0}"; then
+  echo "[backend] SKIP_MIGRATIONS habilitado. Migrations não serão executadas."
+else
+  run_migrations 5 5
+fi
 
 echo "[backend] Ensuring admin seed..."
 node dist/prisma/seed-admin.js || true
