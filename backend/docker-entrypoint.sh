@@ -89,7 +89,7 @@ NODE
       fi
     }
 
-    local db_host db_port db_name db_user db_pass connection_dsn
+    local db_host db_port db_name db_user db_pass
     db_host=$(decode "$host_b64")
     db_port=$(decode "$port_b64")
     if [ -z "$db_port" ]; then
@@ -98,14 +98,12 @@ NODE
     db_name=$(decode "$db_b64")
     db_user=$(decode "$user_b64")
     db_pass=$(decode "$pass_b64")
-    connection_dsn=$(decode "$dsn_b64")
 
     if [ -z "$db_host" ] || [ -z "$db_name" ]; then
       echo "[backend] Informações insuficientes para aguardar pelo banco." >&2
       return 1
     fi
 
-    local connection_dsn="$connection_dsn"
     if [ -n "$db_pass" ]; then
       export PGPASSWORD="$db_pass"
     else
@@ -114,7 +112,12 @@ NODE
 
     echo "[backend] Aguardando disponibilidade do banco de dados (${db_host}:${db_port}/${db_name})..."
 
-    until PGPASSWORD="$db_pass" psql "$connection_dsn" -c 'SELECT 1' >/dev/null 2>&1; do
+    local psql_args=("-h" "$db_host" "-p" "$db_port" "-d" "$db_name" "-c" 'SELECT 1')
+    if [ -n "$db_user" ]; then
+      psql_args=("-U" "$db_user" "${psql_args[@]}")
+    fi
+
+    until PGPASSWORD="$db_pass" psql "${psql_args[@]}" >/dev/null 2>&1; do
       echo "[backend] Banco indisponível (tentativa ${attempt}/${max_attempts}). Aguardando ${sleep_seconds}s..."
 
       if (( attempt >= max_attempts )); then
