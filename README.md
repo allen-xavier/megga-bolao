@@ -45,6 +45,11 @@ nginx/     # Configuração do proxy reverso
 
    > Se a porta 8080 estiver ocupada no host, ajuste o mapeamento do serviço `nginx` em `docker-compose.dev.yml` (linha `8080:80`).
 
+   O container do backend aceita flags úteis via variáveis de ambiente:
+
+   - `SKIP_DB_WAIT`: quando definido como `1`/`true`, ignora a espera pelo PostgreSQL durante a inicialização (útil para pipelines que já garantem o banco pronto).
+   - `SKIP_MIGRATIONS`: quando definido como `1`/`true`, evita a execução automática do `prisma migrate deploy`.
+
 3. A API executa migrations e cria um usuário administrador padrão (`+55 11 99999-9999`, senha `admin123`) através do seed automático.
 
 Para o deploy em produção com Swarm veja [Deploy em Docker Swarm via Portainer](#deploy-em-docker-swarm-via-portainer).
