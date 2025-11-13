@@ -1,20 +1,23 @@
-ARG NODE_IMAGE=node:20-alpine3.19
-FROM ${NODE_IMAGE} AS deps
-RUN apk add --no-cache openssl1.1-compat
+ARG NODE_IMAGE=node:20-bullseye
+
+FROM ${NODE_IMAGE} AS base
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci || npm i
 
-FROM ${NODE_IMAGE} AS build
-RUN apk add --no-cache openssl1.1-compat
+FROM base AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-FROM ${NODE_IMAGE}
-RUN apk add --no-cache openssl1.1-compat
+FROM base
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules
