@@ -54,7 +54,17 @@ const { DATABASE_URL } = process.env;
 try {
   const url = new URL(DATABASE_URL);
   const encode = (value = '') => Buffer.from(value, 'utf8').toString('base64');
-  const payload = [url.hostname, url.port || '5432', url.pathname.slice(1), url.username, url.password]
+  const clean = new URL(DATABASE_URL);
+  clean.search = '';
+  clean.hash = '';
+  const payload = [
+    url.hostname,
+    url.port || '5432',
+    url.pathname.slice(1),
+    url.username,
+    url.password,
+    clean.toString()
+  ]
     .map(encode)
     .join(' ');
   process.stdout.write(payload);
@@ -68,8 +78,8 @@ NODE
       return 1
     fi
 
-    local host_b64 port_b64 db_b64 user_b64 pass_b64
-    read -r host_b64 port_b64 db_b64 user_b64 pass_b64 <<<"${parsed}"
+    local host_b64 port_b64 db_b64 user_b64 pass_b64 dsn_b64
+    read -r host_b64 port_b64 db_b64 user_b64 pass_b64 dsn_b64 <<<"${parsed}"
 
     decode() {
       if [ -z "$1" ]; then
@@ -79,7 +89,7 @@ NODE
       fi
     }
 
-    local db_host db_port db_name db_user db_pass
+    local db_host db_port db_name db_user db_pass connection_dsn
     db_host=$(decode "$host_b64")
     db_port=$(decode "$port_b64")
     if [ -z "$db_port" ]; then
@@ -88,17 +98,23 @@ NODE
     db_name=$(decode "$db_b64")
     db_user=$(decode "$user_b64")
     db_pass=$(decode "$pass_b64")
+    connection_dsn=$(decode "$dsn_b64")
 
     if [ -z "$db_host" ] || [ -z "$db_name" ]; then
       echo "[backend] Informações insuficientes para aguardar pelo banco." >&2
       return 1
     fi
 
-    export PGPASSWORD="$db_pass"
+    local connection_dsn="$connection_dsn"
+    if [ -n "$db_pass" ]; then
+      export PGPASSWORD="$db_pass"
+    else
+      unset PGPASSWORD || true
+    fi
 
     echo "[backend] Aguardando disponibilidade do banco de dados (${db_host}:${db_port}/${db_name})..."
 
-    until pg_isready -h "$db_host" -p "$db_port" -d "$db_name" -U "$db_user" >/dev/null 2>&1; do
+    until PGPASSWORD="$db_pass" psql "$connection_dsn" -c 'SELECT 1' >/dev/null 2>&1; do
       echo "[backend] Banco indisponível (tentativa ${attempt}/${max_attempts}). Aguardando ${sleep_seconds}s..."
 
       if (( attempt >= max_attempts )); then
