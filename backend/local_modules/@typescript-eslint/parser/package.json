@@ -1,0 +1,7 @@
+{
+  "name": "@typescript-eslint/parser",
+  "version": "8.46.4",
+  "main": "index.js",
+  "description": "Local fallback TypeScript parser that transpiles before delegating to Espree.",
+  "license": "MIT"
+}

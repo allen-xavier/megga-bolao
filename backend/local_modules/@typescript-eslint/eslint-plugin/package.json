@@ -1,0 +1,7 @@
+{
+  "name": "@typescript-eslint/eslint-plugin",
+  "version": "8.46.4",
+  "main": "index.js",
+  "description": "Local fallback implementation for environments without npm registry access.",
+  "license": "MIT"
+}
