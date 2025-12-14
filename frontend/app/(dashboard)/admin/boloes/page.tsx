@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -68,7 +69,7 @@ function toSections(boloes: Bolao[]) {
   return { andamento, futuros, encerrados };
 }
 
-export default function AdminBoloesPage() {
+function AdminBoloesPageContent() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
   const searchParams = useSearchParams();
@@ -195,5 +196,17 @@ export default function AdminBoloesPage() {
 
       {sectionsToRender.map((section) => renderList(section.title, section.list))}
     </div>
+  );
+}
+
+export default function AdminBoloesPage() {
+  return (
+    <Suspense
+      fallback={
+        <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">Carregando bolões...</p>
+      }
+    >
+      <AdminBoloesPageContent />
+    </Suspense>
   );
 }
