@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ChangeEvent } from 'react';
+import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
 import { ArrowPathIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
@@ -21,12 +22,16 @@ export function ProfileForm({ user }: { user: UserProfile }) {
   const [form, setForm] = useState<UserProfile>(user);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken;
 
   const updateProfile = async () => {
     try {
       setLoading(true);
       setMessage(null);
-      await api.patch(`/users/${user.id}`, form);
+      await api.patch(`/users/${user.id}`, form, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       setMessage('Dados atualizados com sucesso!');
     } catch (error: any) {
       setMessage(error?.response?.data?.message ?? 'Não foi possível atualizar o perfil.');
