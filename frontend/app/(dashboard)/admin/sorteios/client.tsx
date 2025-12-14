@@ -1,12 +1,18 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { api } from '@/lib/api';
 
 const initialSelection = new Set([11, 13, 14, 17, 18, 59]);
 
 export default function AdminSorteiosClient() {
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken;
   const [selectedNumbers, setSelectedNumbers] = useState<Set<number>>(initialSelection);
   const [drawDate, setDrawDate] = useState(() => new Date().toISOString().slice(0, 16));
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const toggleNumber = (number: number) => {
     setSelectedNumbers((current) => {
@@ -22,6 +28,36 @@ export default function AdminSorteiosClient() {
 
   const formattedNumbers = useMemo(() => Array.from(selectedNumbers).sort((a, b) => a - b), [selectedNumbers]);
 
+  const registerDraw = async () => {
+    if (!token) {
+      setMessage('Faça login como administrador para registrar sorteio.');
+      return;
+    }
+    if (formattedNumbers.length !== 6) {
+      setMessage('Selecione exatamente 6 números.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setMessage(null);
+      await api.post(
+        '/draws',
+        {
+          drawnAt: new Date(drawDate).toISOString(),
+          numbers: formattedNumbers,
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setMessage('Sorteio registrado e aplicado ao bolão em andamento.');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message ?? 'Não foi possível registrar o sorteio.';
+      setMessage(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <header className="space-y-2">
@@ -31,6 +67,7 @@ export default function AdminSorteiosClient() {
       </header>
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
+        {message && <p className="rounded-2xl bg-megga-surface/70 p-3 text-sm text-megga-lime">{message}</p>}
         <div className="flex flex-col gap-4 md:flex-row">
           <label className="flex-1 space-y-2 text-sm text-white/80">
             <span className="text-xs uppercase tracking-[0.3em] text-white/40">Data e horário do sorteio</span>
@@ -87,9 +124,11 @@ export default function AdminSorteiosClient() {
           </button>
           <button
             type="button"
-            className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95"
+            onClick={registerDraw}
+            disabled={loading}
+            className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Registrar sorteio
+            {loading ? 'Registrando...' : 'Registrar sorteio'}
           </button>
         </div>
       </section>

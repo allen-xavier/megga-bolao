@@ -121,6 +121,8 @@ model Draw {
   id          String   @id @default(cuid())
   drawnAt     DateTime
   numbers     Int[]
+  bolao       Bolao?   @relation(fields: [bolaoId], references: [id])
+  bolaoId     String?
   createdBy   User     @relation("DrawCreator", fields: [createdById], references: [id])
   createdById String
   createdAt   DateTime @default(now())
