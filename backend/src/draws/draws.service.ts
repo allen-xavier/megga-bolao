@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDrawDto } from './dto/create-draw.dto';
 import { RankingsService } from '../rankings/rankings.service';
@@ -51,5 +51,14 @@ export class DrawsService {
     });
     await this.rankings.recalculateForDraw(draw.id);
     return { ...draw, bolao: bolaoAtivo };
+  }
+
+  async delete(id: string) {
+    const existing = await this.prisma.draw.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException('Sorteio não encontrado');
+    }
+    await this.prisma.draw.delete({ where: { id } });
+    return { deleted: true };
   }
 }

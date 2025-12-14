@@ -82,6 +82,27 @@ export default function AdminSorteiosClient() {
     }
   };
 
+  const deleteDraw = async (id: string) => {
+    if (!token) {
+      setMessage('Faça login como administrador para excluir sorteio.');
+      return;
+    }
+    try {
+      setLoading(true);
+      setMessage(null);
+      await api.delete(`/draws/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      mutate();
+      setMessage('Sorteio excluído.');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message ?? 'Não foi possível excluir o sorteio.';
+      setMessage(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <header className="space-y-2">
@@ -219,6 +240,13 @@ export default function AdminSorteiosClient() {
                     </span>
                   ))}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => deleteDraw(draw.id)}
+                  className="rounded-xl border border-megga-rose/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-megga-rose transition hover:border-megga-rose hover:text-megga-rose"
+                >
+                  Excluir
+                </button>
               </div>
             </li>
           ))}
