@@ -43,7 +43,7 @@ services:
           - node.role == manager
 
   backend:
-    image: ${BACKEND_IMAGE:-ghcr.io/seu-usuario/megga-bolao-backend:latest}
+    image: ${BACKEND_IMAGE:-ghcr.io/allen-xavier/megga-bolao-backend:latest}
     env_file:
       - .env.swarm
     environment:
@@ -63,7 +63,7 @@ services:
         condition: on-failure
 
   frontend:
-    image: ${FRONTEND_IMAGE:-ghcr.io/seu-usuario/megga-bolao-frontend:latest}
+    image: ${FRONTEND_IMAGE:-ghcr.io/allen-xavier/megga-bolao-frontend:latest}
     env_file:
       - .env.swarm
     environment:
