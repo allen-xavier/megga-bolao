@@ -4,8 +4,20 @@ import { api } from './api';
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
   session: {
     strategy: 'jwt',
+  },
+  cookies: {
+    sessionToken: {
+      name: '__Secure-next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+      },
+    },
   },
   providers: [
     CredentialsProvider({
