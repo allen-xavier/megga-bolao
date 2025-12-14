@@ -67,10 +67,6 @@ function toSections(boloes: Bolao[]) {
   return { andamento, futuros, encerrados };
 }
 
-export const metadata = {
-  title: 'Bolões - Admin Megga Bolão',
-};
-
 export default function AdminBoloesPage() {
   const { data, error, isLoading } = useSWR('/boloes', fetcher, { revalidateOnFocus: false });
 
