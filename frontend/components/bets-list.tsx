@@ -2,7 +2,7 @@
 
 interface Bet {
   id: string;
-  numbers: number[];
+  numbers: Array<number | string>;
   isSurprise: boolean;
   createdAt: string;
   user?: {
@@ -20,12 +20,16 @@ function formatLocation(bet: Bet) {
   return `${bet.user.city} - ${bet.user.state}`;
 }
 
-export function BetsList({ bets, winningNumbers = [] }: { bets: Bet[]; winningNumbers?: number[] }) {
+export function BetsList({ bets, winningNumbers = [] }: { bets: Bet[]; winningNumbers?: Array<number | string> }) {
   if (bets.length === 0) {
     return <p className="text-sm text-white/60">Nenhuma aposta registrada ainda.</p>;
   }
 
-  const winningSet = new Set(winningNumbers);
+  const winningSet = new Set(
+    winningNumbers
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value)),
+  );
 
   return (
     <div className="overflow-hidden rounded-3xl bg-megga-navy/80 text-white shadow-lg ring-1 ring-white/5">
@@ -45,15 +49,16 @@ export function BetsList({ bets, winningNumbers = [] }: { bets: Bet[]; winningNu
               </div>
               <div className="flex flex-wrap gap-1">
                 {bet.numbers?.map((number, idx) => {
-                  const isHit = winningSet.size > 0 && winningSet.has(number);
+                  const value = Number(number);
+                  const isHit = winningSet.size > 0 && Number.isFinite(value) && winningSet.has(value);
                   return (
                     <span
-                      key={`${bet.id}-${number}-${idx}`}
+                      key={`${bet.id}-${value}-${idx}`}
                       className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${
                         isHit ? 'bg-megga-lime/70 text-megga-navy' : 'bg-white/10 text-megga-yellow'
                       }`}
                     >
-                      {number.toString().padStart(2, '0')}
+                      {value.toString().padStart(2, '0')}
                     </span>
                   );
                 })}
