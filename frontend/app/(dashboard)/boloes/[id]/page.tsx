@@ -33,7 +33,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const ticketPrice = Number(bolao.ticketPrice ?? 0);
   const hasTransparency = Boolean(bolao.transparency);
   const draws = bolao.draws ?? [];
-  const winningNumbers = Array.from(
+  const winningNumbers: Array<number | string> = Array.from(
     new Set(
       draws
         .flatMap((draw: any) => draw.numbers ?? [])
