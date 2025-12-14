@@ -31,6 +31,7 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN mkdir -p /app/storage
-RUN chmod +x docker-entrypoint.sh
+# Remove possible Windows line endings to avoid "exec format error" in linux
+RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
 EXPOSE 3001
 ENTRYPOINT ["./docker-entrypoint.sh"]
