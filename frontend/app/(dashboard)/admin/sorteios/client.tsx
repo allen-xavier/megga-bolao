@@ -1,25 +1,27 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import useSWR from 'swr';
 import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
-
-const initialSelection = new Set([11, 13, 14, 17, 18, 59]);
 
 export default function AdminSorteiosClient() {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
-  const [selectedNumbers, setSelectedNumbers] = useState<Set<number>>(initialSelection);
+
+  const [selectedNumbers, setSelectedNumbers] = useState<Set<number>>(new Set());
   const [drawDate, setDrawDate] = useState(() => new Date().toISOString().slice(0, 16));
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [from, setFrom] = useState<string>('');
+  const [to, setTo] = useState<string>('');
 
   const toggleNumber = (number: number) => {
     setSelectedNumbers((current) => {
       const next = new Set(current);
       if (next.has(number)) {
         next.delete(number);
-      } else {
+      } else if (next.size < 6) {
         next.add(number);
       }
       return next;
@@ -27,6 +29,26 @@ export default function AdminSorteiosClient() {
   };
 
   const formattedNumbers = useMemo(() => Array.from(selectedNumbers).sort((a, b) => a - b), [selectedNumbers]);
+
+  const { data: draws, isLoading, mutate } = useSWR(
+    ['/draws', token, from, to],
+    async () => {
+      const params: Record<string, string> = {};
+      if (from) params.from = from;
+      if (to) params.to = to;
+      const response = await api.get('/draws', {
+        params,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      return response.data as Array<{
+        id: string;
+        drawnAt: string;
+        numbers: number[];
+        bolao?: { id: string; name: string } | null;
+      }>;
+    },
+    { revalidateOnFocus: false },
+  );
 
   const registerDraw = async () => {
     if (!token) {
@@ -49,6 +71,8 @@ export default function AdminSorteiosClient() {
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
+      setSelectedNumbers(new Set());
+      mutate();
       setMessage('Sorteio registrado e aplicado ao bolão em andamento.');
     } catch (error: any) {
       const msg = error?.response?.data?.message ?? 'Não foi possível registrar o sorteio.';
@@ -117,10 +141,10 @@ export default function AdminSorteiosClient() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
-            onClick={() => setSelectedNumbers(initialSelection)}
+            onClick={() => setSelectedNumbers(new Set())}
             className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
           >
-            Restaurar seleção padrão
+            Limpar seleção
           </button>
           <button
             type="button"
@@ -131,6 +155,74 @@ export default function AdminSorteiosClient() {
             {loading ? 'Registrando...' : 'Registrar sorteio'}
           </button>
         </div>
+      </section>
+
+      <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 text-white shadow-lg ring-1 ring-white/5">
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/50">Sorteios cadastrados</p>
+            <h2 className="text-lg font-semibold">Histórico</h2>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm text-white/80">
+            <label className="flex items-center gap-1">
+              De:
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                className="rounded-xl border border-white/10 bg-white/5 px-2 py-1 text-white focus:border-megga-magenta focus:outline-none"
+              />
+            </label>
+            <label className="flex items-center gap-1">
+              Até:
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                className="rounded-xl border border-white/10 bg-white/5 px-2 py-1 text-white focus:border-megga-magenta focus:outline-none"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => mutate()}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+            >
+              Filtrar
+            </button>
+          </div>
+        </header>
+
+        {isLoading && <p className="text-sm text-white/70">Carregando sorteios...</p>}
+        {!isLoading && (!draws || draws.length === 0) && (
+          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Nenhum sorteio encontrado.</p>
+        )}
+        <ul className="space-y-3">
+          {draws?.map((draw) => (
+            <li key={draw.id} className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-sm text-white">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/50">Data</p>
+                  <p className="font-semibold">
+                    {new Date(draw.drawnAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                  </p>
+                  <p className="text-xs text-white/60">
+                    Bolão: {draw.bolao?.name ? `${draw.bolao.name} (${draw.bolao.id.slice(0, 6)})` : 'Não vinculado'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {draw.numbers.map((num) => (
+                    <span
+                      key={num}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-megga-magenta/25 text-xs font-semibold text-megga-yellow"
+                    >
+                      {num.toString().padStart(2, '0')}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );
