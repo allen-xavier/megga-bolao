@@ -34,9 +34,30 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
+  private normalizePhone(phone: string): string {
+    if (!phone) {
+      return '';
+    }
+
+    const digits = phone.replace(/\D/g, '');
+    if (digits.startsWith('55') && digits.length === 13) {
+      return `+${digits}`;
+    }
+    if (digits.length === 11) {
+      // Assume BR number without country code
+      return `+55${digits}`;
+    }
+    if (phone.startsWith('+')) {
+      return phone;
+    }
+    return `+${digits}`;
+  }
+
   async register(dto: RegisterUserDto): Promise<AuthResult> {
+    const normalizedPhone = this.normalizePhone(dto.phone);
+
     const uniqueFilters: Prisma.UserWhereInput[] = [
-      { phone: dto.phone },
+      { phone: normalizedPhone },
       { cpf: dto.cpf },
     ];
 
@@ -59,7 +80,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         fullName: dto.fullName,
-        phone: dto.phone,
+        phone: normalizedPhone,
         cpf: dto.cpf,
         email: dto.email,
         cep: dto.cep,
@@ -83,7 +104,8 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResult> {
-    const user = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    const normalizedPhone = this.normalizePhone(dto.phone);
+    const user = await this.prisma.user.findUnique({ where: { phone: normalizedPhone } });
 
     if (!user) {
       throw new UnauthorizedException('Credenciais inválidas');
