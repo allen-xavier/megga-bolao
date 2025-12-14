@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { sections } from '@/components/nav-sections';
 import { signOut } from 'next-auth/react';
 
@@ -13,6 +14,8 @@ interface AppDrawerProps {
 
 export function AppDrawer({ open, onClose }: AppDrawerProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const role = session?.user?.role;
 
   useEffect(() => {
     if (!open) {
@@ -38,6 +41,13 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
   if (!open) {
     return null;
   }
+
+  const filteredSections = sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => (item.adminOnly ? role === 'ADMIN' : true)),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm md:hidden">
@@ -65,7 +75,7 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
           </button>
         </header>
         <div className="space-y-6">
-          {sections.map((section) => (
+          {filteredSections.map((section) => (
             <section key={section.title} className="space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/40">{section.title}</h2>
               <ul className="space-y-2">

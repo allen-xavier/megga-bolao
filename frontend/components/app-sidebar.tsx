@@ -2,11 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { sections } from '@/components/nav-sections';
 import { signOut } from 'next-auth/react';
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+
+  const filteredSections = sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => (item.adminOnly ? role === 'ADMIN' : true)),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <aside className="hidden h-full w-72 shrink-0 flex-col gap-6 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-glow ring-1 ring-white/5 md:flex">
@@ -17,7 +27,7 @@ export function AppSidebar() {
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto pr-1">
-        {sections.map((section) => (
+        {filteredSections.map((section) => (
           <section key={section.title} className="space-y-3">
             <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/40">{section.title}</h2>
             <ul className="space-y-2">

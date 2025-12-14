@@ -3,6 +3,7 @@
 import useSWR from 'swr';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
 type Prize = {
@@ -70,6 +71,8 @@ function toSections(boloes: Bolao[]) {
 export default function AdminBoloesPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
+  const searchParams = useSearchParams();
+  const filtro = searchParams.get('filtro');
 
   const { data, error, isLoading } = useSWR(
     token ? '/boloes' : null,
@@ -83,6 +86,12 @@ export default function AdminBoloesPage() {
   );
 
   const { andamento, futuros, encerrados } = toSections(data ?? []);
+  const sectionsToRender =
+    filtro === 'encerrados'
+      ? [{ title: 'Encerrados', list: encerrados }]
+      : filtro === 'futuros'
+        ? [{ title: 'Futuros', list: futuros }]
+        : [{ title: 'Em andamento', list: andamento }, { title: 'Futuros', list: futuros }, { title: 'Encerrados', list: encerrados }];
 
   const renderList = (title: string, list: Bolao[]) => (
     <section className="space-y-4">
@@ -184,9 +193,7 @@ export default function AdminBoloesPage() {
         </Link>
       </header>
 
-      {renderList('Em andamento', andamento)}
-      {renderList('Futuros', futuros)}
-      {renderList('Encerrados', encerrados)}
+      {sectionsToRender.map((section) => renderList(section.title, section.list))}
     </div>
   );
 }
