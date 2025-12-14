@@ -29,6 +29,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const startsAt = new Date(bolao.startsAt);
   const ticketPrice = Number(bolao.ticketPrice ?? 0);
   const hasTransparency = Boolean(bolao.transparency);
+  const draws = bolao.draws ?? [];
 
   return (
     <div className="space-y-6">
@@ -115,11 +116,38 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
       <section id="sorteios" className="space-y-3 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
         <header>
           <h2 className="text-lg font-semibold">Sorteios</h2>
-          <p className="text-sm text-white/60">Agenda e resultados serão exibidos aqui.</p>
+          <p className="text-sm text-white/60">Resultados oficiais vinculados a este bolão.</p>
         </header>
-        <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">
-          Nenhum sorteio registrado ainda. Assim que o bolão iniciar, os resultados aparecerão aqui.
-        </p>
+        {draws.length === 0 ? (
+          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">
+            Nenhum sorteio registrado ainda.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {draws.map((draw: any) => (
+              <li key={draw.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/50">Data</p>
+                    <p className="font-semibold">
+                      {new Date(draw.drawnAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {draw.numbers?.map((num: number) => (
+                      <span
+                        key={num}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-megga-magenta/25 text-xs font-semibold text-megga-yellow"
+                      >
+                        {num.toString().padStart(2, '0')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section id="apostadores" className="space-y-4">

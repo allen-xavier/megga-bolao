@@ -20,6 +20,9 @@ export class BoloesService {
       include: {
         prizes: true,
         transparency: true,
+        draws: {
+          orderBy: { drawnAt: 'desc' },
+        },
         bets: {
           orderBy: { createdAt: 'desc' },
           include: {
