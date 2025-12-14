@@ -6,6 +6,17 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: false });
 
+  // Log básico de requests para facilitar diagnóstico em produção
+  app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      // eslint-disable-next-line no-console
+      console.log(`[req] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${duration}ms)`);
+    });
+    next();
+  });
+
   app.enableCors({
     origin: process.env.WEB_ORIGIN?.split(',') ?? '*',
     credentials: true,
