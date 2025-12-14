@@ -10,7 +10,7 @@ target "backend" {
   context    = "./backend"
   dockerfile = "Dockerfile"
   tags       = ["${REGISTRY}/megga-bolao-backend:latest"]
-  platforms  = ["linux/amd64"]
+  platforms  = ["linux/amd64", "linux/arm64"]
   output     = ["type=registry"]
 }
 
@@ -18,6 +18,6 @@ target "frontend" {
   context    = "./frontend"
   dockerfile = "Dockerfile"
   tags       = ["${REGISTRY}/megga-bolao-frontend:latest"]
-  platforms  = ["linux/amd64"]
+  platforms  = ["linux/amd64", "linux/arm64"]
   output     = ["type=registry"]
 }
