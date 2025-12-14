@@ -1,6 +1,12 @@
 import axios from 'axios';
 
+const fallbackBase =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  (typeof window !== 'undefined'
+    ? `${window.location.origin}/api`
+    : 'https://app.allentiomolu.com.br/api');
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001/api',
+  baseURL: fallbackBase,
   withCredentials: true,
 });
