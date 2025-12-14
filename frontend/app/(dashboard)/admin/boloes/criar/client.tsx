@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
 
 interface PrizeOption {
@@ -39,9 +40,14 @@ const toNumber = (value: string | number) => {
 };
 
 export default function CreateBolaoClient() {
+  const { data: session, status } = useSession();
   const [prizes, setPrizes] = useState<PrizeOption[]>(() => basePrizes.map((prize) => ({ ...prize })));
   const [guaranteedPrize, setGuaranteedPrize] = useState('10000,00');
   const [name, setName] = useState('Bolão Promocional');
+  const [startsAt, setStartsAt] = useState(() => {
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    return tomorrow.toISOString().slice(0, 16); // datetime-local format
+  });
   const [ticketPrice, setTicketPrice] = useState(35);
   const [minimumQuotas, setMinimumQuotas] = useState(500);
   const [saving, setSaving] = useState(false);
@@ -75,9 +81,13 @@ export default function CreateBolaoClient() {
       setSaving(true);
       setMessage(null);
 
+      if (!session?.user?.accessToken) {
+        throw new Error('Faça login como administrador para salvar.');
+      }
+
       const payload = {
         name,
-        startsAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // amanhã
+        startsAt: new Date(startsAt).toISOString(),
         ticketPrice: Number(ticketPrice),
         minimumQuotas: Number(minimumQuotas),
         guaranteedPrize: toNumber(guaranteedPrize),
@@ -91,7 +101,11 @@ export default function CreateBolaoClient() {
           })),
       };
 
-      await api.post('/boloes', payload);
+      await api.post('/boloes', payload, {
+        headers: {
+          Authorization: `Bearer ${session.user.accessToken}`,
+        },
+      });
       setMessage('Bolão criado com sucesso.');
     } catch (error: any) {
       setMessage(error?.response?.data?.message ?? 'Erro ao salvar bolão.');
@@ -155,6 +169,15 @@ export default function CreateBolaoClient() {
               type="number"
               value={minimumQuotas}
               onChange={(event) => setMinimumQuotas(Number(event.target.value))}
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
+            />
+          </label>
+          <label className="space-y-2 text-sm text-white/80">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Data de início</span>
+            <input
+              type="datetime-local"
+              value={startsAt}
+              onChange={(event) => setStartsAt(event.target.value)}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
             />
           </label>
