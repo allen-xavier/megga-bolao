@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { sections } from '@/components/nav-sections';
+import { signOut } from 'next-auth/react';
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -41,6 +42,15 @@ export function AppSidebar() {
             </ul>
           </section>
         ))}
+      </div>
+      <div>
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition hover:border-megga-magenta hover:text-megga-yellow"
+        >
+          Sair da conta
+        </button>
       </div>
     </aside>
   );
