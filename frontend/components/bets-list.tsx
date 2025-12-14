@@ -10,6 +10,7 @@ interface Bet {
     city?: string;
     state?: string;
   };
+  hits?: number;
 }
 
 function formatLocation(bet: Bet) {
@@ -19,10 +20,12 @@ function formatLocation(bet: Bet) {
   return `${bet.user.city} - ${bet.user.state}`;
 }
 
-export function BetsList({ bets }: { bets: Bet[] }) {
+export function BetsList({ bets, winningNumbers = [] }: { bets: Bet[]; winningNumbers?: number[] }) {
   if (bets.length === 0) {
     return <p className="text-sm text-white/60">Nenhuma aposta registrada ainda.</p>;
   }
+
+  const winningSet = new Set(winningNumbers);
 
   return (
     <div className="overflow-hidden rounded-3xl bg-megga-navy/80 text-white shadow-lg ring-1 ring-white/5">
@@ -41,14 +44,19 @@ export function BetsList({ bets }: { bets: Bet[] }) {
                 <p className="text-xs text-white/50">{formatLocation(bet)}</p>
               </div>
               <div className="flex flex-wrap gap-1">
-                {bet.numbers?.map((number, idx) => (
-                  <span
-                    key={`${bet.id}-${number}-${idx}`}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold text-megga-yellow"
-                  >
-                    {number.toString().padStart(2, '0')}
-                  </span>
-                ))}
+                {bet.numbers?.map((number, idx) => {
+                  const isHit = winningSet.size > 0 && winningSet.has(number);
+                  return (
+                    <span
+                      key={`${bet.id}-${number}-${idx}`}
+                      className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${
+                        isHit ? 'bg-megga-lime/70 text-megga-navy' : 'bg-white/10 text-megga-yellow'
+                      }`}
+                    >
+                      {number.toString().padStart(2, '0')}
+                    </span>
+                  );
+                })}
               </div>
             </div>
             <div className="flex flex-col items-end justify-between text-right text-xs text-white/60">

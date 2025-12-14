@@ -30,6 +30,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const ticketPrice = Number(bolao.ticketPrice ?? 0);
   const hasTransparency = Boolean(bolao.transparency);
   const draws = bolao.draws ?? [];
+  const latestDraw = draws[0];
 
   return (
     <div className="space-y-6">
@@ -155,7 +156,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
           <h2 className="text-lg font-semibold text-white">Lista de apostadores</h2>
           <TransparencyDownload bolaoId={bolao.id} hasFile={hasTransparency} />
         </header>
-        <BetsList bets={bolao.bets ?? []} />
+        <BetsList bets={bolao.bets ?? []} winningNumbers={latestDraw?.numbers ?? []} />
       </section>
     </div>
   );
