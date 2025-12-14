@@ -44,8 +44,6 @@ services:
 
   backend:
     image: ${BACKEND_IMAGE:-ghcr.io/allen-xavier/megga-bolao-backend:latest}
-    env_file:
-      - .env.swarm
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-megga}:${POSTGRES_PASSWORD:-megga}@db:5432/${POSTGRES_DB:-megga_bolao}?schema=public}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
@@ -64,8 +62,6 @@ services:
 
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/allen-xavier/megga-bolao-frontend:latest}
-    env_file:
-      - .env.swarm
     environment:
       NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-https://app.allentiomolu.com.br/api}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-https://app.allentiomolu.com.br}
@@ -120,4 +116,5 @@ volumes:
 
 configs:
   nginx_conf:
-    file: ./nginx/nginx.conf
+    external: true
+    name: nginx_conf
