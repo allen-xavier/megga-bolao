@@ -51,7 +51,8 @@ function toSections(boloes: Bolao[]) {
   const encerrados: Bolao[] = [];
 
   boloes.forEach((b) => {
-    if (b.closedAt) {
+    const closedTs = b.closedAt ? new Date(b.closedAt).getTime() : null;
+    if (closedTs && closedTs <= now) {
       encerrados.push(b);
       return;
     }
@@ -131,13 +132,13 @@ export default function AdminBoloesPage() {
             <div className="mt-4 flex gap-3">
               <Link
                 href={`/boloes/${bolao.id}`}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+                className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
               >
                 Visualizar bolão
               </Link>
               <Link
                 href={`/admin/boloes/criar?id=${bolao.id}`}
-                className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95"
+                className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-center text-sm font-semibold text-white transition hover:opacity-95"
               >
                 Editar / Pausar
               </Link>

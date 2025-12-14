@@ -3,37 +3,39 @@ import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  const adminPhone = '+5511999999999';
-  const exists = await prisma.user.findUnique({ where: { phone: adminPhone } });
-  if (exists) {
-    // eslint-disable-next-line no-console
-    console.log('Admin user already exists, skipping seed');
-    return;
-  }
-
-  const passwordHash = await argon2.hash('admin123');
-  await prisma.user.create({
-    data: {
-      fullName: 'Administrador',
-      phone: adminPhone,
-      email: 'admin@meggabolao.com',
-      cpf: '00000000000',
-      cep: '00000000',
-      address: 'Rua Admin, 123',
-      city: 'São Paulo',
-      state: 'SP',
-      pixKey: 'admin@pix',
+async function ensureUser(phone: string, password: string, role: UserRole, fullName: string) {
+  const passwordHash = await argon2.hash(password);
+  await prisma.user.upsert({
+    where: { phone },
+    update: {
+      fullName,
       passwordHash,
-      role: UserRole.ADMIN,
+      role,
       acceptedTerms: true,
-      wallet: {
-        create: {},
-      },
+    },
+    create: {
+      fullName,
+      phone,
+      email: role === UserRole.ADMIN ? 'admin@meggabolao.com' : undefined,
+      cpf: role === UserRole.ADMIN ? '00000000000' : '12345678901',
+      cep: role === UserRole.ADMIN ? '00000000' : '01001000',
+      address: role === UserRole.ADMIN ? 'Rua Admin, 123' : 'Rua das Flores, 100',
+      city: 'Sao Paulo',
+      state: 'SP',
+      pixKey: role === UserRole.ADMIN ? 'admin@pix' : 'user@pix',
+      passwordHash,
+      role,
+      acceptedTerms: true,
+      wallet: { create: {} },
     },
   });
+}
+
+async function main() {
+  await ensureUser('+5511999999999', 'admin123', UserRole.ADMIN, 'Administrador');
+  await ensureUser('+5511988887777', 'user123', UserRole.USER, 'Usuario Teste');
   // eslint-disable-next-line no-console
-  console.log('Admin user created with default credentials');
+  console.log('Seed ensured for admin and default user.');
 }
 
 main()
