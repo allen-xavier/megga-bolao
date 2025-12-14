@@ -65,18 +65,27 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
             </div>
           </div>
           <nav className="grid grid-cols-4 gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
-            {['Apostar', 'Sorteios', 'Premiação', 'Apostadores'].map((item) => (
-              <span key={item} className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70">
-                {item}
-              </span>
-            ))}
+            <a href="#apostar" className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70 hover:bg-megga-purple/30">
+              Apostar
+            </a>
+            <a href="#sorteios" className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70 hover:bg-megga-purple/30">
+              Sorteios
+            </a>
+            <a href="#premiacoes" className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70 hover:bg-megga-purple/30">
+              Premiação
+            </a>
+            <a href="#apostadores" className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70 hover:bg-megga-purple/30">
+              Apostadores
+            </a>
           </nav>
         </div>
       </section>
 
-      <PlaceBetForm bolaoId={bolao.id} ticketPrice={ticketPrice} />
+      <div id="apostar">
+        <PlaceBetForm bolaoId={bolao.id} ticketPrice={ticketPrice} />
+      </div>
 
-      <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <section id="premiacoes" className="space-y-4 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
         <header>
           <h2 className="text-lg font-semibold">Premiações</h2>
           <p className="text-sm text-white/60">Distribuição configurada para este bolão.</p>
@@ -103,7 +112,17 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
         </ul>
       </section>
 
-      <section className="space-y-4">
+      <section id="sorteios" className="space-y-3 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <header>
+          <h2 className="text-lg font-semibold">Sorteios</h2>
+          <p className="text-sm text-white/60">Agenda e resultados serão exibidos aqui.</p>
+        </header>
+        <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">
+          Nenhum sorteio registrado ainda. Assim que o bolão iniciar, os resultados aparecerão aqui.
+        </p>
+      </section>
+
+      <section id="apostadores" className="space-y-4">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-lg font-semibold text-white">Lista de apostadores</h2>
           <TransparencyDownload bolaoId={bolao.id} hasFile={hasTransparency} />
