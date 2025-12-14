@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function ensureUser(phone: string, password: string, role: UserRole, fullName: string) {
   const passwordHash = await argon2.hash(password);
-  await prisma.user.upsert({
+  const user = await prisma.user.upsert({
     where: { phone },
     update: {
       fullName,
@@ -27,6 +27,20 @@ async function ensureUser(phone: string, password: string, role: UserRole, fullN
       role,
       acceptedTerms: true,
       wallet: { create: {} },
+    },
+  });
+
+  const defaultBalance = 1000;
+  await prisma.wallet.upsert({
+    where: { userId: user.id },
+    update: {
+      balance: defaultBalance,
+      locked: 0,
+    },
+    create: {
+      userId: user.id,
+      balance: defaultBalance,
+      locked: 0,
     },
   });
 }
