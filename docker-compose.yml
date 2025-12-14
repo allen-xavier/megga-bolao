@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-megga}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-megga}
-      POSTGRES_DB: ${POSTGRES_DB:-megga_bolao}
+      POSTGRES_USER: megga
+      POSTGRES_PASSWORD: PgPW_9tqL2sV5mX8rJ1c
+      POSTGRES_DB: megga_bolao
       TZ: America/Sao_Paulo
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -43,11 +43,20 @@ services:
           - node.role == manager
 
   backend:
-    image: ${BACKEND_IMAGE:-ghcr.io/allen-xavier/megga-bolao-backend:latest}
+    image: ghcr.io/allen-xavier/megga-bolao-backend:latest
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-megga}:${POSTGRES_PASSWORD:-megga}@db:5432/${POSTGRES_DB:-megga_bolao}?schema=public}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
-      WEB_ORIGIN: ${WEB_ORIGIN:-https://app.allentiomolu.com.br}
+      DATABASE_URL: postgresql://megga:PgPW_9tqL2sV5mX8rJ1c@db:5432/megga_bolao?schema=public
+      REDIS_URL: redis://redis:6379
+      WEB_ORIGIN: https://app.allentiomolu.com.br
+      JWT_SECRET: jwtsec_D2c9L1mR0zVn8Qp4Xk5aS7wT3uY6hJ0b
+      JWT_REFRESH_SECRET: jwtref_A7m9Q1t6V4p2Z8k3s5R0xN1yW6gH4dC
+      ACCESS_TOKEN_TTL: 900
+      REFRESH_TOKEN_TTL: 604800
+      EVOLUTION_API_URL: https://sua-api-evolution.exemplo
+      EVOLUTION_API_TOKEN: evo_tok_v73ZpL9qR2sX6uB4tM1nY8c
+      SUITPAY_API_URL: https://api.suitpay.com.br
+      SUITPAY_API_TOKEN: suitpay_tok_R5t8L1k2Q9sW4vH3mZ7nC0a
+      SUITPAY_WEBHOOK_SECRET: suitpay_wh_84nQf2jX6mPs9yT3vZw0Lc
       PORT: 3001
       TZ: America/Sao_Paulo
     volumes:
@@ -61,10 +70,11 @@ services:
         condition: on-failure
 
   frontend:
-    image: ${FRONTEND_IMAGE:-ghcr.io/allen-xavier/megga-bolao-frontend:latest}
+    image: ghcr.io/allen-xavier/megga-bolao-frontend:latest
     environment:
-      NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-https://app.allentiomolu.com.br/api}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://app.allentiomolu.com.br}
+      NEXT_PUBLIC_API_BASE: https://app.allentiomolu.com.br/api
+      NEXTAUTH_URL: https://app.allentiomolu.com.br
+      NEXTAUTH_SECRET: nextauth_9rP6wJ3yV8uL2cQ4sT7gZ1mB5hF0xDa
       TZ: America/Sao_Paulo
     networks:
       - internal
@@ -92,10 +102,10 @@ services:
       labels:
         - traefik.enable=true
         - traefik.docker.network=traefik-public
-        - traefik.http.routers.megga.rule=Host(`${APP_DOMAIN:-app.allentiomolu.com.br}`)
+        - traefik.http.routers.megga.rule=Host(`app.allentiomolu.com.br`)
         - traefik.http.routers.megga.entrypoints=websecure
         - traefik.http.routers.megga.tls=true
-        - traefik.http.routers.megga.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+        - traefik.http.routers.megga.tls.certresolver=letsencrypt
         - traefik.http.services.megga.loadbalancer.server.port=80
 
 networks:
