@@ -3,7 +3,7 @@ variable "REGISTRY" {
 }
 
 group "default" {
-  targets = ["backend", "frontend"]
+  targets = ["backend", "frontend", "nginx"]
 }
 
 target "backend" {
@@ -18,6 +18,14 @@ target "frontend" {
   context    = "./frontend"
   dockerfile = "Dockerfile"
   tags       = ["${REGISTRY}/megga-bolao-frontend:latest"]
+  platforms  = ["linux/amd64"]
+  output     = ["type=registry"]
+}
+
+target "nginx" {
+  context    = "./nginx"
+  dockerfile = "Dockerfile"
+  tags       = ["${REGISTRY}/megga-bolao-nginx:latest"]
   platforms  = ["linux/amd64"]
   output     = ["type=registry"]
 }
