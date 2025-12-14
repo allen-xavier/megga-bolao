@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useSWRConfig } from 'swr';
 import { api } from '@/lib/api';
 
@@ -25,6 +26,7 @@ function generateRandomNumbers() {
 export function PlaceBetForm({ bolaoId, ticketPrice }: PlaceBetFormProps) {
   const router = useRouter();
   const { mutate } = useSWRConfig();
+  const { data: session, status } = useSession();
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const [isSurprise, setIsSurprise] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,10 +84,16 @@ export function PlaceBetForm({ bolaoId, ticketPrice }: PlaceBetFormProps) {
     setSuccessMessage(null);
 
     try {
+      if (status !== 'authenticated' || !session?.user?.accessToken) {
+        throw new Error('Faça login para apostar.');
+      }
+
       const payload = isSurprise
         ? { isSurprise: true }
         : { numbers: selectedNumbers, isSurprise: false };
-      const response = await api.post(`/boloes/${bolaoId}/bets`, payload);
+      const response = await api.post(`/boloes/${bolaoId}/bets`, payload, {
+        headers: { Authorization: `Bearer ${session.user.accessToken}` },
+      });
 
       setSuccessMessage('Aposta registrada com sucesso!');
       setIsSurprise(false);

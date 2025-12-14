@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
 import { AppDrawer } from '@/components/app-drawer';
 
@@ -13,9 +14,19 @@ interface WalletResponse {
 const fetcher = (url: string) => api.get(url).then((response) => response.data);
 
 export function TopBar() {
-  const { data } = useSWR<WalletResponse>('/wallet/me', fetcher, {
-    revalidateOnFocus: false,
-  });
+  const { data: session } = useSession();
+  const { data } = useSWR<WalletResponse>(
+    session?.user?.accessToken ? ['/wallet/me', session.user.accessToken] : null,
+    ([url, token]) =>
+      api
+        .get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => response.data),
+    {
+      revalidateOnFocus: false,
+    },
+  );
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const balance = Number(data?.balance ?? 0).toLocaleString('pt-BR', {

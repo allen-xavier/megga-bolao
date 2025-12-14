@@ -1,6 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
+import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
 
 interface Wallet {
@@ -14,12 +15,30 @@ interface Wallet {
   }>;
 }
 
-const fetcher = (url: string) => api.get(url).then((response) => response.data);
-
 export function WalletSummary() {
-  const { data, isLoading } = useSWR<Wallet>('/wallet/me', fetcher, {
-    revalidateOnFocus: false,
-  });
+  const { data: session, status } = useSession();
+  const token = session?.user?.accessToken;
+
+  const { data, isLoading } = useSWR<Wallet>(
+    token ? '/wallet/me' : null,
+    () =>
+      api
+        .get('/wallet/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => response.data),
+    {
+      revalidateOnFocus: false,
+    },
+  );
+
+  if (status !== 'authenticated') {
+    return (
+      <div className="rounded-3xl bg-megga-navy/60 p-6 text-sm text-white/60">
+        Entre com sua conta para ver os dados da carteira.
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="rounded-3xl bg-megga-navy/60 p-6 text-sm text-white/60">Carregando carteira...</div>;
@@ -68,9 +87,7 @@ export function WalletSummary() {
                   <p className="text-xs text-white/50">{new Date(item.createdAt).toLocaleString('pt-BR')}</p>
                 </div>
                 <span
-                  className={`text-sm font-semibold ${
-                    amount >= 0 ? 'text-megga-lime' : 'text-megga-rose'
-                  }`}
+                  className={`text-sm font-semibold ${amount >= 0 ? 'text-megga-lime' : 'text-megga-rose'}`}
                 >
                   {amount >= 0 ? '+' : '-'}R$ {formattedAmount}
                 </span>

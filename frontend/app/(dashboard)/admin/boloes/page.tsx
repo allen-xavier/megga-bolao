@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
 
 type Prize = {
@@ -23,8 +24,6 @@ type Bolao = {
   prizes: Prize[];
 };
 
-const fetcher = (url: string) => api.get(url).then((res) => res.data as Bolao[]);
-
 function StatusBadge({ label }: { label: string }) {
   const isActive = label === 'Em andamento';
   const color = isActive
@@ -42,7 +41,7 @@ function StatusBadge({ label }: { label: string }) {
 
 function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined) return 'R$ 0,00';
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function toSections(boloes: Bolao[]) {
@@ -68,7 +67,19 @@ function toSections(boloes: Bolao[]) {
 }
 
 export default function AdminBoloesPage() {
-  const { data, error, isLoading } = useSWR('/boloes', fetcher, { revalidateOnFocus: false });
+  const { data: session, status } = useSession();
+  const token = session?.user?.accessToken;
+
+  const { data, error, isLoading } = useSWR(
+    token ? '/boloes' : null,
+    () =>
+      api
+        .get('/boloes', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => res.data as Bolao[]),
+    { revalidateOnFocus: false },
+  );
 
   const { andamento, futuros, encerrados } = toSections(data ?? []);
 
@@ -88,8 +99,7 @@ export default function AdminBoloesPage() {
                 <p className="text-xs uppercase tracking-[0.3em] text-white/40">#{bolao.id}</p>
                 <h3 className="mt-1 text-lg font-semibold">{bolao.name}</h3>
                 <p className="text-xs text-white/60">
-                  Início: {new Date(bolao.startsAt).toLocaleString('pt-BR')} • Cota: {formatCurrency(bolao.ticketPrice)} • Mínimo:{' '}
-                  {bolao.minimumQuotas} cotas
+                  Início: {new Date(bolao.startsAt).toLocaleString('pt-BR')} • Cota: {formatCurrency(bolao.ticketPrice)} • Mínimo: {bolao.minimumQuotas} cotas
                 </p>
               </div>
               <StatusBadge
@@ -109,7 +119,9 @@ export default function AdminBoloesPage() {
               </div>
               <div className="rounded-2xl bg-white/5 px-4 py-3">
                 <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Comissão</p>
-                <p className="mt-2 text-base font-semibold text-white">{(bolao.commissionPercent ?? 0).toFixed(2)}%</p>
+                <p className="mt-2 text-base font-semibold text-white">
+                  {Number(bolao.commissionPercent ?? 0).toFixed(2)}%
+                </p>
               </div>
               <div className="rounded-2xl bg-white/5 px-4 py-3">
                 <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Prêmios configurados</p>
@@ -135,6 +147,14 @@ export default function AdminBoloesPage() {
       )}
     </section>
   );
+
+  if (status !== 'authenticated') {
+    return (
+      <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">
+        Faça login como administrador para visualizar os bolões.
+      </p>
+    );
+  }
 
   if (isLoading) {
     return <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">Carregando bolões...</p>;
