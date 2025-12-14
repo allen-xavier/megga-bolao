@@ -81,7 +81,7 @@ export default function CreateBolaoClient() {
       setSaving(true);
       setMessage(null);
 
-      if (!session?.user?.accessToken) {
+      if (status !== 'authenticated' || !session?.user?.accessToken) {
         throw new Error('Faça login como administrador para salvar.');
       }
 
@@ -108,7 +108,11 @@ export default function CreateBolaoClient() {
       });
       setMessage('Bolão criado com sucesso.');
     } catch (error: any) {
-      setMessage(error?.response?.data?.message ?? 'Erro ao salvar bolão.');
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        (typeof error === 'string' ? error : null);
+      setMessage(backendMessage ? String(backendMessage) : 'Erro ao salvar bolão.');
     } finally {
       setSaving(false);
     }

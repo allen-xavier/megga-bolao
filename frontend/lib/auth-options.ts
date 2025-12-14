@@ -23,10 +23,13 @@ export const authOptions: NextAuthOptions = {
           password: credentials.password,
         });
         return {
-          ...response.data.user,
+          id: response.data.user.id,
+          name: response.data.user.fullName,
+          email: response.data.user.email,
+          role: response.data.user.role,
           accessToken: response.data.tokens.accessToken,
           refreshToken: response.data.tokens.refreshToken,
-        } as any;
+        };
       },
     }),
   ],
@@ -38,6 +41,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.accessToken = (user as any).accessToken;
         token.refreshToken = (user as any).refreshToken;
+        token.role = (user as any).role;
       }
       return token;
     },
@@ -46,6 +50,7 @@ export const authOptions: NextAuthOptions = {
         ...(session.user || {}),
         accessToken: token.accessToken as string | undefined,
         refreshToken: token.refreshToken as string | undefined,
+        role: token.role as string | undefined,
       } as any;
       return session;
     },
