@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { api } from '@/lib/api';
 
 interface PrizeOption {
   id: string;
@@ -20,9 +21,31 @@ const basePrizes: PrizeOption[] = [
   { id: 'indicacao', name: 'Indique e Ganhe', description: 'Comissão direta e indireta', percentage: 3, enabled: true },
 ];
 
+const prizeTypeMap: Record<string, string> = {
+  'pe-quente': 'PE_QUENTE',
+  'pe-frio': 'PE_FRIO',
+  consolacao: 'CONSOLACAO',
+  sena: 'SENA_PRIMEIRO',
+  ligeirinho: 'LIGEIRINHO',
+  oito: 'OITO_ACERTOS',
+  indicacao: 'INDICACAO_DIRETA',
+};
+
+const toNumber = (value: string | number) => {
+  if (typeof value === 'number') return value;
+  const normalized = value.replace(/\./g, '').replace(',', '.');
+  const parsed = Number(normalized);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 export default function CreateBolaoClient() {
   const [prizes, setPrizes] = useState<PrizeOption[]>(() => basePrizes.map((prize) => ({ ...prize })));
   const [guaranteedPrize, setGuaranteedPrize] = useState('10000,00');
+  const [name, setName] = useState('Bolão Promocional');
+  const [ticketPrice, setTicketPrice] = useState(35);
+  const [minimumQuotas, setMinimumQuotas] = useState(500);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   const { totalPercentage, meggaTax } = useMemo(() => {
     const total = prizes.filter((prize) => prize.enabled).reduce((acc, prize) => acc + prize.percentage, 0);
@@ -47,6 +70,36 @@ export default function CreateBolaoClient() {
     setPrizes(basePrizes.map((prize) => ({ ...prize })));
   };
 
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setMessage(null);
+
+      const payload = {
+        name,
+        startsAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // amanhã
+        ticketPrice: Number(ticketPrice),
+        minimumQuotas: Number(minimumQuotas),
+        guaranteedPrize: toNumber(guaranteedPrize),
+        commissionPercent: meggaTax,
+        promotional: true,
+        prizes: prizes
+          .filter((p) => p.enabled)
+          .map((p) => ({
+            type: prizeTypeMap[p.id] ?? 'CONSOLACAO',
+            percentage: p.percentage,
+          })),
+      };
+
+      await api.post('/boloes', payload);
+      setMessage('Bolão criado com sucesso.');
+    } catch (error: any) {
+      setMessage(error?.response?.data?.message ?? 'Erro ao salvar bolão.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -56,18 +109,24 @@ export default function CreateBolaoClient() {
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
+          onClick={handleSave}
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95 disabled:opacity-60"
+          disabled={saving}
         >
-          Salvar rascunho
+          {saving ? 'Salvando...' : 'Salvar rascunho'}
         </button>
       </header>
+
+      {message && <p className="rounded-2xl bg-megga-navy/70 p-3 text-sm text-megga-lime">{message}</p>}
+
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm text-white/80">
             <span className="text-xs uppercase tracking-[0.3em] text-white/40">Nome do bolão</span>
             <input
               type="text"
-              defaultValue="Bolão de Maio"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 focus:border-megga-magenta focus:outline-none"
             />
           </label>
@@ -85,7 +144,8 @@ export default function CreateBolaoClient() {
             <span className="text-xs uppercase tracking-[0.3em] text-white/40">Valor da cota</span>
             <input
               type="number"
-              defaultValue={35}
+              value={ticketPrice}
+              onChange={(event) => setTicketPrice(Number(event.target.value))}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
             />
           </label>
@@ -93,7 +153,8 @@ export default function CreateBolaoClient() {
             <span className="text-xs uppercase tracking-[0.3em] text-white/40">Mínimo de cotas</span>
             <input
               type="number"
-              defaultValue={500}
+              value={minimumQuotas}
+              onChange={(event) => setMinimumQuotas(Number(event.target.value))}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
             />
           </label>
@@ -106,6 +167,7 @@ export default function CreateBolaoClient() {
           </p>
         </div>
       </section>
+
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <header className="space-y-2">
           <p className="text-xs uppercase tracking-[0.3em] text-white/50">Premiações</p>
@@ -135,9 +197,7 @@ export default function CreateBolaoClient() {
                 value={prize.percentage}
                 onChange={(event) =>
                   setPrizes((current) =>
-                    current.map((item) =>
-                      item.id === prize.id ? { ...item, percentage: Number(event.target.value) } : item,
-                    ),
+                    current.map((item) => (item.id === prize.id ? { ...item, percentage: Number(event.target.value) } : item)),
                   )
                 }
                 className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-white focus:border-megga-magenta focus:outline-none"
@@ -155,9 +215,11 @@ export default function CreateBolaoClient() {
           </button>
           <button
             type="button"
-            className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95"
+            onClick={handleSave}
+            className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-60"
+            disabled={saving}
           >
-            Salvar configurações
+            {saving ? 'Salvando...' : 'Salvar configurações'}
           </button>
         </div>
       </section>
