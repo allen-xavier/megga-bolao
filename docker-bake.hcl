@@ -8,7 +8,7 @@ group "default" {
 
 target "backend" {
   context    = "./backend"
-  dockerfile = "./backend/Dockerfile"
+  dockerfile = "Dockerfile"
   tags       = ["${REGISTRY}/megga-bolao-backend:latest"]
   platforms  = ["linux/amd64"]
   output     = ["type=registry"]
@@ -16,7 +16,7 @@ target "backend" {
 
 target "frontend" {
   context    = "./frontend"
-  dockerfile = "./frontend/Dockerfile"
+  dockerfile = "Dockerfile"
   tags       = ["${REGISTRY}/megga-bolao-frontend:latest"]
   platforms  = ["linux/amd64"]
   output     = ["type=registry"]
