@@ -3,39 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-type DrawerSection = {
-  title: string;
-  items: { label: string; href: string; description?: string }[];
-};
-
-const sections: DrawerSection[] = [
-  {
-    title: 'Bolões',
-    items: [
-      { label: 'Criar Bolão', href: '/admin/boloes/criar', description: 'Configure cotas, prêmios e taxa Megga.' },
-      { label: 'Bolões em Andamento', href: '/admin/boloes', description: 'Gerencie campanhas ativas e status.' },
-      { label: 'Bolões Encerrados', href: '/admin/boloes?filtro=encerrados', description: 'Consulte histórico e relatórios.' },
-    ],
-  },
-  {
-    title: 'Conta',
-    items: [
-      { label: 'Dashboard', href: '/admin', description: 'Resumo de premiações, saques e indicações.' },
-      { label: 'Usuários', href: '/admin/usuarios', description: 'Acompanhe cadastros e perfis verificados.' },
-      { label: 'SuitPay Config', href: '/admin/suitpay', description: 'Chaves, webhooks e limites automáticos.' },
-      { label: 'Config Afiliados', href: '/admin/afiliados', description: 'Defina comissões diretas e indiretas.' },
-    ],
-  },
-  {
-    title: 'Política',
-    items: [
-      { label: 'Termos e Condições', href: '/politica/termos' },
-      { label: 'Jogo Responsável', href: '/politica/jogo-responsavel' },
-      { label: 'Privacidade', href: '/politica/privacidade' },
-    ],
-  },
-];
+import { sections } from '@/components/nav-sections';
 
 interface AppDrawerProps {
   open: boolean;
@@ -71,7 +39,7 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm md:hidden">
       <button
         type="button"
         onClick={onClose}
@@ -107,9 +75,7 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
                       className="block rounded-2xl border border-white/5 bg-white/5 px-4 py-3 transition hover:border-megga-magenta/50 hover:bg-megga-purple/30"
                     >
                       <p className="text-sm font-medium">{item.label}</p>
-                      {item.description ? (
-                        <p className="mt-1 text-xs text-white/60">{item.description}</p>
-                      ) : null}
+                      {item.description ? <p className="mt-1 text-xs text-white/60">{item.description}</p> : null}
                     </Link>
                   </li>
                 ))}

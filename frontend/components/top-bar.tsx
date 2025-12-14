@@ -30,7 +30,7 @@ export function TopBar() {
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/70 transition hover:border-megga-magenta hover:text-white"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/70 transition hover:border-megga-magenta hover:text-white md:hidden"
             aria-label="Abrir menu"
           >
             <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
