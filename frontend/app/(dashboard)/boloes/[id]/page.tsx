@@ -4,6 +4,9 @@ import { BetsList } from '@/components/bets-list';
 import { PlaceBetForm } from '@/components/place-bet-form';
 import { TransparencyDownload } from '@/components/transparency-download';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getBolao(id: string) {
   try {
     const response = await api.get(`/boloes/${id}`);
