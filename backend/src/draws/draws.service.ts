@@ -155,10 +155,18 @@ export class DrawsService {
       total: getPrizeValue(PrizeType.LIGEIRINHO),
     };
 
+    const nextFutureBolao = await this.prisma.bolao.findFirst({
+      where: { startsAt: { gt: new Date() }, closedAt: null },
+      orderBy: { startsAt: "asc" },
+      select: { id: true },
+    });
+
+    const isPotAppliedHere = nextFutureBolao?.id === bolao.id;
+
     const senaWinners = hitsByBet.filter((b) => b.firstDrawHits === 6);
     const senaPrizeBase = getPrizeValue(PrizeType.SENA_PRIMEIRO);
     let senaPotAmount = Number(senaPot.amount);
-    let senaTotal = senaPrizeBase + senaPotAmount;
+    let senaTotal = senaPrizeBase + (isPotAppliedHere ? senaPotAmount : 0);
     if (senaWinners.length === 0) {
       senaPotAmount += senaPrizeBase * 0.8;
       senaTotal = 0;
@@ -223,7 +231,7 @@ export class DrawsService {
 
       await tx.senaPot.upsert({
         where: { id: "global" },
-        update: { amount: senaPotAmount },
+        update: { amount: isPotAppliedHere && senaTotal > 0 ? 0 : senaPotAmount },
         create: { id: "global", amount: senaPotAmount },
       });
     });
