@@ -152,8 +152,8 @@ export class BoloesService {
     const liveResults: any[] = [];
 
     // LIGEIRINHO: maior numero de acertos no primeiro sorteio
-    const maxFirst = Math.max(...hitsByBet.map((h) => h.firstHits));
-    const ligeirinho = hitsByBet.filter((h) => h.firstHits === maxFirst && maxFirst > 0);
+    const maxFirst = Math.max(...hitsByBet.map((h: { firstHits: number }) => h.firstHits));
+    const ligeirinho = hitsByBet.filter((h: { firstHits: number }) => h.firstHits === maxFirst && maxFirst > 0);
     if (ligeirinho.length > 0) {
       const total = getPrizeValue("LIGEIRINHO");
       if (total > 0) {
@@ -161,7 +161,7 @@ export class BoloesService {
         liveResults.push({
           prizeType: "LIGEIRINHO",
           totalValue: total,
-          winners: ligeirinho.map((h) => ({
+          winners: ligeirinho.map((h: any) => ({
             bet: h.bet,
             user: h.bet.user,
             amount: perWinner,
@@ -172,7 +172,7 @@ export class BoloesService {
     }
 
     // SENA_PRIMEIRO: acertou 6 no primeiro sorteio
-    const senaPrimeiro = hitsByBet.filter((h) => h.firstHits === 6);
+    const senaPrimeiro = hitsByBet.filter((h: { firstHits: number }) => h.firstHits === 6);
     if (senaPrimeiro.length > 0) {
       const total = getPrizeValue("SENA_PRIMEIRO");
       if (total > 0) {
@@ -180,7 +180,7 @@ export class BoloesService {
         liveResults.push({
           prizeType: "SENA_PRIMEIRO",
           totalValue: total,
-          winners: senaPrimeiro.map((h) => ({
+          winners: senaPrimeiro.map((h: any) => ({
             bet: h.bet,
             user: h.bet.user,
             amount: perWinner,
