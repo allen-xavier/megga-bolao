@@ -65,6 +65,15 @@ run_migrations() {
   local max_attempts=${1:-5}
   local sleep_seconds=${2:-5}
 
+  # Clean failed migrations (P3009) so we can reapply with fixed SQL
+  if command -v psql >/dev/null 2>&1; then
+    psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" <<'SQL' || true
+DELETE FROM "_prisma_migrations"
+WHERE migration_name IN ('20251215_results_and_sena_pot', '20251215_affiliate_config')
+  AND finished_at IS NULL;
+SQL
+  fi
+
   echo "[backend] Running database migrations..."
   while (( attempt <= max_attempts )); do
     if npx prisma migrate deploy; then
