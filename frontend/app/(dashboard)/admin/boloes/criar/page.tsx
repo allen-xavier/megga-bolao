@@ -1,9 +1,10 @@
-import CreateBolaoClient from './client';
+import { Suspense } from "react";
+import CreateBolaoClient from "./client";
 
-export const metadata = {
-  title: 'Criar Bolão - Admin Megga Bolão',
-};
-
-export default function CreateBolaoPage() {
-  return <CreateBolaoClient />;
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="p-4 text-sm text-white/70">Carregando...</div>}>
+      <CreateBolaoClient />
+    </Suspense>
+  );
 }
