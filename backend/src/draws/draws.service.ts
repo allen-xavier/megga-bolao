@@ -103,13 +103,18 @@ export class DrawsService {
       (await this.prisma.senaPot.findUnique({ where: { id: "global" } })) ||
       (await this.prisma.senaPot.create({ data: { id: "global", amount: 0 } }));
 
+    const totalCollected = (bolao.bets.length || 0) * Number(bolao.ticketPrice ?? 0);
+    const commissionPercent = Number(bolao.commissionPercent ?? 0);
+    const netPool = totalCollected * (1 - commissionPercent / 100);
+    const prizePool = Math.max(Number(bolao.guaranteedPrize ?? 0), netPool);
+
     const getPrizeValue = (type: PrizeType) => {
       const prize = bolao.prizes.find((p) => p.type === type);
       if (!prize) return 0;
       const fixed = Number(prize.fixedValue ?? 0);
       const pct = Number(prize.percentage ?? 0);
       if (fixed > 0) return fixed;
-      return (pct / 100) * Number(bolao.guaranteedPrize ?? 0);
+      return (pct / 100) * prizePool;
     };
 
     const winners: Record<string, { bets: typeof hitsByBet; total: number }> = {} as any;
