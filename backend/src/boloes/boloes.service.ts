@@ -54,11 +54,12 @@ export class BoloesService {
       select: { id: true },
     });
     const senaPotApplied = potTarget?.id === bolao.id ? Number(senaPot?.amount ?? 0) : 0;
+    const senaPotVisible = senaPotApplied;
     const livePrizes = !bolao.closedAt ? this.computeLivePrizes(bolao) : [];
 
     return {
       ...bolao,
-      senaPot: senaPot?.amount ?? 0,
+      senaPot: senaPotVisible,
       senaPotApplied,
       livePrizes,
     };

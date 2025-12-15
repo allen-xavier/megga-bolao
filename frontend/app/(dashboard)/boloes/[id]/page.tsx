@@ -50,7 +50,6 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const latestResult = bolao.bolaoResults?.[0] ?? null;
   const prizeResults = latestResult?.prizes ?? [];
   const livePrizes = bolao.livePrizes ?? [];
-  const senaPot = Number(bolao.senaPot ?? 0);
   const senaPotApplied = Number(bolao.senaPotApplied ?? 0);
   const ticketPrice = Number(bolao.ticketPrice ?? 0);
   const hasTransparency = Boolean(bolao.transparency);
@@ -117,10 +116,10 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                   </p>
                 )}
               </div>
-              {!isClosed && senaPot > 0 && (
+              {!isClosed && senaPotApplied > 0 && (
                 <div className="rounded-2xl bg-white/10 px-5 py-4 text-right shadow ring-1 ring-megga-purple/40">
                   <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Sena acumulada</p>
-                  <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(senaPot)}</p>
+                  <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(senaPotApplied)}</p>
                 </div>
               )}
             </div>
@@ -166,7 +165,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                   const pct = Number(prize.percentage ?? 0);
                   const pctShare = totalPct > 0 ? pct / totalPct : 0;
                   const baseValue = fixed + variablePool * pctShare;
-                  const bonus = prize.type === 'SENA_PRIMEIRO' ? (senaPot > 0 ? senaPot : 0) : 0;
+                  const bonus = prize.type === 'SENA_PRIMEIRO' ? (senaPotApplied > 0 ? senaPotApplied : 0) : 0;
                   const totalValue = baseValue + bonus;
 
                   if (bonus > 0) {
