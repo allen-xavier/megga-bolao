@@ -35,6 +35,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const prizeResults = latestResult?.prizes ?? [];
   const livePrizes = bolao.livePrizes ?? [];
   const senaPot = Number(bolao.senaPot ?? 0);
+  const senaPotApplied = Number(bolao.senaPotApplied ?? 0);
   const ticketPrice = Number(bolao.ticketPrice ?? 0);
   const hasTransparency = Boolean(bolao.transparency);
   const draws = bolao.draws ?? [];
@@ -61,6 +62,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const totalFixed = prizes.reduce((acc: number, p: any) => acc + Number(p.fixedValue ?? 0), 0);
   const totalPct = prizes.reduce((acc: number, p: any) => acc + Number(p.percentage ?? 0), 0);
   const variablePool = Math.max(prizePool - totalFixed, 0);
+  const displayTotal = prizePool + senaPotApplied;
 
   return (
     <div className="space-y-6">
@@ -92,7 +94,12 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
               </div>
               <div className="rounded-2xl bg-megga-lime/20 px-5 py-4 text-right shadow ring-1 ring-megga-lime/40">
                 <p className="text-[11px] uppercase tracking-[0.3em] text-megga-lime/80">Premiacao total</p>
-                <p className="mt-2 text-2xl font-semibold text-megga-lime">R$ {formatCurrency(prizePool)}</p>
+                <p className="mt-2 text-2xl font-semibold text-megga-lime">R$ {formatCurrency(displayTotal)}</p>
+                {senaPotApplied > 0 && (
+                  <p className="text-[11px] text-white/70">
+                    (Base R$ {formatCurrency(prizePool)} + Sena acumulada R$ {formatCurrency(senaPotApplied)})
+                  </p>
+                )}
               </div>
               {!isClosed && senaPot > 0 && (
                 <div className="rounded-2xl bg-white/10 px-5 py-4 text-right shadow ring-1 ring-megga-purple/40">
