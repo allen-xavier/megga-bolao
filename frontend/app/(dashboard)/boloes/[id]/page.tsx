@@ -55,8 +55,14 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const totalCollected = (bolao.bets?.length ?? 0) * Number(bolao.ticketPrice ?? 0);
   const commissionPercent = Number(bolao.commissionPercent ?? 0);
   const netPool = totalCollected * (1 - commissionPercent / 100);
+  const prizes = bolao.prizes ?? [];
+  const totalPct = prizes.reduce((acc: number, p: any) => acc + Number(p.percentage ?? 0), 0);
+  const totalFixed = prizes.reduce((acc: number, p: any) => acc + Number(p.fixedValue ?? 0), 0);
   const guaranteedPrize = Number(bolao.guaranteedPrize ?? 0);
-  const prizePool = Math.max(guaranteedPrize, netPool);
+  const prizePool =
+    totalPct > 0
+      ? Math.max(netPool, (Math.max(guaranteedPrize - totalFixed, 0)) / (totalPct / 100))
+      : Math.max(netPool, guaranteedPrize - totalFixed);
 
   return (
     <div className="space-y-6">
@@ -130,13 +136,20 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
               <div>
                 <p className="font-medium text-white">{prize.type}</p>
                 <p className="text-xs text-white/60">Premiacao prevista</p>
+                {prize.type === 'SENA_PRIMEIRO' && senaPot > 0 && (
+                  <p className="text-[11px] text-megga-yellow/90">
+                    Inclui R$ {formatCurrency(senaPot)} de sena acumulada
+                  </p>
+                )}
               </div>
               <span className="text-sm font-semibold text-megga-yellow">
                 {(() => {
                   const fixed = Number(prize.fixedValue ?? 0);
                   const pct = Number(prize.percentage ?? 0);
-                  const value = fixed > 0 ? fixed : pct > 0 ? (pct / 100) * prizePool : 0;
-                  return `R$ ${formatCurrency(value)}`;
+                  const baseValue = fixed > 0 ? fixed : pct > 0 ? (pct / 100) * prizePool : 0;
+                  const displayValue =
+                    prize.type === 'SENA_PRIMEIRO' ? baseValue + (senaPot > 0 ? senaPot : 0) : baseValue;
+                  return `R$ ${formatCurrency(displayValue)}`;
                 })()}
               </span>
             </li>
