@@ -119,12 +119,14 @@ export class DrawsService {
     const prizePool = Math.max(netPool, guaranteedPrize);
 
     const getPrizeValue = (type: PrizeType) => {
-      const prize = bolao.prizes.find((p) => p.type === type);
+      const prizes = bolao.prizes ?? [];
+      const prize = prizes.find((p) => p.type === type);
       if (!prize) return 0;
-      const fixed = Number(prize.fixedValue ?? 0);
-      const pct = Number(prize.percentage ?? 0);
-      if (fixed > 0) return fixed;
-      return (pct / 100) * prizePool;
+      const totalFixed = prizes.reduce((acc, p) => acc + Number(p.fixedValue ?? 0), 0);
+      const totalPct = prizes.reduce((acc, p) => acc + Number(p.percentage ?? 0), 0);
+      const variablePool = Math.max(prizePool - totalFixed, 0);
+      const pctShare = totalPct > 0 ? Number(prize.percentage ?? 0) / totalPct : 0;
+      return Number(prize.fixedValue ?? 0) + variablePool * pctShare;
     };
 
     const winners: Record<string, { bets: typeof hitsByBet; total: number }> = {} as any;

@@ -57,6 +57,10 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const netPool = totalCollected * (1 - commissionPercent / 100);
   const guaranteedPrize = Number(bolao.guaranteedPrize ?? 0);
   const prizePool = Math.max(guaranteedPrize, netPool);
+  const prizes = bolao.prizes ?? [];
+  const totalFixed = prizes.reduce((acc: number, p: any) => acc + Number(p.fixedValue ?? 0), 0);
+  const totalPct = prizes.reduce((acc: number, p: any) => acc + Number(p.percentage ?? 0), 0);
+  const variablePool = Math.max(prizePool - totalFixed, 0);
 
   return (
     <div className="space-y-6">
@@ -135,7 +139,8 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                 {(() => {
                   const fixed = Number(prize.fixedValue ?? 0);
                   const pct = Number(prize.percentage ?? 0);
-                  const baseValue = fixed > 0 ? fixed : pct > 0 ? (pct / 100) * prizePool : 0;
+                  const pctShare = totalPct > 0 ? pct / totalPct : 0;
+                  const baseValue = fixed + variablePool * pctShare;
                   const bonus = prize.type === 'SENA_PRIMEIRO' ? (senaPot > 0 ? senaPot : 0) : 0;
                   const totalValue = baseValue + bonus;
 
@@ -209,7 +214,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
         </section>
       )}
 
-      {isClosed && prizeResults.length > 0 && (
+          {isClosed && prizeResults.length > 0 && (
         <section className="space-y-4 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
           <header>
             <h2 className="text-lg font-semibold">Resultados e ganhadores</h2>
