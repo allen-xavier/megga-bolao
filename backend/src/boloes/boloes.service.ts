@@ -48,11 +48,18 @@ export class BoloesService {
     if (!bolao) return null;
 
     const senaPot = await this.prisma.senaPot.findUnique({ where: { id: "global" } });
+    const potTarget = await this.prisma.bolao.findFirst({
+      where: { closedAt: null },
+      orderBy: { startsAt: "asc" },
+      select: { id: true },
+    });
+    const senaPotApplied = potTarget?.id === bolao.id ? Number(senaPot?.amount ?? 0) : 0;
     const livePrizes = !bolao.closedAt ? this.computeLivePrizes(bolao) : [];
 
     return {
       ...bolao,
       senaPot: senaPot?.amount ?? 0,
+      senaPotApplied,
       livePrizes,
     };
   }

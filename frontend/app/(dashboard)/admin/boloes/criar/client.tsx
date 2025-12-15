@@ -1,8 +1,9 @@
-'use client';
+﻿"use client";
 
-import { useMemo, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { api } from '@/lib/api';
+import { useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface PrizeOption {
   id: string;
@@ -13,37 +14,41 @@ interface PrizeOption {
 }
 
 const basePrizes: PrizeOption[] = [
-  { id: 'pe-quente', name: 'Pé Quente', description: 'Ganha quem acertar 10 números primeiro', percentage: 40, enabled: true },
-  { id: 'pe-frio', name: 'Pé Frio', description: 'Ganha quem acertar menos números no final', percentage: 12, enabled: true },
-  { id: 'consolacao', name: 'Consolação', description: 'Ganha quem ficar com 9 acertos no final', percentage: 8, enabled: true },
-  { id: 'sena', name: 'Sena 1º Sorteio', description: 'Ganha quem completar 6 acertos no primeiro sorteio', percentage: 10, enabled: true },
-  { id: 'ligeirinho', name: 'Ligeirinho', description: 'Ganha quem fizer mais acertos no primeiro sorteio', percentage: 5, enabled: true },
-  { id: 'oito', name: '8 acertos', description: 'Ganha quem finalizar com 8 acertos', percentage: 8, enabled: true },
-  { id: 'indicacao', name: 'Indique e Ganhe', description: 'Comissão direta e indireta', percentage: 3, enabled: true },
+  { id: "pe-quente", name: "Pe Quente", description: "Ganha quem acertar 10 numeros primeiro", percentage: 40, enabled: true },
+  { id: "pe-frio", name: "Pe Frio", description: "Ganha quem acertar menos numeros no final", percentage: 12, enabled: true },
+  { id: "consolacao", name: "Consolacao", description: "Ganha quem ficar com 9 acertos no final", percentage: 8, enabled: true },
+  { id: "sena", name: "Sena 1o Sorteio", description: "Ganha quem completar 6 acertos no primeiro sorteio", percentage: 10, enabled: true },
+  { id: "ligeirinho", name: "Ligeirinho", description: "Ganha quem fizer mais acertos no primeiro sorteio", percentage: 5, enabled: true },
+  { id: "oito", name: "8 acertos", description: "Ganha quem finalizar com 8 acertos", percentage: 8, enabled: true },
+  { id: "indicacao", name: "Indique e Ganhe", description: "Comissao direta e indireta", percentage: 3, enabled: true },
 ];
 
 const prizeTypeMap: Record<string, string> = {
-  'pe-quente': 'PE_QUENTE',
-  'pe-frio': 'PE_FRIO',
-  consolacao: 'CONSOLACAO',
-  sena: 'SENA_PRIMEIRO',
-  ligeirinho: 'LIGEIRINHO',
-  oito: 'OITO_ACERTOS',
-  indicacao: 'INDICACAO_DIRETA',
+  "pe-quente": "PE_QUENTE",
+  "pe-frio": "PE_FRIO",
+  consolacao: "CONSOLACAO",
+  sena: "SENA_PRIMEIRO",
+  ligeirinho: "LIGEIRINHO",
+  oito: "OITO_ACERTOS",
+  indicacao: "INDICACAO_DIRETA",
 };
 
 const toNumber = (value: string | number) => {
-  if (typeof value === 'number') return value;
-  const normalized = value.replace(/\./g, '').replace(',', '.');
+  if (typeof value === "number") return value;
+  const normalized = value.replace(/\./g, "").replace(",", ".");
   const parsed = Number(normalized);
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 
 export default function CreateBolaoClient() {
   const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const bolaoId = searchParams.get("id");
+
   const [prizes, setPrizes] = useState<PrizeOption[]>(() => basePrizes.map((prize) => ({ ...prize })));
-  const [guaranteedPrize, setGuaranteedPrize] = useState('10000,00');
-  const [name, setName] = useState('Bolão Promocional');
+  const [guaranteedPrize, setGuaranteedPrize] = useState("10000,00");
+  const [name, setName] = useState("Bolao Promocional");
   const [startsAt, setStartsAt] = useState(() => {
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
     return tomorrow.toISOString().slice(0, 16); // datetime-local format
@@ -51,6 +56,7 @@ export default function CreateBolaoClient() {
   const [ticketPrice, setTicketPrice] = useState(35);
   const [minimumQuotas, setMinimumQuotas] = useState(500);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const { totalPercentage, meggaTax } = useMemo(() => {
@@ -81,8 +87,8 @@ export default function CreateBolaoClient() {
       setSaving(true);
       setMessage(null);
 
-      if (status !== 'authenticated' || !session?.user?.accessToken) {
-        throw new Error('Faça login como administrador para salvar.');
+      if (status !== "authenticated" || !session?.user?.accessToken) {
+        throw new Error("Faca login como administrador para salvar.");
       }
 
       const payload = {
@@ -96,25 +102,59 @@ export default function CreateBolaoClient() {
         prizes: prizes
           .filter((p) => p.enabled)
           .map((p) => ({
-            type: prizeTypeMap[p.id] ?? 'CONSOLACAO',
+            type: prizeTypeMap[p.id] ?? "CONSOLACAO",
             percentage: p.percentage,
           })),
       };
 
-      await api.post('/boloes', payload, {
+      await api.post("/boloes", payload, {
         headers: {
           Authorization: `Bearer ${session.user.accessToken}`,
         },
       });
-      setMessage('Bolão criado com sucesso.');
+      setMessage("Bolao criado com sucesso.");
     } catch (error: any) {
       const backendMessage =
         error?.response?.data?.message ||
         error?.message ||
-        (typeof error === 'string' ? error : null);
-      setMessage(backendMessage ? String(backendMessage) : 'Erro ao salvar bolão.');
+        (typeof error === "string" ? error : null);
+      setMessage(backendMessage ? String(backendMessage) : "Erro ao salvar bolao.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!bolaoId) {
+      setMessage("Nenhum bolao selecionado para excluir.");
+      return;
+    }
+    if (!confirm("Tem certeza que deseja excluir este bolao?")) {
+      return;
+    }
+    try {
+      setDeleting(true);
+      setMessage(null);
+
+      if (status !== "authenticated" || !session?.user?.accessToken) {
+        throw new Error("Faca login como administrador para excluir.");
+      }
+
+      await api.delete(`/boloes/${bolaoId}`, {
+        headers: {
+          Authorization: `Bearer ${session.user.accessToken}`,
+        },
+      });
+      setMessage("Bolao excluido com sucesso.");
+      router.push("/admin/boloes");
+    } catch (error: any) {
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        (typeof error === "string" ? error : null);
+      setMessage(backendMessage ? String(backendMessage) : "Erro ao excluir bolao.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -122,8 +162,8 @@ export default function CreateBolaoClient() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Novo bolão</p>
-          <h1 className="text-2xl font-semibold">Criar bolão promocional</h1>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">{bolaoId ? "Editar bolao" : "Novo bolao"}</p>
+          <h1 className="text-2xl font-semibold">{bolaoId ? "Editar bolao" : "Criar bolao promocional"}</h1>
         </div>
         <button
           type="button"
@@ -131,7 +171,7 @@ export default function CreateBolaoClient() {
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95 disabled:opacity-60"
           disabled={saving}
         >
-          {saving ? 'Salvando...' : 'Salvar rascunho'}
+          {saving ? "Salvando..." : "Salvar"}
         </button>
       </header>
 
@@ -140,7 +180,7 @@ export default function CreateBolaoClient() {
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm text-white/80">
-            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Nome do bolão</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Nome do bolao</span>
             <input
               type="text"
               value={name}
@@ -149,14 +189,14 @@ export default function CreateBolaoClient() {
             />
           </label>
           <label className="space-y-2 text-sm text-white/80">
-            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Premiação garantida</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Premiacao garantida</span>
             <input
               type="text"
               value={guaranteedPrize}
               onChange={(event) => setGuaranteedPrize(event.target.value)}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
             />
-            <span className="text-xs text-white/60">Valor mínimo garantido. Só entra na conta após superar o arrecadado.</span>
+            <span className="text-xs text-white/60">Valor minimo garantido. So entra na conta apos superar o arrecadado.</span>
           </label>
           <label className="space-y-2 text-sm text-white/80">
             <span className="text-xs uppercase tracking-[0.3em] text-white/40">Valor da cota</span>
@@ -168,7 +208,7 @@ export default function CreateBolaoClient() {
             />
           </label>
           <label className="space-y-2 text-sm text-white/80">
-            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Mínimo de cotas</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Minimo de cotas</span>
             <input
               type="number"
               value={minimumQuotas}
@@ -177,7 +217,7 @@ export default function CreateBolaoClient() {
             />
           </label>
           <label className="space-y-2 text-sm text-white/80">
-            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Data de início</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Data de inicio</span>
             <input
               type="datetime-local"
               value={startsAt}
@@ -188,18 +228,18 @@ export default function CreateBolaoClient() {
         </div>
         <div className="rounded-2xl bg-white/5 p-4 text-sm text-white/80">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Resumo financeiro</p>
-          <p className="mt-2 text-base font-semibold text-megga-yellow">{totalPercentage}% destinado a prêmios</p>
+          <p className="mt-2 text-base font-semibold text-megga-yellow">{totalPercentage}% destinado a premios</p>
           <p className="text-xs text-white/60">
-            A Taxa Megga atual é de <span className="font-semibold text-megga-yellow">{meggaTax}%</span>. Ajuste as premiações para não exceder o arrecadado.
+            A Taxa Megga atual e de <span className="font-semibold text-megga-yellow">{meggaTax}%</span>. Ajuste as premiacoes para nao exceder o arrecadado.
           </p>
         </div>
       </section>
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <header className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Premiações</p>
-          <h2 className="text-xl font-semibold">Percentuais configuráveis</h2>
-          <p className="text-sm text-white/60">Ative ou desative prêmios conforme a estratégia do bolão.</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Premiacoes</p>
+          <h2 className="text-xl font-semibold">Percentuais configuraveis</h2>
+          <p className="text-sm text-white/60">Ative ou desative premios conforme a estrategia do bolao.</p>
         </header>
         <div className="grid gap-4 md:grid-cols-2">
           {prizes.map((prize) => (
@@ -238,7 +278,7 @@ export default function CreateBolaoClient() {
             onClick={resetPrizes}
             className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
           >
-            Restaurar padrão
+            Restaurar padrao
           </button>
           <button
             type="button"
@@ -246,9 +286,21 @@ export default function CreateBolaoClient() {
             className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-60"
             disabled={saving}
           >
-            {saving ? 'Salvando...' : 'Salvar configurações'}
+            {saving ? "Salvando..." : "Salvar configuracoes"}
           </button>
         </div>
+        {bolaoId && (
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="rounded-2xl border border-red-400/60 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-500/10 disabled:opacity-60"
+              disabled={deleting}
+            >
+              {deleting ? "Excluindo..." : "Excluir bolao"}
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

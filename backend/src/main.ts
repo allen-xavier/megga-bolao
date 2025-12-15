@@ -5,6 +5,9 @@ import { AppModule } from './app.module';
 import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
+  // Garante fuso horário de São Paulo para toda a aplicação Node
+  process.env.TZ = 'America/Sao_Paulo';
+
   const app = await NestFactory.create(AppModule, { cors: false });
 
   // Log básico de requests para facilitar diagnóstico em produção

@@ -158,13 +158,13 @@ export class DrawsService {
       total: getPrizeValue(PrizeType.LIGEIRINHO),
     };
 
-    const nextFutureBolao = await this.prisma.bolao.findFirst({
-      where: { startsAt: { gt: new Date() }, closedAt: null },
+    const potTargetBolao = await this.prisma.bolao.findFirst({
+      where: { closedAt: null },
       orderBy: { startsAt: "asc" },
       select: { id: true },
     });
 
-    const isPotAppliedHere = nextFutureBolao?.id === bolao.id;
+    const isPotAppliedHere = potTargetBolao?.id === bolao.id;
 
     const senaWinners = hitsByBet.filter((b) => b.firstDrawHits === 6);
     const senaPrizeBase = getPrizeValue(PrizeType.SENA_PRIMEIRO);
