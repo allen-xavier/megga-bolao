@@ -40,6 +40,32 @@ export class UsersService {
     return this.toSafeUser(updated);
   }
 
+  async findPrizesForUser(userId: string) {
+    const prizes = await this.prisma.prizeResultWinner.findMany({
+      where: { userId },
+      include: {
+        prizeResult: {
+          include: {
+            bolaoResult: {
+              include: { bolao: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return prizes.map((item) => ({
+      id: item.id,
+      amount: item.amount,
+      prizeType: item.prizeResult.prizeType,
+      bolaoId: item.prizeResult.bolaoResult.bolaoId,
+      bolaoName: item.prizeResult.bolaoResult.bolao.name,
+      closedAt: item.prizeResult.bolaoResult.closedAt,
+      createdAt: item.createdAt,
+    }));
+  }
+
   private toSafeUser(user: any) {
     const { passwordHash, ...safe } = user;
     return safe;

@@ -44,6 +44,13 @@ export class BetsService {
         throw new BadRequestException('Saldo insuficiente para realizar a aposta');
       }
 
+      // Affiliate config (singleton)
+      const affiliateConfig =
+        (await tx.affiliateConfig.findUnique({ where: { id: 'global' } })) ||
+        (await tx.affiliateConfig.create({
+          data: { id: 'global', firstLevelPercent: 2, secondLevelPercent: 1, firstBetBonus: 0 },
+        }));
+
       const transparency = await this.transparency.ensureRecord(tx, bolao.id);
 
       const updatedWallet = await tx.wallet.update({
@@ -64,18 +71,84 @@ export class BetsService {
         },
       });
 
-        const bet = (await tx.bet.create({
-          data: {
-            bolaoId,
-            userId,
-            numbers,
-            isSurprise: dto.isSurprise ?? false,
-            transparencyId: transparency.id,
-          },
-          include: {
-            user: { select: { fullName: true, city: true, state: true } },
-          },
-        })) as BetWithUser;
+      const bet = (await tx.bet.create({
+        data: {
+          bolaoId,
+          userId,
+          numbers,
+          isSurprise: dto.isSurprise ?? false,
+          transparencyId: transparency.id,
+        },
+        include: {
+          user: { select: { fullName: true, city: true, state: true } },
+        },
+      })) as BetWithUser;
+
+      // Affiliate commissions and bonus
+      const directRef = await tx.referral.findUnique({ where: { referredUserId: userId } });
+      if (directRef) {
+        const commission1 = (Number(affiliateConfig.firstLevelPercent) / 100) * ticketPrice;
+        if (commission1 > 0) {
+          await tx.wallet.update({
+            where: { userId: directRef.userId },
+            data: {
+              balance: { increment: commission1 },
+              statements: {
+                create: {
+                  amount: commission1,
+                  description: `Comissão direta pela aposta de ${bet.user.fullName}`,
+                  type: PaymentType.COMMISSION,
+                  referenceId: bet.id,
+                },
+              },
+            },
+          });
+        }
+
+        // Indirect (level 2)
+        const indirectRef = await tx.referral.findUnique({ where: { referredUserId: directRef.userId } });
+        if (indirectRef) {
+          const commission2 = (Number(affiliateConfig.secondLevelPercent) / 100) * ticketPrice;
+          if (commission2 > 0) {
+            await tx.wallet.update({
+              where: { userId: indirectRef.userId },
+              data: {
+                balance: { increment: commission2 },
+                statements: {
+                  create: {
+                    amount: commission2,
+                    description: `Comissão indireta pela aposta de ${bet.user.fullName}`,
+                    type: PaymentType.COMMISSION,
+                    referenceId: bet.id,
+                  },
+                },
+              },
+            });
+          }
+        }
+
+        // Bonus first bet for direct referrer
+        const previousBets = await tx.bet.count({ where: { userId } });
+        if (previousBets === 0) {
+          const bonus = Number(affiliateConfig.firstBetBonus ?? 0);
+          if (bonus > 0) {
+            await tx.wallet.update({
+              where: { userId: directRef.userId },
+              data: {
+                balance: { increment: bonus },
+                statements: {
+                  create: {
+                    amount: bonus,
+                    description: `Bônus pela primeira aposta de ${bet.user.fullName}`,
+                    type: PaymentType.COMMISSION,
+                    referenceId: bet.id,
+                  },
+                },
+              },
+            });
+          }
+        }
+      }
 
       return { bet, wallet: updatedWallet, transparency };
     });

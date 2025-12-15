@@ -62,21 +62,17 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
               </p>
               <p className="text-xs uppercase tracking-[0.24em] text-white/40">Dias oficiais: terça, quinta e sábado</p>
             </div>
-            <div className="rounded-2xl bg-gradient-to-br from-megga-magenta via-megga-purple to-megga-teal px-5 py-4 text-right shadow">
-              <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Valor da cota</p>
-              <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(ticketPrice)}</p>
+            <div className="flex flex-wrap gap-3">
+              <div className="rounded-2xl bg-gradient-to-br from-megga-magenta via-megga-purple to-megga-teal px-5 py-4 text-right shadow">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Valor da cota</p>
+                <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(ticketPrice)}</p>
+              </div>
+              <div className="rounded-2xl bg-megga-lime/20 px-5 py-4 text-right shadow ring-1 ring-megga-lime/40">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-megga-lime/80">Premiação total</p>
+                <p className="mt-2 text-2xl font-semibold text-megga-lime">R$ {formatCurrency(guaranteedPrize)}</p>
+              </div>
             </div>
           </header>
-          <div className="grid grid-cols-1 gap-3 text-xs uppercase tracking-[0.28em] text-white/60 sm:grid-cols-2">
-            <div className="rounded-2xl bg-white/5 px-4 py-3">
-              <span className="text-white/40">Premiação total</span>
-              <p className="mt-2 text-lg font-semibold text-megga-yellow">R$ {formatCurrency(guaranteedPrize)}</p>
-            </div>
-            <div className="rounded-2xl bg-white/5 px-4 py-3">
-              <span className="text-white/40">Valor da cota</span>
-              <p className="mt-2 text-lg font-semibold text-white">R$ {formatCurrency(ticketPrice)}</p>
-            </div>
-          </div>
           <nav className="grid grid-cols-4 gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
             <a href="#apostar" className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70 hover:bg-megga-purple/30">
               Apostar

@@ -3,6 +3,8 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { UserProfile } from './entities/user.entity';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -26,5 +28,10 @@ export class UsersController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.update(id, dto);
+  }
+
+  @Get('me/prizes')
+  mePrizes(@CurrentUser() user: UserProfile) {
+    return this.usersService.findPrizesForUser(user.id);
   }
 }
