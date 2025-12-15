@@ -41,6 +41,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
         .filter((value: number) => Number.isFinite(value)),
     ),
   );
+  const guaranteedPrize = Number(bolao.guaranteedPrize ?? 0);
 
   return (
     <div className="space-y-6">
@@ -66,14 +67,14 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
               <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(ticketPrice)}</p>
             </div>
           </header>
-          <div className="grid grid-cols-2 gap-3 text-xs uppercase tracking-[0.28em] text-white/60">
+          <div className="grid grid-cols-1 gap-3 text-xs uppercase tracking-[0.28em] text-white/60 sm:grid-cols-2">
             <div className="rounded-2xl bg-white/5 px-4 py-3">
-              <span className="text-white/40">Cotas mínimas</span>
-              <p className="mt-2 text-lg font-semibold text-white">{bolao.minimumQuotas}</p>
+              <span className="text-white/40">Premiação total</span>
+              <p className="mt-2 text-lg font-semibold text-megga-yellow">R$ {formatCurrency(guaranteedPrize)}</p>
             </div>
             <div className="rounded-2xl bg-white/5 px-4 py-3">
-              <span className="text-white/40">Promoção</span>
-              <p className="mt-2 text-lg font-semibold text-white">{bolao.promotional ? 'Ativa' : 'Padrão'}</p>
+              <span className="text-white/40">Valor da cota</span>
+              <p className="mt-2 text-lg font-semibold text-white">R$ {formatCurrency(ticketPrice)}</p>
             </div>
           </div>
           <nav className="grid grid-cols-4 gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
@@ -100,7 +101,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
       <section id="premiacoes" className="space-y-4 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
         <header>
           <h2 className="text-lg font-semibold">Premiações</h2>
-          <p className="text-sm text-white/60">Distribuição configurada para este bolão.</p>
+          <p className="text-sm text-white/60">Distribuição configurada para este bolão (valores calculados).</p>
         </header>
         <ul className="space-y-3">
           {bolao.prizes?.map((prize: any) => (
@@ -110,9 +111,17 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                 <p className="text-xs text-white/60">Premiação prevista</p>
               </div>
               <span className="text-sm font-semibold text-megga-yellow">
-                {prize.percentage
-                  ? `${Number(prize.percentage).toFixed(2)}%`
-                  : `R$ ${formatCurrency(Number(prize.fixedValue ?? 0))}`}
+                {(() => {
+                  const fixed = Number(prize.fixedValue ?? 0);
+                  const pct = Number(prize.percentage ?? 0);
+                  const value =
+                    fixed > 0
+                      ? fixed
+                      : pct > 0
+                        ? (pct / 100) * guaranteedPrize
+                        : 0;
+                  return `R$ ${formatCurrency(value)}`;
+                })()}
               </span>
             </li>
           ))}
