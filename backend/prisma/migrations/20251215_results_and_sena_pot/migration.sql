@@ -1,13 +1,15 @@
 -- Results and sena pot
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE "BolaoResult" (
-  "id" TEXT PRIMARY KEY DEFAULT cuid(),
+  "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
   "bolaoId" TEXT NOT NULL,
   "closedAt" TIMESTAMP NOT NULL,
   "createdAt" TIMESTAMP NOT NULL DEFAULT now()
 );
 
 CREATE TABLE "PrizeResult" (
-  "id" TEXT PRIMARY KEY DEFAULT cuid(),
+  "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
   "bolaoResultId" TEXT NOT NULL,
   "prizeType" TEXT NOT NULL,
   "totalValue" DECIMAL(12,2) NOT NULL,
@@ -15,7 +17,7 @@ CREATE TABLE "PrizeResult" (
 );
 
 CREATE TABLE "PrizeResultWinner" (
-  "id" TEXT PRIMARY KEY DEFAULT cuid(),
+  "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
   "prizeResultId" TEXT NOT NULL,
   "betId" TEXT NOT NULL,
   "userId" TEXT NOT NULL,

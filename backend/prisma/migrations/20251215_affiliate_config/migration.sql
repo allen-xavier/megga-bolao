@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE "AffiliateConfig" (
   "id" TEXT PRIMARY KEY,
   "firstLevelPercent" DECIMAL(5,2) NOT NULL DEFAULT 2.0,
