@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+ï»¿import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
 import { BetsList } from "@/components/bets-list";
 import { PlaceBetForm } from "@/components/place-bet-form";
@@ -176,7 +176,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                           <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
                           {winner.bet?.numbers && (
                             <p className="text-xs text-white/60">
-                              Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" · ")} • {winner.hits} acertos
+                              Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" Â· ")} â€¢ {winner.hits} acertos
                             </p>
                           )}
                         </div>
@@ -224,7 +224,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                           <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
                           {winner.bet?.numbers && (
                             <p className="text-xs text-white/60">
-                              Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" · ")}
+                              Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" Â· ")}
                             </p>
                           )}
                         </div>
