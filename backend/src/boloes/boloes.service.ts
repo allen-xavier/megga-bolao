@@ -49,7 +49,7 @@ export class BoloesService {
 
     const senaPot = await this.prisma.senaPot.findUnique({ where: { id: "global" } });
     const potTarget = await this.prisma.bolao.findFirst({
-      where: { closedAt: null },
+      where: { closedAt: null, startsAt: { gt: new Date() } },
       orderBy: { startsAt: "asc" },
       select: { id: true },
     });
