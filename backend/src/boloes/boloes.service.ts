@@ -15,7 +15,7 @@ export class BoloesService {
   }
 
   async findOne(id: string) {
-    return this.prisma.bolao.findUnique({
+    const bolao = await this.prisma.bolao.findUnique({
       where: { id },
       include: {
         prizes: true,
@@ -45,6 +45,17 @@ export class BoloesService {
         },
       },
     });
+
+    if (!bolao) {
+      return null;
+    }
+
+    const senaPot = await this.prisma.senaPot.findUnique({ where: { id: 'global' } });
+
+    return {
+      ...bolao,
+      senaPot: senaPot?.amount ?? 0,
+    };
   }
 
   async create(dto: CreateBolaoDto, adminId: string) {
