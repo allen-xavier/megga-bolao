@@ -118,18 +118,8 @@ export class BoloesService {
     const totalCollected = (bolao.bets?.length ?? 0) * Number(bolao.ticketPrice ?? 0);
     const commissionPercent = Number(bolao.commissionPercent ?? 0);
     const netPool = totalCollected * (1 - commissionPercent / 100);
-
-    const prizes = bolao.prizes ?? [];
-    const totalPct = prizes.reduce((acc: number, p: any) => acc + Number(p.percentage ?? 0), 0);
-    const totalFixed = prizes.reduce((acc: number, p: any) => acc + Number(p.fixedValue ?? 0), 0);
     const guaranteedPrize = Number(bolao.guaranteedPrize ?? 0);
-
-    if (totalPct > 0) {
-      const requiredPool = (Math.max(guaranteedPrize - totalFixed, 0)) / (totalPct / 100);
-      return Math.max(netPool, requiredPool);
-    }
-
-    return Math.max(netPool, guaranteedPrize - totalFixed);
+    return Math.max(guaranteedPrize, netPool);
   }
 
   private computeLivePrizes(bolao: any) {

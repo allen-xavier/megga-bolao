@@ -115,13 +115,8 @@ export class DrawsService {
     const totalCollected = (bolao.bets.length || 0) * Number(bolao.ticketPrice ?? 0);
     const commissionPercent = Number(bolao.commissionPercent ?? 0);
     const netPool = totalCollected * (1 - commissionPercent / 100);
-    const totalPct = bolao.prizes.reduce((acc, p) => acc + Number(p.percentage ?? 0), 0);
-    const totalFixed = bolao.prizes.reduce((acc, p) => acc + Number(p.fixedValue ?? 0), 0);
     const guaranteedPrize = Number(bolao.guaranteedPrize ?? 0);
-    const prizePool =
-      totalPct > 0
-        ? Math.max(netPool, (Math.max(guaranteedPrize - totalFixed, 0)) / (totalPct / 100))
-        : Math.max(netPool, guaranteedPrize - totalFixed);
+    const prizePool = Math.max(netPool, guaranteedPrize);
 
     const getPrizeValue = (type: PrizeType) => {
       const prize = bolao.prizes.find((p) => p.type === type);
