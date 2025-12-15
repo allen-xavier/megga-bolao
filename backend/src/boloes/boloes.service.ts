@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateBolaoDto } from './dto/create-bolao.dto';
-import { UpdateBolaoDto } from './dto/update-bolao.dto';
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateBolaoDto } from "./dto/create-bolao.dto";
+import { UpdateBolaoDto } from "./dto/update-bolao.dto";
+import { toSaoPauloDate } from "../common/timezone.util";
 
 @Injectable()
 export class BoloesService {
@@ -10,7 +11,7 @@ export class BoloesService {
   async list() {
     return this.prisma.bolao.findMany({
       include: { prizes: true, transparency: true },
-      orderBy: { startsAt: 'asc' },
+      orderBy: { startsAt: "asc" },
     });
   }
 
@@ -20,9 +21,7 @@ export class BoloesService {
       include: {
         prizes: true,
         transparency: true,
-        draws: {
-          orderBy: { drawnAt: 'desc' },
-        },
+        draws: { orderBy: { drawnAt: "desc" } },
         bolaoResults: {
           include: {
             prizes: {
@@ -38,7 +37,7 @@ export class BoloesService {
           },
         },
         bets: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           include: {
             user: { select: { id: true, fullName: true, city: true, state: true } },
           },
@@ -46,15 +45,15 @@ export class BoloesService {
       },
     });
 
-    if (!bolao) {
-      return null;
-    }
+    if (!bolao) return null;
 
-    const senaPot = await this.prisma.senaPot.findUnique({ where: { id: 'global' } });
+    const senaPot = await this.prisma.senaPot.findUnique({ where: { id: "global" } });
+    const livePrizes = !bolao.closedAt ? this.computeLivePrizes(bolao) : [];
 
     return {
       ...bolao,
       senaPot: senaPot?.amount ?? 0,
+      livePrizes,
     };
   }
 
@@ -63,7 +62,7 @@ export class BoloesService {
     return this.prisma.bolao.create({
       data: {
         name: dto.name,
-        startsAt: new Date(dto.startsAt),
+        startsAt: toSaoPauloDate(dto.startsAt),
         ticketPrice: dto.ticketPrice,
         minimumQuotas: dto.minimumQuotas,
         guaranteedPrize: dto.guaranteedPrize,
@@ -90,7 +89,7 @@ export class BoloesService {
       where: { id },
       data: {
         ...dto,
-        startsAt: dto.startsAt ? new Date(dto.startsAt) : undefined,
+        startsAt: dto.startsAt ? toSaoPauloDate(dto.startsAt) : undefined,
         prizes: dto.prizes
           ? {
               deleteMany: {},
@@ -111,7 +110,86 @@ export class BoloesService {
     const totalPercent = dto.prizes.reduce((acc, prize) => acc + (prize.percentage ?? 0), 0);
     const commission = dto.commissionPercent ?? 0;
     if (totalPercent + commission > 100) {
-      throw new BadRequestException('Soma das premiações e comissão não pode exceder 100%');
+      throw new BadRequestException("Soma das premiacoes e comissao nao pode exceder 100%");
     }
+  }
+
+  private getPrizePool(bolao: any) {
+    const totalCollected = (bolao.bets?.length ?? 0) * Number(bolao.ticketPrice ?? 0);
+    const commissionPercent = Number(bolao.commissionPercent ?? 0);
+    const netPool = totalCollected * (1 - commissionPercent / 100);
+    const guaranteedPrize = Number(bolao.guaranteedPrize ?? 0);
+    return Math.max(guaranteedPrize, netPool);
+  }
+
+  private computeLivePrizes(bolao: any) {
+    const drawsAsc = [...(bolao.draws ?? [])].sort(
+      (a, b) => new Date(a.drawnAt).getTime() - new Date(b.drawnAt).getTime(),
+    );
+    if (drawsAsc.length === 0) return [];
+
+    const firstDrawNumbers: number[] = Array.isArray(drawsAsc[0]?.numbers)
+      ? drawsAsc[0].numbers.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n))
+      : [];
+    if (firstDrawNumbers.length === 0) return [];
+
+    const prizePool = this.getPrizePool(bolao);
+    const getPrizeValue = (type: string) => {
+      const prize = bolao.prizes.find((p: any) => p.type === type);
+      if (!prize) return 0;
+      const fixed = Number(prize.fixedValue ?? 0);
+      const pct = Number(prize.percentage ?? 0);
+      if (fixed > 0) return fixed;
+      return (pct / 100) * prizePool;
+    };
+
+    const hitsByBet = (bolao.bets ?? []).map((bet: any) => {
+      const numbers: number[] = (bet.numbers ?? []).map((n: any) => Number(n));
+      const firstHits = numbers.filter((n) => firstDrawNumbers.includes(n)).length;
+      return { bet, firstHits };
+    });
+
+    const liveResults: any[] = [];
+
+    // LIGEIRINHO: maior numero de acertos no primeiro sorteio
+    const maxFirst = Math.max(...hitsByBet.map((h) => h.firstHits));
+    const ligeirinho = hitsByBet.filter((h) => h.firstHits === maxFirst && maxFirst > 0);
+    if (ligeirinho.length > 0) {
+      const total = getPrizeValue("LIGEIRINHO");
+      if (total > 0) {
+        const perWinner = total / ligeirinho.length;
+        liveResults.push({
+          prizeType: "LIGEIRINHO",
+          totalValue: total,
+          winners: ligeirinho.map((h) => ({
+            bet: h.bet,
+            user: h.bet.user,
+            amount: perWinner,
+            hits: h.firstHits,
+          })),
+        });
+      }
+    }
+
+    // SENA_PRIMEIRO: acertou 6 no primeiro sorteio
+    const senaPrimeiro = hitsByBet.filter((h) => h.firstHits === 6);
+    if (senaPrimeiro.length > 0) {
+      const total = getPrizeValue("SENA_PRIMEIRO");
+      if (total > 0) {
+        const perWinner = total / senaPrimeiro.length;
+        liveResults.push({
+          prizeType: "SENA_PRIMEIRO",
+          totalValue: total,
+          winners: senaPrimeiro.map((h) => ({
+            bet: h.bet,
+            user: h.bet.user,
+            amount: perWinner,
+            hits: h.firstHits,
+          })),
+        });
+      }
+    }
+
+    return liveResults;
   }
 }

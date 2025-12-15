@@ -4,6 +4,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { CreateDrawDto } from "./dto/create-draw.dto";
 import { RankingsService } from "../rankings/rankings.service";
 import { ListDrawsDto } from "./dto/list-draws.dto";
+import { toSaoPauloDate } from "../common/timezone.util";
 
 @Injectable()
 export class DrawsService {
@@ -25,7 +26,7 @@ export class DrawsService {
   }
 
   async create(dto: CreateDrawDto, userId: string) {
-    const drawnAt = new Date(dto.drawnAt);
+    const drawnAt = toSaoPauloDate(dto.drawnAt);
     const boloesAtivos = await this.prisma.bolao.findMany({
       where: {
         startsAt: { lte: drawnAt },
@@ -41,6 +42,14 @@ export class DrawsService {
     const createdDraws = [] as any[];
 
     for (const bolao of boloesAtivos) {
+      const existing = await this.prisma.draw.findFirst({
+        where: { bolaoId: bolao.id, drawnAt },
+      });
+      if (existing) {
+        createdDraws.push({ ...existing, bolao });
+        continue;
+      }
+
       const draw = await this.prisma.draw.create({
         data: {
           drawnAt,

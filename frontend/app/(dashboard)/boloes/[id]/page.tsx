@@ -1,10 +1,10 @@
-import { notFound } from 'next/navigation';
-import { api } from '@/lib/api';
-import { BetsList } from '@/components/bets-list';
-import { PlaceBetForm } from '@/components/place-bet-form';
-import { TransparencyDownload } from '@/components/transparency-download';
+import { notFound } from "next/navigation";
+import { api } from "@/lib/api";
+import { BetsList } from "@/components/bets-list";
+import { PlaceBetForm } from "@/components/place-bet-form";
+import { TransparencyDownload } from "@/components/transparency-download";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 async function getBolao(id: string) {
@@ -17,7 +17,7 @@ async function getBolao(id: string) {
 }
 
 function formatCurrency(value: number) {
-  return value.toLocaleString('pt-BR', {
+  return value.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -33,6 +33,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const isClosed = Boolean(bolao.closedAt);
   const latestResult = bolao.bolaoResults?.[0] ?? null;
   const prizeResults = latestResult?.prizes ?? [];
+  const livePrizes = bolao.livePrizes ?? [];
   const senaPot = Number(bolao.senaPot ?? 0);
   const ticketPrice = Number(bolao.ticketPrice ?? 0);
   const hasTransparency = Boolean(bolao.transparency);
@@ -63,10 +64,10 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
         <div className="flex items-center justify-between bg-megga-purple/80 px-6 py-4 text-[11px] uppercase tracking-[0.24em] text-white/70">
           <span className="inline-flex items-center gap-2 font-semibold">
             <span
-              className={`h-2.5 w-2.5 rounded-full shadow ${isClosed ? 'bg-white/60' : 'bg-megga-lime'}`}
+              className={`h-2.5 w-2.5 rounded-full shadow ${isClosed ? "bg-white/60" : "bg-megga-lime"}`}
               aria-hidden
-            />{' '}
-            {isClosed ? 'Encerrado' : 'Em andamento'}
+            />{" "}
+            {isClosed ? "Encerrado" : "Em andamento"}
           </span>
           <span className="rounded-full bg-white/10 px-3 py-1">Bolao #{bolao.id.slice(0, 6)}</span>
         </div>
@@ -75,8 +76,8 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
             <div>
               <h1 className="text-2xl font-semibold leading-tight">{bolao.name}</h1>
               <p className="mt-1 text-sm text-white/60">
-                Inicio {startsAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' })} as{' '}
-                {startsAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}
+                Inicio {startsAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" })} as{" "}
+                {startsAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}
               </p>
               <p className="text-xs uppercase tracking-[0.24em] text-white/40">Dias oficiais: terca, quinta e sabado</p>
             </div>
@@ -148,18 +149,58 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
         </ul>
       </section>
 
+      {!isClosed && livePrizes.length > 0 && (
+        <section className="space-y-4 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+          <header>
+            <h2 className="text-lg font-semibold">Premiacoes ja atingidas</h2>
+            <p className="text-sm text-white/60">Premios liberados antes do encerramento.</p>
+          </header>
+          <div className="space-y-3">
+            {livePrizes.map((prize: any) => (
+              <div key={prize.prizeType} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
+                    <p className="text-base font-semibold">{prize.prizeType}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs uppercase tracking-[0.24em] text-white/50">Total distribuido</p>
+                    <p className="text-lg font-semibold text-megga-yellow">R$ {formatCurrency(Number(prize.totalValue ?? 0))}</p>
+                  </div>
+                </div>
+                {prize.winners?.length ? (
+                  <ul className="space-y-1 text-sm text-white/80">
+                    {prize.winners.map((winner: any) => (
+                      <li key={`${prize.prizeType}-${winner.bet?.id ?? winner.user?.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2">
+                        <div>
+                          <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
+                          {winner.bet?.numbers && (
+                            <p className="text-xs text-white/60">
+                              Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" · ")} • {winner.hits} acertos
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-sm font-semibold text-megga-lime">
+                          R$ {formatCurrency(Number(winner.amount ?? 0))}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-white/60">Nenhum ganhador nesta categoria.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {isClosed && prizeResults.length > 0 && (
         <section className="space-y-4 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
           <header>
             <h2 className="text-lg font-semibold">Resultados e ganhadores</h2>
             <p className="text-sm text-white/60">
-              Bolao encerrado em{' '}
-              {new Date(bolao.closedAt).toLocaleString('pt-BR', {
-                dateStyle: 'short',
-                timeStyle: 'short',
-                timeZone: 'America/Sao_Paulo',
-              })}
-              .
+              Bolao encerrado em {new Date(bolao.closedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" })}.
             </p>
           </header>
           <div className="space-y-3">
@@ -177,33 +218,21 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                 </div>
                 {prize.winners?.length ? (
                   <ul className="space-y-1 text-sm text-white/80">
-                    {prize.winners.map((winner: any) => {
-                      const betNumbers: number[] = (winner.bet?.numbers ?? []).map((n: any) => Number(n));
-                      const cumulativeHits = betNumbers.filter((n) => winningNumbers.includes(n)).length;
-                      const firstDrawHits = betNumbers.filter((n) => firstDrawNumbers.includes(n)).length;
-                      const hitsLabel =
-                        prize.prizeType === 'PE_FRIO'
-                          ? `${cumulativeHits} acertos`
-                          : prize.prizeType === 'LIGEIRINHO' || prize.prizeType === 'SENA_PRIMEIRO'
-                            ? `${firstDrawHits} acertos`
-                            : `${cumulativeHits} acertos`;
-
-                      return (
-                        <li key={winner.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2">
-                          <div>
-                            <p className="font-medium">{winner.user?.fullName ?? 'Apostador'}</p>
-                            {winner.bet?.numbers && (
-                              <p className="text-xs text-white/60">
-                                Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, '0')).join(' Â· ')} â€¢ {hitsLabel}
-                              </p>
-                            )}
-                          </div>
-                          <span className="text-sm font-semibold text-megga-lime">
-                            R$ {formatCurrency(Number(winner.amount ?? 0))}
-                          </span>
-                        </li>
-                      );
-                    })}
+                    {prize.winners.map((winner: any) => (
+                      <li key={winner.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2">
+                        <div>
+                          <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
+                          {winner.bet?.numbers && (
+                            <p className="text-xs text-white/60">
+                              Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" · ")}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-sm font-semibold text-megga-lime">
+                          R$ {formatCurrency(Number(winner.amount ?? 0))}
+                        </span>
+                      </li>
+                    ))}
                   </ul>
                 ) : (
                   <p className="text-sm text-white/60">Nenhum ganhador nesta categoria.</p>
@@ -231,11 +260,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                   <div className="space-y-1">
                     <p className="text-xs uppercase tracking-[0.3em] text-white/50">Data</p>
                     <p className="font-semibold">
-                      {new Date(draw.drawnAt).toLocaleString('pt-BR', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                        timeZone: 'America/Sao_Paulo',
-                      })}
+                      {new Date(draw.drawnAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" })}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -244,7 +269,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                         key={num}
                         className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-megga-magenta/25 text-xs font-semibold text-megga-yellow"
                       >
-                        {num.toString().padStart(2, '0')}
+                        {num.toString().padStart(2, "0")}
                       </span>
                     ))}
                   </div>
