@@ -23,12 +23,16 @@ export class BoloesService {
         draws: {
           orderBy: { drawnAt: 'desc' },
         },
-        results: {
+        bolaoResults: {
           include: {
-            winners: {
+            prizes: {
               include: {
-                bet: true,
-                user: { select: { id: true, fullName: true } },
+                winners: {
+                  include: {
+                    bet: true,
+                    user: { select: { id: true, fullName: true } },
+                  },
+                },
               },
             },
           },

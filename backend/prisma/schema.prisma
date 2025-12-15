@@ -63,6 +63,7 @@ model User {
   auditLogs      AuditLog[]
   referrals      Referral[] @relation("UserReferrals")
   invitedRefs    Referral[] @relation("UserInvited")
+  prizeWins      PrizeResultWinner[]
 }
 
 model Wallet {
@@ -101,7 +102,7 @@ model Bolao {
   prizes            Prize[]
   bets              Bet[]
   draws             Draw[]
-  results           PrizeResult[]
+  bolaoResults      BolaoResult[]
   transparency      TransparencyFile?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
