@@ -23,6 +23,22 @@ function formatCurrency(value: number) {
   });
 }
 
+const prizeInfo: Record<
+  string,
+  {
+    title: string;
+    description: string;
+  }
+> = {
+  PE_QUENTE: { title: "Pe Quente", description: "Ganha quem acertar 10 numeros primeiro" },
+  PE_FRIO: { title: "Pe Frio", description: "Ganha quem acertar menos numeros no final" },
+  CONSOLACAO: { title: "Consolacao", description: "Ganha quem terminar com 9 acertos" },
+  SENA_PRIMEIRO: { title: "Sena 1o sorteio", description: "Ganha quem fizer sena no primeiro sorteio" },
+  LIGEIRINHO: { title: "Ligeirinho", description: "Ganha quem tiver mais acertos no primeiro sorteio" },
+  OITO_ACERTOS: { title: "8 acertos", description: "Ganha quem finalizar com 8 acertos" },
+  INDICACAO_DIRETA: { title: "Indique e ganhe", description: "Comissao por indicacao direta/indireta" },
+};
+
 export default async function BolaoPage({ params }: { params: { id: string } }) {
   const bolao = await getBolao(params.id);
   if (!bolao) {
@@ -139,8 +155,10 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
           {bolao.prizes?.map((prize: any) => (
             <li key={prize.id} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm">
               <div>
-                <p className="font-medium text-white">{prize.type}</p>
-                <p className="text-xs text-white/60">Premiacao prevista</p>
+                <p className="font-medium text-white">{prizeInfo[prize.type]?.title ?? prize.type}</p>
+                <p className="text-xs text-white/60">
+                  {prizeInfo[prize.type]?.description ?? "Premiacao prevista"}
+                </p>
               </div>
               <span className="text-sm font-semibold text-megga-yellow">
                 {(() => {
@@ -235,7 +253,12 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
-                    <p className="text-base font-semibold">{prize.prizeType}</p>
+                    <p className="text-base font-semibold">
+                      {prizeInfo[prize.prizeType]?.title ?? prize.prizeType}
+                    </p>
+                    {prizeInfo[prize.prizeType]?.description && (
+                      <p className="text-xs text-white/60">{prizeInfo[prize.prizeType].description}</p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-xs uppercase tracking-[0.24em] text-white/50">Total distribuido</p>
