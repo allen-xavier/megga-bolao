@@ -1,9 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PaymentType, PrizeType } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateDrawDto } from './dto/create-draw.dto';
-import { RankingsService } from '../rankings/rankings.service';
-import { ListDrawsDto } from './dto/list-draws.dto';
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { PaymentType, PrizeType } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateDrawDto } from "./dto/create-draw.dto";
+import { RankingsService } from "../rankings/rankings.service";
+import { ListDrawsDto } from "./dto/list-draws.dto";
 
 @Injectable()
 export class DrawsService {
@@ -20,44 +20,49 @@ export class DrawsService {
     return this.prisma.draw.findMany({
       where,
       include: { bolao: { select: { id: true, name: true } } },
-      orderBy: { drawnAt: 'desc' },
+      orderBy: { drawnAt: "desc" },
     });
   }
 
   async create(dto: CreateDrawDto, userId: string) {
     const drawnAt = new Date(dto.drawnAt);
-    const bolaoAtivo = await this.prisma.bolao.findFirst({
+    const boloesAtivos = await this.prisma.bolao.findMany({
       where: {
         startsAt: { lte: drawnAt },
         OR: [{ closedAt: null }, { closedAt: { gte: drawnAt } }],
       },
-      orderBy: { startsAt: 'desc' },
       include: { prizes: true },
     });
 
-    if (!bolaoAtivo) {
-      throw new BadRequestException('Nenhum bolão em andamento para a data informada');
+    if (!boloesAtivos || boloesAtivos.length === 0) {
+      throw new BadRequestException("Nenhum bolao em andamento para a data informada");
     }
 
-    const draw = await this.prisma.draw.create({
-      data: {
-        drawnAt,
-        numbers: dto.numbers,
-        createdById: userId,
-        bolaoId: bolaoAtivo.id,
-      },
-    });
-    await this.rankings.recalculateForDraw(draw.id);
+    const createdDraws = [] as any[];
 
-    await this.processPrizesAndClosure(bolaoAtivo.id);
+    for (const bolao of boloesAtivos) {
+      const draw = await this.prisma.draw.create({
+        data: {
+          drawnAt,
+          numbers: dto.numbers,
+          createdById: userId,
+          bolaoId: bolao.id,
+        },
+      });
 
-    return { ...draw, bolao: bolaoAtivo };
+      createdDraws.push({ ...draw, bolao });
+      await this.rankings.recalculateForDraw(draw.id);
+      await this.processPrizesAndClosure(bolao.id);
+    }
+
+    // Mantem compatibilidade retornando o primeiro draw criado
+    return createdDraws[0];
   }
 
   async delete(id: string) {
     const existing = await this.prisma.draw.findUnique({ where: { id } });
     if (!existing) {
-      throw new NotFoundException('Sorteio não encontrado');
+      throw new NotFoundException("Sorteio nao encontrado");
     }
     await this.prisma.draw.delete({ where: { id } });
     return { deleted: true };
@@ -68,7 +73,7 @@ export class DrawsService {
       where: { id: bolaoId },
       include: {
         prizes: true,
-        draws: { orderBy: { drawnAt: 'asc' } },
+        draws: { orderBy: { drawnAt: "asc" } },
         bets: {
           include: { user: { select: { id: true, fullName: true } } },
         },
@@ -76,7 +81,6 @@ export class DrawsService {
     });
     if (!bolao) return;
 
-    // Union de todos os números sorteados
     const allNumbersSet = new Set<number>();
     bolao.draws.forEach((d) => d.numbers.forEach((n) => allNumbersSet.add(n)));
     const firstDrawNumbers = bolao.draws[0]?.numbers ?? [];
@@ -95,10 +99,9 @@ export class DrawsService {
       return;
     }
 
-    // Sena pot global
     const senaPot =
-      (await this.prisma.senaPot.findUnique({ where: { id: 'global' } })) ||
-      (await this.prisma.senaPot.create({ data: { id: 'global', amount: 0 } }));
+      (await this.prisma.senaPot.findUnique({ where: { id: "global" } })) ||
+      (await this.prisma.senaPot.create({ data: { id: "global", amount: 0 } }));
 
     const getPrizeValue = (type: PrizeType) => {
       const prize = bolao.prizes.find((p) => p.type === type);
@@ -194,7 +197,7 @@ export class DrawsService {
               statements: {
                 create: {
                   amount: perWinner,
-                  description: `Prêmio ${prize.type} - bolão ${bolao.name}`,
+                  description: `Premio ${prize.type} - bolao ${bolao.name}`,
                   type: PaymentType.PRIZE,
                   referenceId: bolao.id,
                 },
@@ -205,9 +208,9 @@ export class DrawsService {
       }
 
       await tx.senaPot.upsert({
-        where: { id: 'global' },
+        where: { id: "global" },
         update: { amount: senaPotAmount },
-        create: { id: 'global', amount: senaPotAmount },
+        create: { id: "global", amount: senaPotAmount },
       });
     });
   }
