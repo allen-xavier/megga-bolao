@@ -114,7 +114,20 @@ export class BoloesService {
   }
 
   async remove(id: string) {
-    await this.prisma.bolao.delete({ where: { id } });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.prizeResultWinner.deleteMany({
+        where: { prizeResult: { bolaoResult: { bolaoId: id } } },
+      });
+      await tx.prizeResult.deleteMany({
+        where: { bolaoResult: { bolaoId: id } },
+      });
+      await tx.bolaoResult.deleteMany({ where: { bolaoId: id } });
+      await tx.draw.deleteMany({ where: { bolaoId: id } });
+      await tx.prize.deleteMany({ where: { bolaoId: id } });
+      await tx.bet.deleteMany({ where: { bolaoId: id } });
+      await tx.transparencyFile.deleteMany({ where: { bolaoId: id } });
+      await tx.bolao.delete({ where: { id } });
+    });
     return { deleted: true };
   }
 
