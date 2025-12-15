@@ -113,6 +113,11 @@ export class BoloesService {
     });
   }
 
+  async remove(id: string) {
+    await this.prisma.bolao.delete({ where: { id } });
+    return { deleted: true };
+  }
+
   private ensurePrizeDistribution(dto: CreateBolaoDto) {
     const totalPercent = dto.prizes.reduce((acc, prize) => acc + (prize.percentage ?? 0), 0);
     const commission = dto.commissionPercent ?? 0;
