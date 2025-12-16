@@ -8,6 +8,7 @@ import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UserRole } from '../users/entities/user.entity';
+import { randomUUID } from 'crypto';
 
 interface AuthPayload {
   sub: string;
@@ -91,6 +92,7 @@ export class AuthService {
         passwordHash,
         role: dto.role ?? UserRole.USER,
         acceptedTerms: dto.acceptedTerms ?? false,
+        referralCode: dto.referralCode ?? `ref_${randomUUID().replace(/-/g, '').slice(0, 16)}`,
         wallet: {
           create: {},
         },
