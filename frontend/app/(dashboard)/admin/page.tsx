@@ -55,8 +55,8 @@ export default function AdminDashboardPage() {
     return { andamento, futuros, encerrados, garantida };
   })();
 
-  const destaques = (bolo es: Bolao[]) =>
-    boloes
+  const destaques = (bolo: Bolao[]) =>
+    bolo
       ?.filter((b) => !b.closedAt)
       .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
       .slice(0, 3) ?? [];
