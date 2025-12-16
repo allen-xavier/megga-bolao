@@ -46,6 +46,14 @@ function formatCurrency(value: number | null | undefined) {
   return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function formatSaoPaulo(value: string) {
+  return new Date(value).toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+}
+
 function toSections(boloes: Bolao[]) {
   const now = Date.now();
   const andamento: Bolao[] = [];
@@ -92,7 +100,11 @@ function AdminBoloesPageContent() {
       ? [{ title: 'Encerrados', list: encerrados }]
       : filtro === 'futuros'
         ? [{ title: 'Futuros', list: futuros }]
-        : [{ title: 'Em andamento', list: andamento }, { title: 'Futuros', list: futuros }, { title: 'Encerrados', list: encerrados }];
+        : [
+            { title: 'Em andamento', list: andamento },
+            { title: 'Futuros', list: futuros },
+            { title: 'Encerrados', list: encerrados },
+          ];
 
   const renderList = (title: string, list: Bolao[]) => (
     <section className="space-y-4">
@@ -101,7 +113,7 @@ function AdminBoloesPageContent() {
         <span className="text-xs uppercase tracking-[0.3em] text-white/50">{list.length} registros</span>
       </div>
       {list.length === 0 ? (
-        <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">Nenhum bolão encontrado.</p>
+        <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">Nenhum bolao encontrado.</p>
       ) : (
         list.map((bolao) => (
           <article key={bolao.id} className="rounded-3xl bg-megga-navy/80 p-5 text-white shadow-lg ring-1 ring-white/5">
@@ -110,7 +122,7 @@ function AdminBoloesPageContent() {
                 <p className="text-xs uppercase tracking-[0.3em] text-white/40">#{bolao.id}</p>
                 <h3 className="mt-1 text-lg font-semibold">{bolao.name}</h3>
                 <p className="text-xs text-white/60">
-                  Início: {new Date(bolao.startsAt).toLocaleString('pt-BR')} • Cota: {formatCurrency(bolao.ticketPrice)} • Mínimo: {bolao.minimumQuotas} cotas
+                  Inicio: {formatSaoPaulo(bolao.startsAt)} • Cota: {formatCurrency(bolao.ticketPrice)} • Minimo: {bolao.minimumQuotas} cotas
                 </p>
               </div>
               <StatusBadge
@@ -125,18 +137,18 @@ function AdminBoloesPageContent() {
             </div>
             <div className="mt-4 grid gap-3 text-sm text-white/70 md:grid-cols-3">
               <div className="rounded-2xl bg-white/5 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premiação garantida</p>
+                <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premiacao garantida</p>
                 <p className="mt-2 text-base font-semibold text-megga-yellow">{formatCurrency(bolao.guaranteedPrize)}</p>
               </div>
               <div className="rounded-2xl bg-white/5 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Comissão</p>
+                <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Comissao</p>
                 <p className="mt-2 text-base font-semibold text-white">
                   {Number(bolao.commissionPercent ?? 0).toFixed(2)}%
                 </p>
               </div>
               <div className="rounded-2xl bg-white/5 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Prêmios configurados</p>
-                <p className="mt-2 text-base font-semibold text-white">{bolao.prizes?.length ?? 0} premiações</p>
+                <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premios configurados</p>
+                <p className="mt-2 text-base font-semibold text-white">{bolao.prizes?.length ?? 0} premiacoes</p>
               </div>
             </div>
             <div className="mt-4 flex gap-3">
@@ -144,13 +156,13 @@ function AdminBoloesPageContent() {
                 href={`/boloes/${bolao.id}`}
                 className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
               >
-                Visualizar bolão
+                Visualizar bolao
               </Link>
               <Link
                 href={`/admin/boloes/criar?id=${bolao.id}`}
                 className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-center text-sm font-semibold text-white transition hover:opacity-95"
               >
-                Editar / Pausar
+                Editar / pausar
               </Link>
             </div>
           </article>
@@ -162,19 +174,19 @@ function AdminBoloesPageContent() {
   if (status !== 'authenticated') {
     return (
       <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">
-        Faça login como administrador para visualizar os bolões.
+        Faca login como administrador para visualizar os boloes.
       </p>
     );
   }
 
   if (isLoading) {
-    return <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">Carregando bolões...</p>;
+    return <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">Carregando boloes...</p>;
   }
 
   if (error) {
     return (
       <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-megga-yellow ring-1 ring-white/5">
-        Erro ao carregar bolões: {error?.message ?? 'falha desconhecida'}
+        Erro ao carregar boloes: {error?.message ?? 'falha desconhecida'}
       </p>
     );
   }
@@ -183,14 +195,14 @@ function AdminBoloesPageContent() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Gestão de bolões</p>
-          <h1 className="text-2xl font-semibold">Bolões</h1>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Gestao de boloes</p>
+          <h1 className="text-2xl font-semibold">Boloes</h1>
         </div>
         <Link
           href="/admin/boloes/criar"
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
         >
-          Criar novo bolão
+          Criar novo bolao
         </Link>
       </header>
 
@@ -201,11 +213,7 @@ function AdminBoloesPageContent() {
 
 export default function AdminBoloesPage() {
   return (
-    <Suspense
-      fallback={
-        <p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">Carregando bolões...</p>
-      }
-    >
+    <Suspense fallback={<p className="rounded-2xl bg-megga-navy/80 p-4 text-sm text-white/70 ring-1 ring-white/5">Carregando boloes...</p>}>
       <AdminBoloesPageContent />
     </Suspense>
   );

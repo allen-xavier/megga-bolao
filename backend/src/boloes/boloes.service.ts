@@ -9,6 +9,7 @@ export class BoloesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list() {
+    await this.reserveSenaPotIfNeeded();
     return this.prisma.bolao.findMany({
       include: { prizes: true, transparency: true },
       orderBy: { startsAt: "asc" },
@@ -16,6 +17,7 @@ export class BoloesService {
   }
 
   async findOne(id: string) {
+    await this.reserveSenaPotIfNeeded();
     const bolao = await this.prisma.bolao.findUnique({
       where: { id },
       include: {
@@ -48,12 +50,7 @@ export class BoloesService {
     if (!bolao) return null;
 
     const senaPot = await this.prisma.senaPot.findUnique({ where: { id: "global" } });
-    const potTarget = await this.prisma.bolao.findFirst({
-      where: { closedAt: null, startsAt: { gt: new Date() } },
-      orderBy: { startsAt: "asc" },
-      select: { id: true },
-    });
-    const senaPotApplied = potTarget?.id === bolao.id ? Number(senaPot?.amount ?? 0) : 0;
+    const senaPotApplied = Number(bolao.senaPotReserved ?? 0);
     const senaPotVisible = senaPotApplied;
     const livePrizes = !bolao.closedAt ? this.computeLivePrizes(bolao) : [];
 
@@ -220,5 +217,35 @@ export class BoloesService {
     }
 
     return liveResults;
+  }
+
+  private async reserveSenaPotIfNeeded() {
+    const senaPot = await this.prisma.senaPot.findUnique({ where: { id: "global" } });
+    const availablePot = Number(senaPot?.amount ?? 0);
+    if (availablePot <= 0) return;
+
+    const reservedExists = await this.prisma.bolao.findFirst({
+      where: { senaPotReserved: { gt: 0 }, closedAt: null },
+      select: { id: true },
+    });
+    if (reservedExists) return;
+
+    const target = await this.prisma.bolao.findFirst({
+      where: { closedAt: null, startsAt: { gt: new Date() } },
+      orderBy: { startsAt: "asc" },
+    });
+    if (!target) return;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.bolao.update({
+        where: { id: target.id },
+        data: { senaPotReserved: availablePot },
+      });
+      await tx.senaPot.upsert({
+        where: { id: "global" },
+        update: { amount: 0 },
+        create: { id: "global", amount: 0 },
+      });
+    });
   }
 }

@@ -104,6 +104,7 @@ model Bolao {
   draws             Draw[]
   bolaoResults      BolaoResult[]
   transparency      TransparencyFile?
+  senaPotReserved   Decimal   @default(0) @db.Decimal(12, 2)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   closedAt          DateTime?

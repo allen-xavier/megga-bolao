@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
@@ -33,6 +33,34 @@ const prizeTypeMap: Record<string, string> = {
   indicacao: "INDICACAO_DIRETA",
 };
 
+const reversePrizeTypeMap: Record<string, string> = Object.fromEntries(
+  Object.entries(prizeTypeMap).map(([k, v]) => [v, k]),
+);
+
+const formatInputDate = (date: Date) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .formatToParts(date)
+    .reduce<Record<string, string>>((acc, part) => {
+      if (part.type !== "literal") acc[part.type] = part.value;
+      return acc;
+    }, {});
+
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+};
+
+const toIsoFromInput = (value: string) => {
+  const sanitized = value.length === 16 ? `${value}:00` : value;
+  return new Date(`${sanitized}-03:00`).toISOString();
+};
+
 const toNumber = (value: string | number) => {
   if (typeof value === "number") return value;
   const normalized = value.replace(/\./g, "").replace(",", ".");
@@ -51,19 +79,57 @@ export default function CreateBolaoClient() {
   const [name, setName] = useState("Bolao Promocional");
   const [startsAt, setStartsAt] = useState(() => {
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    return tomorrow.toISOString().slice(0, 16); // datetime-local format
+    return formatInputDate(tomorrow); // datetime-local format in America/Sao_Paulo
   });
   const [ticketPrice, setTicketPrice] = useState(35);
   const [minimumQuotas, setMinimumQuotas] = useState(500);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const { totalPercentage, meggaTax } = useMemo(() => {
     const total = prizes.filter((prize) => prize.enabled).reduce((acc, prize) => acc + prize.percentage, 0);
     const tax = Math.max(0, 100 - total);
     return { totalPercentage: total, meggaTax: tax };
   }, [prizes]);
+
+  useEffect(() => {
+    if (!bolaoId || status !== "authenticated" || !session?.user?.accessToken) return;
+
+    const loadBolao = async () => {
+      try {
+        setLoading(true);
+        const { data } = await api.get(`/boloes/${bolaoId}`, {
+          headers: { Authorization: `Bearer ${session.user.accessToken}` },
+        });
+
+        setName(data.name ?? "");
+        setGuaranteedPrize(String(data.guaranteedPrize ?? ""));
+        setTicketPrice(Number(data.ticketPrice ?? 0));
+        setMinimumQuotas(Number(data.minimumQuotas ?? 0));
+        setStartsAt(formatInputDate(new Date(data.startsAt)));
+
+        const prizesFromApi: PrizeOption[] = basePrizes.map((p) => {
+          const match = (data.prizes ?? []).find((pr: any) => reversePrizeTypeMap[pr.type] === p.id);
+          return match
+            ? { ...p, enabled: true, percentage: Number(match.percentage ?? p.percentage) }
+            : { ...p, enabled: false };
+        });
+        setPrizes(prizesFromApi);
+      } catch (error: any) {
+        const backendMessage =
+          error?.response?.data?.message ||
+          error?.message ||
+          (typeof error === "string" ? error : null);
+        setMessage(backendMessage ? String(backendMessage) : "Erro ao carregar bolao.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBolao();
+  }, [bolaoId, session?.user?.accessToken, status]);
 
   const togglePrize = (id: string) => {
     setPrizes((current) =>
@@ -93,7 +159,7 @@ export default function CreateBolaoClient() {
 
       const payload = {
         name,
-        startsAt: new Date(startsAt).toISOString(),
+        startsAt: toIsoFromInput(startsAt),
         ticketPrice: Number(ticketPrice),
         minimumQuotas: Number(minimumQuotas),
         guaranteedPrize: toNumber(guaranteedPrize),
@@ -107,12 +173,21 @@ export default function CreateBolaoClient() {
           })),
       };
 
-      await api.post("/boloes", payload, {
-        headers: {
-          Authorization: `Bearer ${session.user.accessToken}`,
-        },
-      });
-      setMessage("Bolao criado com sucesso.");
+      if (bolaoId) {
+        await api.put(`/boloes/${bolaoId}`, payload, {
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`,
+          },
+        });
+        setMessage("Bolao atualizado com sucesso.");
+      } else {
+        await api.post("/boloes", payload, {
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`,
+          },
+        });
+        setMessage("Bolao criado com sucesso.");
+      }
     } catch (error: any) {
       const backendMessage =
         error?.response?.data?.message ||
@@ -176,6 +251,7 @@ export default function CreateBolaoClient() {
       </header>
 
       {message && <p className="rounded-2xl bg-megga-navy/70 p-3 text-sm text-megga-lime">{message}</p>}
+      {loading && <p className="rounded-2xl bg-megga-navy/70 p-3 text-sm text-white/70">Carregando dados do bolao...</p>}
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <div className="grid gap-4 md:grid-cols-2">

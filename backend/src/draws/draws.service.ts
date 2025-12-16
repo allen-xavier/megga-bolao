@@ -64,7 +64,6 @@ export class DrawsService {
       await this.processPrizesAndClosure(bolao.id);
     }
 
-    // Mantem compatibilidade retornando o primeiro draw criado
     return createdDraws[0];
   }
 
@@ -104,10 +103,7 @@ export class DrawsService {
     const shouldClose = hasTen && !bolao.closedAt;
     const closedAt = shouldClose ? new Date() : bolao.closedAt;
 
-    const senaPot =
-      (await this.prisma.senaPot.findUnique({ where: { id: "global" } })) ||
-      (await this.prisma.senaPot.create({ data: { id: "global", amount: 0 } }));
-
+    const senaPotGlobal = await this.prisma.senaPot.findUnique({ where: { id: "global" } });
     const totalCollected = (bolao.bets.length || 0) * Number(bolao.ticketPrice ?? 0);
     const commissionPercent = Number(bolao.commissionPercent ?? 0);
     const netPool = totalCollected * (1 - commissionPercent / 100);
@@ -128,19 +124,24 @@ export class DrawsService {
     const senaPrizeBase = getPrizeValue(PrizeType.SENA_PRIMEIRO);
     const senaWinners = hitsByBet.filter((b) => b.firstDrawHits === 6);
     const isFirstDraw = bolao.draws.length === 1;
+    const reservedPot = Number(bolao.senaPotReserved ?? 0);
+    const globalPotAmount = Number(senaPotGlobal?.amount ?? 0);
 
-    // Acumula/zera pot no primeiro sorteio mesmo sem encerrar
+    // Acumula/zera pot no primeiro sorteio, mesmo sem encerrar
     if (!shouldClose && isFirstDraw) {
-      let senaPotAmount = Number(senaPot.amount);
+      let newGlobal = globalPotAmount;
       if (senaWinners.length === 0) {
-        senaPotAmount += senaPrizeBase * 0.8;
+        newGlobal += reservedPot + senaPrizeBase * 0.8;
       } else {
-        senaPotAmount = 0;
+        newGlobal = 0;
       }
-      await this.prisma.senaPot.upsert({
-        where: { id: "global" },
-        update: { amount: senaPotAmount },
-        create: { id: "global", amount: senaPotAmount },
+      await this.prisma.$transaction(async (tx) => {
+        await tx.bolao.update({ where: { id: bolao.id }, data: { senaPotReserved: 0 } });
+        await tx.senaPot.upsert({
+          where: { id: "global" },
+          update: { amount: newGlobal },
+          create: { id: "global", amount: newGlobal },
+        });
       });
       return;
     }
@@ -178,19 +179,16 @@ export class DrawsService {
       total: getPrizeValue(PrizeType.LIGEIRINHO),
     };
 
-    const potTargetBolao = await this.prisma.bolao.findFirst({
-      where: { closedAt: null },
-      orderBy: { startsAt: "asc" },
-      select: { id: true },
-    });
+    const potAvailable = reservedPot > 0 ? reservedPot : globalPotAmount;
+    let senaPotAmount = globalPotAmount;
+    let senaTotal = senaPrizeBase + potAvailable;
 
-    const isPotAppliedHere = potTargetBolao?.id === bolao.id;
-
-    let senaPotAmount = Number(senaPot.amount);
-    let senaTotal = senaPrizeBase + (isPotAppliedHere ? senaPotAmount : 0);
     if (senaWinners.length === 0) {
-      senaPotAmount += senaPrizeBase * 0.8;
+      senaPotAmount = potAvailable + senaPrizeBase * 0.8;
       senaTotal = 0;
+    } else {
+      // Sena saiu, zera o acumulado global
+      senaPotAmount = 0;
     }
 
     const prizeEntries: Array<{ type: PrizeType; bets: typeof hitsByBet; total: number }> = [
@@ -203,7 +201,7 @@ export class DrawsService {
     ];
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.bolao.update({ where: { id: bolao.id }, data: { closedAt: closedAt ?? new Date() } });
+      await tx.bolao.update({ where: { id: bolao.id }, data: { closedAt: closedAt ?? new Date(), senaPotReserved: 0 } });
 
       const bolaoResult = await tx.bolaoResult.create({
         data: {
@@ -252,7 +250,7 @@ export class DrawsService {
 
       await tx.senaPot.upsert({
         where: { id: "global" },
-        update: { amount: isPotAppliedHere && senaTotal > 0 ? 0 : senaPotAmount },
+        update: { amount: senaPotAmount },
         create: { id: "global", amount: senaPotAmount },
       });
     });
