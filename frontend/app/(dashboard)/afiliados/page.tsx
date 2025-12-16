@@ -31,9 +31,11 @@ function formatCurrency(value?: number) {
 export default function AfiliadosPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
-  const { data, error, isLoading } = useSWR<AffiliateInfo>(token ? ["/affiliates/me", token] as const : null, ([url, t]) => fetcher(url, t), {
-    revalidateOnFocus: false,
-  });
+  const { data, error, isLoading } = useSWR<AffiliateInfo, any, [string, string] | null>(
+    token ? ["/affiliates/me", token] as [string, string] : null,
+    ([url, t]) => fetcher(url, t),
+    { revalidateOnFocus: false },
+  );
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
