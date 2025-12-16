@@ -20,9 +20,11 @@ const fetcher = (url: string, token?: string) =>
 export default function SuitPayConfigPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
-  const { data, error, mutate } = useSWR<SuitpayConfig>(token ? ["/admin/suitpay/config", token] as const : null, ([url, t]) => fetcher(url, t), {
-    revalidateOnFocus: false,
-  });
+  const { data, error, mutate } = useSWR<SuitpayConfig, any, [string, string] | null>(
+    token ? ["/admin/suitpay/config", token] as [string, string] : null,
+    ([url, t]) => fetcher(url, t),
+    { revalidateOnFocus: false },
+  );
 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
