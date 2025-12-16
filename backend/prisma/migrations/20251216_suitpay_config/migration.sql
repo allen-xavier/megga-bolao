@@ -1,4 +1,5 @@
--- CreateTable
+-- CreateTable (idempotent)
+DROP TABLE IF EXISTS "SuitpayConfig";
 CREATE TABLE "SuitpayConfig" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "environment" TEXT NOT NULL DEFAULT 'sandbox',
