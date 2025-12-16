@@ -375,6 +375,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                           {winner.bet?.numbers && (
                             <p className="text-xs text-white/60">
                               Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" - ")}
+                              {winner.hits ? ` • ${winner.hits} acertos` : ""}
                             </p>
                           )}
                         </div>

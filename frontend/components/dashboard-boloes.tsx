@@ -23,6 +23,20 @@ function formatStartsAt(date: Date) {
   });
 }
 
+function getNextDrawLabel() {
+  const now = new Date();
+  const nowSp = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  const targetDays = [2, 4, 6]; // terça(2), quinta(4), sábado(6)
+  for (let add = 0; add < 7; add += 1) {
+    const candidate = new Date(nowSp.getTime() + add * 24 * 60 * 60 * 1000);
+    if (targetDays.includes(candidate.getDay())) {
+      if (add === 0) return 'Hoje';
+      return candidate.toLocaleDateString('pt-BR', { weekday: 'long' });
+    }
+  }
+  return '—';
+}
+
 export function DashboardBoloes() {
   const { data, isLoading } = useSWR<Bolao[]>('/boloes', fetcher, {
     revalidateOnFocus: false,
@@ -50,8 +64,7 @@ export function DashboardBoloes() {
         const hasStarted = startsAt.getTime() <= Date.now();
         const statusLabel = hasStarted ? 'Em andamento' : 'Acumulando';
         const participationLabel = bolao.promotional ? 'Promocional' : 'Participando';
-        const weekday = startsAt.toLocaleDateString('pt-BR', { weekday: 'long' });
-        const nextDrawLabel = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+        const nextDrawLabel = getNextDrawLabel();
 
         return (
           <article

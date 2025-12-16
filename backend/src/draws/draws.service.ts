@@ -240,12 +240,14 @@ export class DrawsService {
         });
 
         for (const item of prize.bets) {
+          const hits = prize.type === PrizeType.SENA_PRIMEIRO || prize.type === PrizeType.LIGEIRINHO ? item.firstDrawHits : item.cumulativeHits;
           await tx.prizeResultWinner.create({
             data: {
               prizeResultId: prizeResult.id,
               betId: item.bet.id,
               userId: item.bet.user.id,
               amount: perWinner,
+              hits,
             },
           });
 

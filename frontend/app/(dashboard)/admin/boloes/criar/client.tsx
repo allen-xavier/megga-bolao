@@ -77,10 +77,7 @@ export default function CreateBolaoClient() {
   const [prizes, setPrizes] = useState<PrizeOption[]>(() => basePrizes.map((prize) => ({ ...prize })));
   const [guaranteedPrize, setGuaranteedPrize] = useState("10000,00");
   const [name, setName] = useState("Bolao Promocional");
-  const [startsAt, setStartsAt] = useState(() => {
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    return formatInputDate(tomorrow); // datetime-local format in America/Sao_Paulo
-  });
+  const [startsAt, setStartsAt] = useState(() => formatInputDate(new Date())); // data/hora atual SP
   const [ticketPrice, setTicketPrice] = useState(35);
   const [minimumQuotas, setMinimumQuotas] = useState(500);
   const [saving, setSaving] = useState(false);
