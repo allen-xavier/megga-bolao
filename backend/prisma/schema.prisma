@@ -55,6 +55,7 @@ model User {
   acceptedTerms  Boolean    @default(false)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+  referralCode   String     @unique @default(cuid())
   wallet         Wallet?
   bets           Bet[]
   payments       Payment[]

@@ -97,10 +97,41 @@ export class AuthService {
       },
     });
 
+    await this.linkReferrals(user.id, dto.referralCode);
+
     return {
       user: this.toSafeUser(user),
       tokens: await this.generateTokens({ sub: user.id, role: user.role }),
     };
+  }
+
+  private async linkReferrals(newUserId: string, referralCode?: string) {
+    if (!referralCode) return;
+    const referrer = await this.prisma.user.findUnique({ where: { referralCode } });
+    if (!referrer) return;
+
+    // Nível 1
+    await this.prisma.referral.create({
+      data: {
+        userId: referrer.id,
+        referredUserId: newUserId,
+        level: 1,
+      },
+    });
+
+    // Nível 2 (se o referrer tiver um referrer)
+    const referrerRef = await this.prisma.referral.findFirst({
+      where: { referredUserId: referrer.id, level: 1 },
+    });
+    if (referrerRef) {
+      await this.prisma.referral.create({
+        data: {
+          userId: referrerRef.userId,
+          referredUserId: newUserId,
+          level: 2,
+        },
+      });
+    }
   }
 
   async login(dto: LoginDto): Promise<AuthResult> {

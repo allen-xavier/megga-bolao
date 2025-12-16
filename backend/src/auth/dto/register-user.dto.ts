@@ -43,4 +43,8 @@ export class RegisterUserDto {
   @IsOptional()
   @IsBoolean()
   acceptedTerms?: boolean = false;
+
+  @IsOptional()
+  @IsString()
+  referralCode?: string;
 }
