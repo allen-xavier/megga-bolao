@@ -15,10 +15,6 @@ type Bolao = {
   minimumQuotas?: number | null;
 };
 
-type Wallet = {
-  balance: number;
-};
-
 type AdminStats = {
   totalBets: number;
   totalPaid: number;
@@ -50,19 +46,14 @@ export default function AdminDashboardPage() {
     ([url, t]: [string, string]) => fetcher(url, t),
     { revalidateOnFocus: false },
   );
-  const { data: wallet } = useSWR<Wallet>(
-    token ? ["/wallet/me", token] as const : null,
-    ([url, t]: [string, string]) => fetcher(url, t),
-    { revalidateOnFocus: false },
-  );
-  const { data: stats } = useSWR<AdminStats>(
+  const { data: statsData } = useSWR<AdminStats>(
     token ? ["/admin/stats", token] as const : null,
     ([url, t]: [string, string]) => fetcher(url, t),
     { revalidateOnFocus: false },
   );
 
   const now = Date.now();
-  const stats = (() => {
+  const bolaoStats = (() => {
     const list = boloes ?? [];
     const andamento = list.filter((b) => !b.closedAt && new Date(b.startsAt).getTime() <= now);
     const futuros = list.filter((b) => !b.closedAt && new Date(b.startsAt).getTime() > now);
@@ -82,35 +73,33 @@ export default function AdminDashboardPage() {
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Administracao</p>
         <h1 className="text-2xl font-semibold">Painel do administrador</h1>
-        <p className="text-sm text-white/70">
-          Acompanhe indicadores reais dos boloes e da sua carteira administrativa.
-        </p>
+        <p className="text-sm text-white/70">Indicadores reais dos boloes e da carteira administrativa.</p>
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Premiacao garantida (ativos)</p>
-          <p className="mt-3 text-2xl font-semibold text-megga-yellow">{formatCurrency(stats.garantida)}</p>
-          <p className="mt-2 text-sm text-white/60">{stats.andamento.length} bolao(s) em andamento</p>
+          <p className="mt-3 text-2xl font-semibold text-megga-yellow">{formatCurrency(bolaoStats.garantida)}</p>
+          <p className="mt-2 text-sm text-white/60">{bolaoStats.andamento.length} bolao(s) em andamento</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Carteira administrativa</p>
           <p className="mt-3 text-2xl font-semibold text-megga-yellow">
-            {formatCurrency(stats?.adminBalance ?? 0)}
+            {formatCurrency(statsData?.adminBalance ?? 0)}
           </p>
-          <p className="mt-2 text-sm text-white/60">Total apostado - premios pagos</p>
+          <p className="mt-2 text-sm text-white/60">Total apostado menos premios pagos</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Boloes</p>
           <p className="mt-3 text-2xl font-semibold text-megga-yellow">
-            {stats.andamento.length} ativos • {stats.futuros.length} futuros • {stats.encerrados.length} encerrados
+            {bolaoStats.andamento.length} ativos • {bolaoStats.futuros.length} futuros • {bolaoStats.encerrados.length} encerrados
           </p>
           <p className="mt-2 text-sm text-white/60">Dados em tempo real via API</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Saldo dos usuarios</p>
           <p className="mt-3 text-2xl font-semibold text-megga-yellow">
-            {formatCurrency(stats?.walletOutstanding ?? 0)}
+            {formatCurrency(statsData?.walletOutstanding ?? 0)}
           </p>
           <p className="mt-2 text-sm text-white/60">Soma dos saldos em carteira (premios/comissoes nao sacados)</p>
         </div>
@@ -149,7 +138,7 @@ export default function AdminDashboardPage() {
               </li>
             );
           })}
-          {(destaques(boloes ?? []).length === 0) && (
+          {destaques(boloes ?? []).length === 0 && (
             <li className="rounded-2xl border border-white/5 bg-white/5 p-4 text-sm text-white/70">
               Nenhum bolao em destaque no momento.
             </li>
