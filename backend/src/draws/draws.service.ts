@@ -132,7 +132,6 @@ export class DrawsService {
     const isFirstDraw = bolao.draws.length === 1;
     const reservedPot = Number(bolao.senaPotReserved ?? 0);
     const globalPotAmount = Number(senaPotGlobal?.amount ?? 0);
-    const commissionPercent = Number(bolao.commissionPercent ?? 0);
     const commissionFactor = Math.max(0, 1 - commissionPercent / 100);
 
     // Acumula/zera pot no primeiro sorteio, mesmo sem encerrar
