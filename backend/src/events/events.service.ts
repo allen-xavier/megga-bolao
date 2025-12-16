@@ -17,10 +17,10 @@ export class EventsService {
     this.subject.next(event);
   }
 
-  stream(): Observable<MessageEvent> {
+  stream(): Observable<AppEvent> {
     return new Observable((subscriber) => {
       const subscription = this.subject.subscribe((event) => {
-        subscriber.next({ data: event } as MessageEvent);
+        subscriber.next(event);
       });
 
       return () => subscription.unsubscribe();

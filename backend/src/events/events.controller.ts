@@ -7,11 +7,7 @@ export class EventsController {
   constructor(private readonly events: EventsService) {}
 
   @Sse()
-  stream(): Observable<MessageEvent> {
-    return this.events.stream().pipe(
-      map((event: any) => ({
-        data: event.data as AppEvent,
-      })),
-    );
+  stream(): Observable<{ data: AppEvent }> {
+    return this.events.stream().pipe(map((event) => ({ data: event })));
   }
 }
