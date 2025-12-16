@@ -78,26 +78,43 @@ export class AuthService {
 
     const passwordHash = await argon2.hash(dto.password);
 
-    const user = await this.prisma.user.create({
-      data: {
-        fullName: dto.fullName,
-        phone: normalizedPhone,
-        cpf: dto.cpf,
-        email: dto.email,
-        cep: dto.cep,
-        address: dto.address,
-        city: dto.city,
-        state: dto.state,
-        pixKey: dto.pixKey,
-        passwordHash,
-        role: dto.role ?? UserRole.USER,
-        acceptedTerms: dto.acceptedTerms ?? false,
-        referralCode: dto.referralCode ?? `ref_${randomUUID().replace(/-/g, '').slice(0, 16)}`,
-        wallet: {
-          create: {},
-        },
-      },
-    });
+    let user: User | null = null;
+    let attempts = 0;
+    while (!user && attempts < 5) {
+      attempts += 1;
+      const referralCode = dto.referralCode ?? `ref_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
+      try {
+        user = await this.prisma.user.create({
+          data: {
+            fullName: dto.fullName,
+            phone: normalizedPhone,
+            cpf: dto.cpf,
+            email: dto.email,
+            cep: dto.cep,
+            address: dto.address,
+            city: dto.city,
+            state: dto.state,
+            pixKey: dto.pixKey,
+            passwordHash,
+            role: dto.role ?? UserRole.USER,
+            acceptedTerms: dto.acceptedTerms ?? false,
+            referralCode,
+            wallet: {
+              create: {},
+            },
+          },
+        });
+      } catch (err: any) {
+        if (err?.code === 'P2002' && err?.meta?.target?.includes('referralCode')) {
+          continue; // tenta gerar outro
+        }
+        throw err;
+      }
+    }
+
+    if (!user) {
+      throw new ConflictException('Nao foi possivel gerar codigo de convite unico. Tente novamente.');
+    }
 
     await this.linkReferrals(user.id, dto.referralCode);
 
