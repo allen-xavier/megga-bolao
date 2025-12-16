@@ -54,11 +54,15 @@ export default function AdminUsuariosPage() {
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
+    const digits = term.replace(/\D/g, "");
     return (users ?? []).filter((u) => {
+      const name = (u.fullName ?? "").toLowerCase();
+      const cpfDigits = (u.cpf ?? "").replace(/\D/g, "");
+      const phoneDigits = (u.phone ?? "").replace(/\D/g, "");
       const matchesTerm =
         term.length === 0 ||
-        u.fullName?.toLowerCase().includes(term) ||
-        u.cpf?.replace(/\D/g, "").includes(term.replace(/\D/g, ""));
+        name.includes(term) ||
+        (digits.length > 0 && (cpfDigits.includes(digits) || phoneDigits.includes(digits)));
       const status = statusLabel(u);
       const matchesStatus =
         statusFilter === "todos" ||
@@ -73,7 +77,7 @@ export default function AdminUsuariosPage() {
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Gestao de contas</p>
         <h1 className="text-2xl font-semibold">Usuarios cadastrados</h1>
-        <p className="text-sm text-white/70">Pesquisa por nome/CPF, filtro por status e links para perfil/saque.</p>
+        <p className="text-sm text-white/70">Pesquisa por nome/CPF/telefone, filtro por status e links para perfil/saque.</p>
       </header>
 
       <section className="space-y-3 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
@@ -84,7 +88,7 @@ export default function AdminUsuariosPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar por nome ou CPF"
+              placeholder="Buscar por nome, CPF ou telefone"
               className="rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-white placeholder-white/40 focus:border-megga-magenta focus:outline-none"
             />
             <select
@@ -141,17 +145,23 @@ export default function AdminUsuariosPage() {
                     <p><span className="text-white/50">Criado em:</span> {user.createdAt ? new Date(user.createdAt).toLocaleString("pt-BR") : "—"}</p>
                   </div>
                 )}
-                <div className="mt-4 flex gap-3 text-sm">
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
                   <button
                     type="button"
                     onClick={() => setExpanded(isOpen ? null : user.id)}
-                    className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+                    className="rounded-2xl border border-white/10 bg-white/5 py-3 font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
                   >
                     {isOpen ? "Fechar perfil" : "Ver perfil"}
                   </button>
                   <Link
+                    href={`/admin/usuarios/${user.id}/editar`}
+                    className="rounded-2xl border border-white/10 bg-white/5 py-3 text-center font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+                  >
+                    Editar perfil
+                  </Link>
+                  <Link
                     href={`/admin/suitpay?userId=${user.id}`}
-                    className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-center font-semibold text-white transition hover:opacity-95"
+                    className="rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-center font-semibold text-white transition hover:opacity-95"
                   >
                     Liberar saque
                   </Link>
