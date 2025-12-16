@@ -21,7 +21,10 @@ type User = {
 
 const fetcher = (url: string, token?: string) =>
   api
-    .get(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
+    .get(url, {
+      params: { page: 1, perPage: 200 },
+      ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
+    })
     .then((response) => response.data);
 
 function statusLabel(user: User) {
@@ -63,11 +66,11 @@ export default function AdminUsuariosPage() {
         term.length === 0 ||
         name.includes(term) ||
         (digits.length > 0 && (cpfDigits.includes(digits) || phoneDigits.includes(digits)));
-      const status = statusLabel(u);
+      const statusValue = statusLabel(u);
       const matchesStatus =
         statusFilter === "todos" ||
-        (statusFilter === "verificado" && status === "Verificado") ||
-        (statusFilter === "pendente" && status === "Pendente");
+        (statusFilter === "verificado" && statusValue === "Verificado") ||
+        (statusFilter === "pendente" && statusValue === "Pendente");
       return matchesTerm && matchesStatus;
     });
   }, [users, query, statusFilter]);
@@ -141,7 +144,7 @@ export default function AdminUsuariosPage() {
 
         <ul className="space-y-3 text-sm text-white/80">
           {filtered.map((user) => {
-            const status = statusLabel(user);
+            const statusValue = statusLabel(user);
             const isOpen = expanded === user.id;
             return (
               <li key={user.id} className="rounded-2xl bg-white/5 p-4">
@@ -150,18 +153,21 @@ export default function AdminUsuariosPage() {
                     <p className="text-sm font-semibold text-white">{user.fullName}</p>
                     <p className="text-xs text-white/60">{user.phone}</p>
                   </div>
-                  <StatusPill status={status} />
+                  <StatusPill status={statusValue} />
                 </div>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-white/60">
                   <span>CPF: {user.cpf}</span>
-                  <span>Email: {user.email ?? "—"}</span>
-                  <span>UF: {user.state ?? "—"}</span>
+                  <span>Email: {user.email ?? "--"}</span>
+                  <span>UF: {user.state ?? "--"}</span>
                 </div>
                 {isOpen && (
                   <div className="mt-3 grid gap-2 text-xs text-white/70 md:grid-cols-2">
-                    <p><span className="text-white/50">Cidade:</span> {user.city ?? "—"}</p>
-                    <p><span className="text-white/50">PIX:</span> {user.pixKey ?? "—"}</p>
-                    <p><span className="text-white/50">Criado em:</span> {user.createdAt ? new Date(user.createdAt).toLocaleString("pt-BR") : "—"}</p>
+                    <p><span className="text-white/50">Cidade:</span> {user.city ?? "--"}</p>
+                    <p><span className="text-white/50">PIX:</span> {user.pixKey ?? "--"}</p>
+                    <p>
+                      <span className="text-white/50">Criado em:</span>{" "}
+                      {user.createdAt ? new Date(user.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "--"}
+                    </p>
                   </div>
                 )}
                 <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">

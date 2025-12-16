@@ -121,7 +121,7 @@ export default function AdminDashboardPage() {
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Boloes</p>
           <p className="mt-3 text-2xl font-semibold text-megga-yellow">
-            {bolaoStats.andamento.length} ativos • {bolaoStats.futuros.length} futuros • {bolaoStats.encerrados.length} encerrados
+            {bolaoStats.andamento.length} ativos · {bolaoStats.futuros.length} futuros · {bolaoStats.encerrados.length} encerrados
           </p>
           <p className="mt-2 text-sm text-white/60">Dados em tempo real via API</p>
         </div>
@@ -150,14 +150,14 @@ export default function AdminDashboardPage() {
         <ul className="space-y-3">
           {destaques(boloes ?? []).map((highlight) => {
             const hasStarted = new Date(highlight.startsAt).getTime() <= now;
-            const status = highlight.closedAt ? "Encerrado" : hasStarted ? "Em andamento" : "Futuro";
+            const statusLabel = highlight.closedAt ? "Encerrado" : hasStarted ? "Em andamento" : "Futuro";
             return (
               <li
                 key={highlight.id}
                 className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-white/5 p-4 md:flex-row md:items-center md:justify-between"
               >
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/40">{status}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/40">{statusLabel}</p>
                   <h3 className="mt-1 text-lg font-semibold text-white">{highlight.name}</h3>
                   <p className="text-xs text-white/60">Inicio: {formatDate(highlight.startsAt)}</p>
                 </div>
