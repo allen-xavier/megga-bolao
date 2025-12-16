@@ -26,6 +26,7 @@ async function ensureUser(phone: string, password: string, role: UserRole, fullN
       passwordHash,
       role,
       acceptedTerms: true,
+      referralCode: role === UserRole.ADMIN ? 'ref_admin_default' : 'ref_user_default',
       wallet: { create: {} },
     },
   });
