@@ -5,12 +5,36 @@ import useSWR from 'swr';
 import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
 
+const formatInputDate = (date: Date) => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+    .formatToParts(date)
+    .reduce<Record<string, string>>((acc, part) => {
+      if (part.type !== 'literal') acc[part.type] = part.value;
+      return acc;
+    }, {});
+
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+};
+
+const toIsoFromInput = (value: string) => {
+  const sanitized = value.length === 16 ? `${value}:00` : value;
+  return new Date(`${sanitized}-03:00`).toISOString();
+};
+
 export default function AdminSorteiosClient() {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
 
   const [selectedNumbers, setSelectedNumbers] = useState<Set<number>>(new Set());
-  const [drawDate, setDrawDate] = useState(() => new Date().toISOString().slice(0, 16));
+  const [drawDate, setDrawDate] = useState(() => formatInputDate(new Date()));
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [from, setFrom] = useState<string>('');
@@ -66,7 +90,7 @@ export default function AdminSorteiosClient() {
       await api.post(
         '/draws',
         {
-          drawnAt: new Date(drawDate).toISOString(),
+          drawnAt: toIsoFromInput(drawDate),
           numbers: formattedNumbers,
         },
         { headers: { Authorization: `Bearer ${token}` } },
