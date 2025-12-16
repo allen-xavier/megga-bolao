@@ -113,6 +113,14 @@ export default function AdminUsuariosPage() {
         {status !== "authenticated" && (
           <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-yellow">Faca login como administrador.</p>
         )}
+        {status !== "authenticated" && (
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
+          >
+            Ir para login
+          </Link>
+        )}
         {isLoading && <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Carregando usuarios...</p>}
         {error && (
           <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-rose">
