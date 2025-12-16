@@ -22,7 +22,7 @@ type User = {
 const fetcher = (url: string, token?: string) =>
   api
     .get(url, {
-      params: { page: 1, perPage: 200 },
+      params: { page: 1, perPage: 100 },
       ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
     })
     .then((response) => response.data);
