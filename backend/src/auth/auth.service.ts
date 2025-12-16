@@ -78,12 +78,13 @@ export class AuthService {
 
     const passwordHash = await argon2.hash(dto.password);
 
+    const inviteCode = dto.referralCode?.trim() || undefined;
     let user: User | null = null;
     let attempts = 0;
     while (!user && attempts < 10) {
       attempts += 1;
       const base = randomUUID().replace(/-/g, '');
-      const referralCode = dto.referralCode ?? `ref_${base.slice(0, 20)}`;
+      const referralCode = `ref_${base.slice(0, 24)}`;
       try {
         user = await this.prisma.user.create({
           data: {
@@ -117,7 +118,7 @@ export class AuthService {
       throw new ConflictException('Nao foi possivel gerar codigo de convite unico. Tente novamente.');
     }
 
-    await this.linkReferrals(user.id, dto.referralCode);
+    await this.linkReferrals(user.id, inviteCode);
 
     return {
       user: this.toSafeUser(user),
@@ -125,9 +126,9 @@ export class AuthService {
     };
   }
 
-  private async linkReferrals(newUserId: string, referralCode?: string) {
-    if (!referralCode) return;
-    const referrer = await this.prisma.user.findUnique({ where: { referralCode } });
+  private async linkReferrals(newUserId: string, inviteCode?: string) {
+    if (!inviteCode) return;
+    const referrer = await this.prisma.user.findUnique({ where: { referralCode: inviteCode } });
     if (!referrer) return;
 
     // Nível 1
