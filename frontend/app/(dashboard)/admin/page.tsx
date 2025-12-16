@@ -19,6 +19,13 @@ type Wallet = {
   balance: number;
 };
 
+type AdminStats = {
+  totalBets: number;
+  totalPaid: number;
+  adminBalance: number;
+  walletOutstanding: number;
+};
+
 const fetcher = (url: string, token?: string) =>
   api
     .get(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
@@ -45,6 +52,11 @@ export default function AdminDashboardPage() {
   );
   const { data: wallet } = useSWR<Wallet>(
     token ? ["/wallet/me", token] as const : null,
+    ([url, t]: [string, string]) => fetcher(url, t),
+    { revalidateOnFocus: false },
+  );
+  const { data: stats } = useSWR<AdminStats>(
+    token ? ["/admin/stats", token] as const : null,
     ([url, t]: [string, string]) => fetcher(url, t),
     { revalidateOnFocus: false },
   );
@@ -84,9 +96,9 @@ export default function AdminDashboardPage() {
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Carteira administrativa</p>
           <p className="mt-3 text-2xl font-semibold text-megga-yellow">
-            {formatCurrency(wallet?.balance ?? 0)}
+            {formatCurrency(stats?.adminBalance ?? 0)}
           </p>
-          <p className="mt-2 text-sm text-white/60">Saldo do usuario logado</p>
+          <p className="mt-2 text-sm text-white/60">Total apostado - premios pagos</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Boloes</p>
@@ -94,6 +106,13 @@ export default function AdminDashboardPage() {
             {stats.andamento.length} ativos • {stats.futuros.length} futuros • {stats.encerrados.length} encerrados
           </p>
           <p className="mt-2 text-sm text-white/60">Dados em tempo real via API</p>
+        </div>
+        <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Saldo dos usuarios</p>
+          <p className="mt-3 text-2xl font-semibold text-megga-yellow">
+            {formatCurrency(stats?.walletOutstanding ?? 0)}
+          </p>
+          <p className="mt-2 text-sm text-white/60">Soma dos saldos em carteira (premios/comissoes nao sacados)</p>
         </div>
       </section>
 

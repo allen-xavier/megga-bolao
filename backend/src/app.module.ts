@@ -13,6 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { BetsModule } from './bets/bets.module';
 import { TransparencyModule } from './transparency/transparency.module';
 import { EventsModule } from './events/events.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { EventsModule } from './events/events.module';
     BetsModule,
     TransparencyModule,
     EventsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
