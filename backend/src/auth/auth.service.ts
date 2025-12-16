@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
@@ -108,12 +108,12 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { phone: normalizedPhone } });
 
     if (!user) {
-      throw new UnauthorizedException('Credenciais inválidas');
+      throw new NotFoundException('Usuario nao encontrado');
     }
 
     const isValid = await argon2.verify(user.passwordHash, dto.password);
     if (!isValid) {
-      throw new UnauthorizedException('Credenciais inválidas');
+      throw new UnauthorizedException('Credenciais invalidas');
     }
 
     return {
