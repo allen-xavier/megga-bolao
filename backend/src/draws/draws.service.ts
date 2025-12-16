@@ -132,21 +132,22 @@ export class DrawsService {
     const isFirstDraw = bolao.draws.length === 1;
     const reservedPot = Number(bolao.senaPotReserved ?? 0);
     const globalPotAmount = Number(senaPotGlobal?.amount ?? 0);
+    const commissionPercent = Number(bolao.commissionPercent ?? 0);
+    const commissionFactor = Math.max(0, 1 - commissionPercent / 100);
 
     // Acumula/zera pot no primeiro sorteio, mesmo sem encerrar
     if (!shouldClose && isFirstDraw) {
-      let newGlobal = globalPotAmount;
-      if (senaWinners.length === 0) {
-        newGlobal += reservedPot + senaPrizeBase * 0.8;
-      } else {
-        newGlobal = 0;
-      }
+      const totalGross = reservedPot + senaPrizeBase;
+      const totalNet = totalGross * commissionFactor;
+      const rolledAmount = senaWinners.length === 0 ? totalNet * 0.8 : 0;
+      const newGlobal = senaWinners.length === 0 ? globalPotAmount + rolledAmount : 0;
+
       await this.prisma.$transaction(async (tx) => {
         await tx.bolao.update({
           where: { id: bolao.id },
           data: {
             senaPotReserved: 0,
-            senaPotRolled: senaWinners.length === 0 ? newGlobal : 0,
+            senaPotRolled: rolledAmount,
           },
         });
         await tx.senaPot.upsert({
@@ -194,14 +195,15 @@ export class DrawsService {
     };
 
     const potAvailable = reservedPot > 0 ? reservedPot : globalPotAmount;
+    const totalSenaGross = potAvailable + senaPrizeBase;
+    const totalSenaNet = totalSenaGross * commissionFactor;
     let senaPotAmount = globalPotAmount;
-    let senaTotal = senaPrizeBase + potAvailable;
+    let senaTotal = totalSenaNet;
 
     if (senaWinners.length === 0) {
-      senaPotAmount = potAvailable + senaPrizeBase * 0.8;
+      senaPotAmount = totalSenaNet * 0.8;
       senaTotal = 0;
     } else {
-      // Sena saiu, zera o acumulado global
       senaPotAmount = 0;
     }
 
@@ -217,7 +219,7 @@ export class DrawsService {
     await this.prisma.$transaction(async (tx) => {
       await tx.bolao.update({
         where: { id: bolao.id },
-        data: { closedAt: closedAt ?? new Date(), senaPotReserved: 0, senaPotRolled: 0 },
+        data: { closedAt: closedAt ?? new Date(), senaPotReserved: 0, senaPotRolled: senaPotAmount },
       });
 
       const bolaoResult = await tx.bolaoResult.create({
