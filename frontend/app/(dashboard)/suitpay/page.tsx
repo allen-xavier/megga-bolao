@@ -17,10 +17,6 @@ type SuitpayConfig = {
 const fetcher = (url: string, token?: string) =>
   api.get<SuitpayConfig>(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined).then((r) => r.data);
 
-export const metadata = {
-  title: "SuitPay - Configuracao",
-};
-
 export default function SuitPayConfigPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
