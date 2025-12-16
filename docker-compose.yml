@@ -55,8 +55,10 @@ services:
       EVOLUTION_API_URL: https://sua-api-evolution.exemplo
       EVOLUTION_API_TOKEN: evo_tok_v73ZpL9qR2sX6uB4tM1nY8c
       SUITPAY_API_URL: https://api.suitpay.com.br
-      SUITPAY_API_TOKEN: suitpay_tok_R5t8L1k2Q9sW4vH3mZ7nC0a
-      SUITPAY_WEBHOOK_SECRET: suitpay_wh_84nQf2jX6mPs9yT3vZw0Lc
+      SUITPAY_CLIENT_ID: ""
+      SUITPAY_CLIENT_SECRET: ""
+      SUITPAY_WEBHOOK_SECRET: ""
+      SUITPAY_ENV: sandbox
       PORT: 3001
       TZ: America/Sao_Paulo
     volumes:

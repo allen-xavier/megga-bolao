@@ -232,3 +232,14 @@ model AuditLog {
   details   Json?
   createdAt DateTime @default(now())
 }
+
+model SuitpayConfig {
+  id             String   @id @default("current")
+  environment    String   @default("sandbox")
+  apiUrl         String
+  clientId       String
+  clientSecret   String
+  webhookSecret  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

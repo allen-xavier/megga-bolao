@@ -14,8 +14,10 @@ export default () => ({
     token: process.env.EVOLUTION_API_TOKEN,
   },
   suitpay: {
+    env: process.env.SUITPAY_ENV ?? 'sandbox',
     url: process.env.SUITPAY_API_URL,
-    token: process.env.SUITPAY_API_TOKEN,
+    clientId: process.env.SUITPAY_CLIENT_ID,
+    clientSecret: process.env.SUITPAY_CLIENT_SECRET,
     webhookSecret: process.env.SUITPAY_WEBHOOK_SECRET,
   },
 });

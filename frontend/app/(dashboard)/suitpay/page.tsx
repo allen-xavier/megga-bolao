@@ -1,102 +1,165 @@
-const payoutQueue = [
-  {
-    id: 'REQ-9087',
-    user: 'Fernanda Souza',
-    value: 'R$ 420,00',
-    status: 'Aguardando aprovação',
-    requestedAt: '25/05/2025 às 19h32',
-  },
-  {
-    id: 'REQ-9079',
-    user: 'Carlos Pereira',
-    value: 'R$ 110,00',
-    status: 'Automático enviado',
-    requestedAt: '25/05/2025 às 18h45',
-  },
-];
+"use client";
 
-const webhooks = [
-  { id: 'WH-5523', type: 'Depósito confirmado', amount: 'R$ 250,00', at: '25/05/2025 17h01' },
-  { id: 'WH-5522', type: 'Saque processado', amount: 'R$ 90,00', at: '25/05/2025 16h20' },
-];
+import { useState } from "react";
+import useSWR from "swr";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { api } from "@/lib/api";
 
-export const metadata = {
-  title: 'SuitPay - Megga Bolão',
+type SuitpayConfig = {
+  environment: "sandbox" | "production";
+  apiUrl: string;
+  clientId: string;
+  clientSecret: string;
+  webhookSecret?: string | null;
 };
 
-export default function SuitPayPage() {
+const fetcher = (url: string, token?: string) =>
+  api.get<SuitpayConfig>(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined).then((r) => r.data);
+
+export const metadata = {
+  title: "SuitPay - Configuracao",
+};
+
+export default function SuitPayConfigPage() {
+  const { data: session, status } = useSession();
+  const token = session?.user?.accessToken;
+  const { data, error, mutate } = useSWR<SuitpayConfig>(token ? ["/admin/suitpay/config", token] as const : null, ([url, t]) => fetcher(url, t), {
+    revalidateOnFocus: false,
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [form, setForm] = useState<SuitpayConfig | null>(null);
+
+  const config = form ?? data;
+
+  const handleChange = (field: keyof SuitpayConfig) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const value = field === "environment" ? (e.target.value as SuitpayConfig["environment"]) : e.target.value;
+    setForm((prev) => ({ ...(prev ?? data ?? { environment: "sandbox", apiUrl: "", clientId: "", clientSecret: "" }), [field]: value }));
+  };
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !config) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      const payload = {
+        environment: config.environment,
+        apiUrl: config.apiUrl,
+        clientId: config.clientId,
+        clientSecret: config.clientSecret,
+        webhookSecret: config.webhookSecret ?? undefined,
+      };
+      await api.patch("/admin/suitpay/config", payload, { headers: { Authorization: `Bearer ${token}` } });
+      setMessage("Configuracao atualizada com sucesso.");
+      setForm(null);
+      mutate();
+    } catch (err: any) {
+      setMessage(err?.response?.data?.message ?? "Falha ao salvar configuracao.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!token || status !== "authenticated") {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-white/80">Faca login como administrador para acessar as configuracoes da SuitPay.</p>
+        <Link
+          href="/login"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
+        >
+          Ir para login
+        </Link>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-megga-rose">Erro ao carregar configuracao: {error?.message ?? "falha desconhecida"}</p>
+      </div>
+    );
+  }
+
+  if (!config) {
+    return <p className="rounded-3xl bg-megga-navy/80 p-6 text-sm text-white/70">Carregando configuracao...</p>;
+  }
+
   return (
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Pagamentos</p>
-        <h1 className="text-2xl font-semibold">Fluxo SuitPay</h1>
-        <p className="text-sm text-white/70">
-          Monitore solicitações de saque, regras automáticas e webhooks recebidos diretamente da SuitPay. Aprove para valores acima do limite automático.
-        </p>
+        <h1 className="text-2xl font-semibold">SuitPay - Configuracao</h1>
+        <p className="text-sm text-white/70">Defina ambiente, endpoint e chaves de acesso (sandbox ou producao).</p>
       </header>
-      <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Fila de saques</h2>
-          <span className="rounded-full bg-megga-yellow/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-megga-yellow">
-            Limite auto: R$ 150,00
-          </span>
+
+      <form onSubmit={save} className="space-y-4 rounded-3xl bg-megga-navy/80 p-6 shadow-lg ring-1 ring-white/5">
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="space-y-1 text-sm text-white/70">
+            <span>Ambiente</span>
+            <select
+              value={config.environment}
+              onChange={handleChange("environment")}
+              className="w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm text-white focus:border-megga-magenta focus:outline-none"
+            >
+              <option value="sandbox" className="bg-megga-navy">Sandbox</option>
+              <option value="production" className="bg-megga-navy">Producao</option>
+            </select>
+          </label>
+          <label className="space-y-1 text-sm text-white/70">
+            <span>API URL</span>
+            <input
+              type="text"
+              value={config.apiUrl}
+              onChange={handleChange("apiUrl")}
+              className="w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
+            />
+          </label>
+          <label className="space-y-1 text-sm text-white/70">
+            <span>Client ID (ci)</span>
+            <input
+              type="text"
+              value={config.clientId}
+              onChange={handleChange("clientId")}
+              className="w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
+            />
+          </label>
+          <label className="space-y-1 text-sm text-white/70">
+            <span>Client Secret (cs)</span>
+            <input
+              type="password"
+              value={config.clientSecret}
+              onChange={handleChange("clientSecret")}
+              className="w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
+            />
+          </label>
+          <label className="space-y-1 text-sm text-white/70">
+            <span>Webhook Secret (opcional)</span>
+            <input
+              type="text"
+              value={config.webhookSecret ?? ""}
+              onChange={handleChange("webhookSecret")}
+              className="w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
+            />
+          </label>
         </div>
-        <ul className="space-y-3">
-          {payoutQueue.map((item) => (
-            <li key={item.id} className="rounded-2xl border border-white/5 bg-white/5 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/40">{item.id}</p>
-                  <p className="mt-1 font-semibold text-white">{item.user}</p>
-                  <p className="text-xs text-white/60">Solicitado em {item.requestedAt}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/40">Valor</p>
-                  <p className="mt-1 text-lg font-semibold text-megga-yellow">{item.value}</p>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-3">
-                <button
-                  type="button"
-                  className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
-                >
-                  Detalhes
-                </button>
-                <button
-                  type="button"
-                  className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95"
-                >
-                  Aprovar saque
-                </button>
-              </div>
-              <p className="mt-3 text-xs text-white/60">{item.status}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="space-y-3 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
-        <header className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Logs de webhooks</h2>
+
+        <div className="flex flex-wrap gap-3">
           <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/80 transition hover:border-megga-magenta hover:text-megga-yellow"
+            type="submit"
+            disabled={saving}
+            className="rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal px-6 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-50"
           >
-            Atualizar
+            {saving ? "Salvando..." : "Salvar configuracao"}
           </button>
-        </header>
-        <ul className="space-y-2 text-sm">
-          {webhooks.map((webhook) => (
-            <li key={webhook.id} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/40">{webhook.id}</p>
-                <p className="mt-1 font-medium text-white">{webhook.type}</p>
-                <p className="text-xs text-white/60">{webhook.at}</p>
-              </div>
-              <span className="text-base font-semibold text-megga-lime">{webhook.amount}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+          <p className="text-xs text-white/60">Sandbox: https://sandbox.ws.suitpay.app | Producao: https://ws.suitpay.app</p>
+        </div>
+        {message && <p className="text-sm text-megga-lime">{message}</p>}
+      </form>
     </div>
   );
 }
