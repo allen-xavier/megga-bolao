@@ -31,9 +31,11 @@ export default function EditUserPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
 
-  const { data: user, error } = useSWR<User>(token && userId ? [`/users/${userId}`, token] as const : null, ([url, t]) => fetcher(url, t), {
-    revalidateOnFocus: false,
-  });
+  const { data: user, error } = useSWR<User, any, [string, string] | null>(
+    token && userId ? [`/users/${userId}`, token] as [string, string] : null,
+    ([url, t]) => fetcher(url, t),
+    { revalidateOnFocus: false },
+  );
 
   const [form, setForm] = useState<User | null>(null);
   const [saving, setSaving] = useState(false);
