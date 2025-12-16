@@ -7,6 +7,7 @@ export type AppEvent =
   | { type: "draw.created"; bolaoId: string; drawId: string }
   | { type: "prize.updated"; bolaoId: string }
   | { type: "pot.updated"; bolaoId?: string }
+  | { type: "bet.created"; bolaoId: string }
   | { type: "ping" };
 
 @Injectable()

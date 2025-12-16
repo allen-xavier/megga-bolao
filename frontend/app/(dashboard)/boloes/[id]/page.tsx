@@ -65,7 +65,8 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     let reconnect: NodeJS.Timeout | null = null;
 
     const connect = () => {
-      source = new EventSource("/api/events");
+      const url = token ? `/api/events?token=${encodeURIComponent(token)}` : `/api/events`;
+      source = new EventSource(url);
       source.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data);
@@ -93,7 +94,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
       if (reconnect) clearTimeout(reconnect);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.id, bolao]);
+  }, [params.id, bolao, token]);
 
   if (loading) {
     return (
@@ -239,15 +240,27 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                   const pct = Number(prize.percentage ?? 0);
                   const pctShare = totalPct > 0 ? pct / totalPct : 0;
                   const baseValue = fixed + variablePool * pctShare;
-                  const bonus = prize.type === "SENA_PRIMEIRO" ? (senaPotApplied > 0 ? senaPotApplied : 0) : 0;
-                  const totalValue = baseValue + bonus;
+                  const bonusApplied = prize.type === "SENA_PRIMEIRO" ? (senaPotApplied > 0 ? senaPotApplied : 0) : 0;
+                  const bonusAwaiting = prize.type === "SENA_PRIMEIRO" && bonusApplied === 0 ? senaPotGlobal : 0;
+                  const totalValue = baseValue + bonusApplied;
 
-                  if (bonus > 0) {
+                  if (bonusApplied > 0) {
                     return (
                       <span className="flex flex-col items-end text-right">
                         <span>R$ {formatCurrency(totalValue)}</span>
                         <span className="text-[11px] text-white/70">
-                          (Base R$ {formatCurrency(baseValue)} + Acum R$ {formatCurrency(bonus)} = Total)
+                          (Base R$ {formatCurrency(baseValue)} + Acum R$ {formatCurrency(bonusApplied)} = Total)
+                        </span>
+                      </span>
+                    );
+                  }
+
+                  if (bonusAwaiting > 0) {
+                    return (
+                      <span className="flex flex-col items-end text-right">
+                        <span>R$ {formatCurrency(baseValue)}</span>
+                        <span className="text-[11px] text-white/70">
+                          Acumulara para proximo bolao: R$ {formatCurrency(bonusAwaiting)}
                         </span>
                       </span>
                     );

@@ -3,6 +3,7 @@ import { PaymentType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBetDto } from './dto/create-bet.dto';
 import { TransparencyService } from '../transparency/transparency.service';
+import { EventsService } from '../events/events.service';
 
 type BetWithUser = Prisma.BetGetPayload<{
   include: { user: { select: { fullName: true; city: true; state: true } } };
@@ -13,6 +14,7 @@ export class BetsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly transparency: TransparencyService,
+    private readonly events: EventsService,
   ) {}
 
   async create(bolaoId: string, userId: string, dto: CreateBetDto) {
@@ -162,6 +164,8 @@ export class BetsService {
       numbers: result.bet.numbers,
       createdAt: result.bet.createdAt,
     });
+
+    this.events.emit({ type: "bet.created", bolaoId, });
 
     return {
       bet: {
