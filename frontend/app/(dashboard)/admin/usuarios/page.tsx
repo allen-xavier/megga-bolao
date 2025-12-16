@@ -39,10 +39,6 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-export const metadata = {
-  title: "Usuarios - Admin Megga Bolao",
-};
-
 export default function AdminUsuariosPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
