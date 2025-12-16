@@ -58,7 +58,17 @@ export default function EditUserPage() {
     setMessage(null);
     setErrorMsg(null);
     try {
-      await api.patch(`/users/${userId}`, form, { headers: { Authorization: `Bearer ${token}` } });
+      const payload = {
+        fullName: form.fullName,
+        phone: form.phone,
+        cpf: form.cpf,
+        email: form.email ?? undefined,
+        city: form.city ?? undefined,
+        state: form.state ?? undefined,
+        pixKey: form.pixKey ?? undefined,
+        acceptedTerms: form.acceptedTerms ?? false,
+      };
+      await api.patch(`/users/${userId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
       setMessage("Perfil atualizado com sucesso.");
     } catch (err: any) {
       setErrorMsg(err?.response?.data?.message ?? "Falha ao atualizar usuario.");
