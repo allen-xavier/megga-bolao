@@ -60,6 +60,7 @@ export class BoloesService {
     return {
       ...bolao,
       senaPot: senaPotVisible,
+      senaPotGlobal: Number(senaPot?.amount ?? 0),
       senaPotApplied,
       livePrizes,
     };

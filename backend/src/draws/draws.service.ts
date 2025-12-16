@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+﻿import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PaymentType, PrizeType } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateDrawDto } from "./dto/create-draw.dto";
@@ -104,10 +104,6 @@ export class DrawsService {
     const shouldClose = hasTen && !bolao.closedAt;
     const closedAt = shouldClose ? new Date() : bolao.closedAt;
 
-    if (!shouldClose) {
-      return;
-    }
-
     const senaPot =
       (await this.prisma.senaPot.findUnique({ where: { id: "global" } })) ||
       (await this.prisma.senaPot.create({ data: { id: "global", amount: 0 } }));
@@ -128,6 +124,30 @@ export class DrawsService {
       const pctShare = totalPct > 0 ? Number(prize.percentage ?? 0) / totalPct : 0;
       return Number(prize.fixedValue ?? 0) + variablePool * pctShare;
     };
+
+    const senaPrizeBase = getPrizeValue(PrizeType.SENA_PRIMEIRO);
+    const senaWinners = hitsByBet.filter((b) => b.firstDrawHits === 6);
+    const isFirstDraw = bolao.draws.length === 1;
+
+    // Acumula/zera pot no primeiro sorteio mesmo sem encerrar
+    if (!shouldClose && isFirstDraw) {
+      let senaPotAmount = Number(senaPot.amount);
+      if (senaWinners.length === 0) {
+        senaPotAmount += senaPrizeBase * 0.8;
+      } else {
+        senaPotAmount = 0;
+      }
+      await this.prisma.senaPot.upsert({
+        where: { id: "global" },
+        update: { amount: senaPotAmount },
+        create: { id: "global", amount: senaPotAmount },
+      });
+      return;
+    }
+
+    if (!shouldClose) {
+      return;
+    }
 
     const winners: Record<string, { bets: typeof hitsByBet; total: number }> = {} as any;
 
@@ -166,8 +186,6 @@ export class DrawsService {
 
     const isPotAppliedHere = potTargetBolao?.id === bolao.id;
 
-    const senaWinners = hitsByBet.filter((b) => b.firstDrawHits === 6);
-    const senaPrizeBase = getPrizeValue(PrizeType.SENA_PRIMEIRO);
     let senaPotAmount = Number(senaPot.amount);
     let senaTotal = senaPrizeBase + (isPotAppliedHere ? senaPotAmount : 0);
     if (senaWinners.length === 0) {

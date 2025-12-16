@@ -51,6 +51,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const prizeResults = latestResult?.prizes ?? [];
   const livePrizes = bolao.livePrizes ?? [];
   const senaPotApplied = Number(bolao.senaPotApplied ?? 0);
+  const senaPotGlobal = Number(bolao.senaPotGlobal ?? 0);
   const ticketPrice = Number(bolao.ticketPrice ?? 0);
   const hasTransparency = Boolean(bolao.transparency);
   const draws = bolao.draws ?? [];
@@ -120,6 +121,12 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                 <div className="rounded-2xl bg-white/10 px-5 py-4 text-right shadow ring-1 ring-megga-purple/40">
                   <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Sena acumulada</p>
                   <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(senaPotApplied)}</p>
+                </div>
+              )}
+              {!isClosed && senaPotApplied === 0 && senaPotGlobal > 0 && (
+                <div className="rounded-2xl bg-white/10 px-5 py-4 text-right shadow ring-1 ring-megga-purple/40">
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Sena acumulou!</p>
+                  <p className="mt-2 text-sm font-semibold text-megga-yellow">Próximo bolão futuro recebe R$ {formatCurrency(senaPotGlobal)}</p>
                 </div>
               )}
             </div>
