@@ -38,12 +38,16 @@ export default function AdminDashboardPage() {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
 
-  const { data: boloes } = useSWR<Bolao[]>(token ? ["/boloes", token] : null, ([url, t]) => fetcher(url, t), {
-    revalidateOnFocus: false,
-  });
-  const { data: wallet } = useSWR<Wallet>(token ? ["/wallet/me", token] : null, ([url, t]) => fetcher(url, t), {
-    revalidateOnFocus: false,
-  });
+  const { data: boloes } = useSWR<Bolao[]>(
+    token ? ["/boloes", token] as const : null,
+    ([url, t]: [string, string]) => fetcher(url, t),
+    { revalidateOnFocus: false },
+  );
+  const { data: wallet } = useSWR<Wallet>(
+    token ? ["/wallet/me", token] as const : null,
+    ([url, t]: [string, string]) => fetcher(url, t),
+    { revalidateOnFocus: false },
+  );
 
   const now = Date.now();
   const stats = (() => {
