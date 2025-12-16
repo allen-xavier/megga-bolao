@@ -51,21 +51,11 @@ export class BoloesService {
     if (!bolao) return null;
 
     const senaPot = await this.prisma.senaPot.findUnique({ where: { id: "global" } });
-    const hasReservedElsewhere = await this.prisma.bolao.findFirst({
-      where: { senaPotReserved: { gt: 0 }, closedAt: null },
-      select: { id: true },
-    });
-    const earliestFuture = await this.prisma.bolao.findFirst({
-      where: { closedAt: null, startsAt: { gt: new Date() } },
-      orderBy: { startsAt: "asc" },
-      select: { id: true },
-    });
     const senaPotApplied = Number(bolao.senaPotReserved ?? 0);
+    const senaPotRolled = Number(bolao.senaPotRolled ?? 0);
     const senaPotVisible = senaPotApplied;
-    const senaPotGlobalVisible =
-      senaPotApplied === 0 && !hasReservedElsewhere && earliestFuture?.id === bolao.id
-        ? Number(senaPot?.amount ?? 0)
-        : 0;
+    // Expor o acumulado global (caso ainda nao esteja reservado) e o valor rolado a partir deste bolao
+    const senaPotGlobalVisible = senaPotApplied > 0 ? 0 : Number(senaPot?.amount ?? 0);
     const livePrizes = !bolao.closedAt ? this.computeLivePrizes(bolao) : [];
 
     return {
@@ -73,6 +63,7 @@ export class BoloesService {
       senaPot: senaPotVisible,
       senaPotGlobal: senaPotGlobalVisible,
       senaPotApplied,
+      senaPotRolled,
       livePrizes,
     };
   }

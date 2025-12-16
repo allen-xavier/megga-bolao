@@ -114,6 +114,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const prizeResults = latestResult?.prizes ?? [];
   const livePrizes = bolao.livePrizes ?? [];
   const senaPotApplied = Number(bolao.senaPotApplied ?? 0);
+  const senaPotRolled = Number(bolao.senaPotRolled ?? 0);
   const senaPotGlobal = Number(bolao.senaPotGlobal ?? 0);
   const ticketPrice = Number(bolao.ticketPrice ?? 0);
   const hasTransparency = Boolean(bolao.transparency);
@@ -191,11 +192,11 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                   <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(senaPotApplied)}</p>
                 </div>
               )}
-              {!isClosed && senaPotApplied === 0 && senaPotGlobal > 0 && (
+              {!isClosed && senaPotApplied === 0 && (senaPotRolled > 0 || senaPotGlobal > 0) && (
                 <div className="rounded-2xl bg-white/10 px-5 py-4 text-right shadow ring-1 ring-megga-purple/40">
                   <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Sena acumulou!</p>
                   <p className="mt-2 text-sm font-semibold text-megga-yellow">
-                    Proximo bolao futuro recebe R$ {formatCurrency(senaPotGlobal)}
+                    Proximo bolao futuro recebe R$ {formatCurrency(senaPotRolled > 0 ? senaPotRolled : senaPotGlobal)}
                   </p>
                 </div>
               )}
@@ -241,7 +242,8 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                   const pctShare = totalPct > 0 ? pct / totalPct : 0;
                   const baseValue = fixed + variablePool * pctShare;
                   const bonusApplied = prize.type === "SENA_PRIMEIRO" ? (senaPotApplied > 0 ? senaPotApplied : 0) : 0;
-                  const bonusAwaiting = prize.type === "SENA_PRIMEIRO" && bonusApplied === 0 ? senaPotGlobal : 0;
+                  const bonusAwaiting =
+                    prize.type === "SENA_PRIMEIRO" && bonusApplied === 0 ? (senaPotRolled > 0 ? senaPotRolled : senaPotGlobal) : 0;
                   const totalValue = baseValue + bonusApplied;
 
                   if (bonusApplied > 0) {

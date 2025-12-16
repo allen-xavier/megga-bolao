@@ -142,7 +142,13 @@ export class DrawsService {
         newGlobal = 0;
       }
       await this.prisma.$transaction(async (tx) => {
-        await tx.bolao.update({ where: { id: bolao.id }, data: { senaPotReserved: 0 } });
+        await tx.bolao.update({
+          where: { id: bolao.id },
+          data: {
+            senaPotReserved: 0,
+            senaPotRolled: senaWinners.length === 0 ? newGlobal : 0,
+          },
+        });
         await tx.senaPot.upsert({
           where: { id: "global" },
           update: { amount: newGlobal },
@@ -209,7 +215,10 @@ export class DrawsService {
     ];
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.bolao.update({ where: { id: bolao.id }, data: { closedAt: closedAt ?? new Date(), senaPotReserved: 0 } });
+      await tx.bolao.update({
+        where: { id: bolao.id },
+        data: { closedAt: closedAt ?? new Date(), senaPotReserved: 0, senaPotRolled: 0 },
+      });
 
       const bolaoResult = await tx.bolaoResult.create({
         data: {

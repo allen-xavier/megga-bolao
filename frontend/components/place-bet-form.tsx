@@ -88,9 +88,7 @@ export function PlaceBetForm({ bolaoId, ticketPrice }: PlaceBetFormProps) {
         throw new Error('Faça login para apostar.');
       }
 
-      const payload = isSurprise
-        ? { isSurprise: true }
-        : { numbers: selectedNumbers, isSurprise: false };
+      const payload = { numbers: selectedNumbers, isSurprise };
       const response = await api.post(`/boloes/${bolaoId}/bets`, payload, {
         headers: { Authorization: `Bearer ${session.user.accessToken}` },
       });

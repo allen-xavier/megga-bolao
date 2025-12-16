@@ -181,23 +181,29 @@ export class BetsService {
   }
 
   private resolveNumbers(dto: CreateBetDto): number[] {
-    if (dto.isSurprise || !dto.numbers?.length) {
+    if (dto.isSurprise) {
+      if (dto.numbers && dto.numbers.length === 10) {
+        return [...dto.numbers].sort((a, b) => a - b);
+      }
       return this.generateSurpriseNumbers();
+    }
+
+    if (!dto.numbers?.length) {
+      throw new BadRequestException('A aposta deve conter exatamente 10 numeros');
     }
 
     const unique = Array.from(new Set(dto.numbers));
     if (unique.length !== 10) {
-      throw new BadRequestException('A aposta deve conter exatamente 10 números únicos');
+      throw new BadRequestException('A aposta deve conter exatamente 10 numeros unicos');
     }
 
     const invalid = unique.some((number) => number < 1 || number > 60);
     if (invalid) {
-      throw new BadRequestException('Os números devem estar entre 1 e 60');
+      throw new BadRequestException('Os numeros devem estar entre 1 e 60');
     }
 
     return [...unique].sort((a, b) => a - b);
   }
-
   private generateSurpriseNumbers(): number[] {
     const pool = Array.from({ length: 60 }, (_, index) => index + 1);
     for (let i = pool.length - 1; i > 0; i -= 1) {
@@ -207,3 +213,4 @@ export class BetsService {
     return pool.slice(0, 10).sort((a, b) => a - b);
   }
 }
+
