@@ -38,22 +38,8 @@ function formatDate(value: string | null | undefined) {
 }
 
 export default function AdminDashboardPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
-
-  if (!token) {
-    return (
-      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-white/80">Faca login como administrador para acessar o painel.</p>
-        <Link
-          href="/login"
-          className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
-        >
-          Ir para login
-        </Link>
-      </div>
-    );
-  }
 
   const { data: boloes } = useSWR<Bolao[]>(
     token ? ["/boloes", token] as const : null,
@@ -81,6 +67,20 @@ export default function AdminDashboardPage() {
       ?.filter((b) => !b.closedAt)
       .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
       .slice(0, 3) ?? [];
+
+  if (!token || status !== "authenticated") {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-white/80">Faca login como administrador para acessar o painel.</p>
+        <Link
+          href="/login"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
+        >
+          Ir para login
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
