@@ -80,9 +80,10 @@ export class AuthService {
 
     let user: User | null = null;
     let attempts = 0;
-    while (!user && attempts < 5) {
+    while (!user && attempts < 10) {
       attempts += 1;
-      const referralCode = dto.referralCode ?? `ref_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
+      const base = randomUUID().replace(/-/g, '');
+      const referralCode = dto.referralCode ?? `ref_${base.slice(0, 20)}`;
       try {
         user = await this.prisma.user.create({
           data: {
