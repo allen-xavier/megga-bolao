@@ -1,32 +1,19 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
 import { BetsList } from "@/components/bets-list";
 import { PlaceBetForm } from "@/components/place-bet-form";
 import { TransparencyDownload } from "@/components/transparency-download";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+type PrizeInfo = {
+  title: string;
+  description: string;
+};
 
-async function getBolao(id: string) {
-  try {
-    const response = await api.get(`/boloes/${id}`);
-    return response.data;
-  } catch {
-    return null;
-  }
-}
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-const prizeInfo: Record<
-  string,
-  {
-    title: string;
-    description: string;
-  }
-> = {
+const prizeInfo: Record<string, PrizeInfo> = {
   PE_QUENTE: { title: "Pe Quente", description: "Ganha quem acertar 10 numeros primeiro" },
   PE_FRIO: { title: "Pe Frio", description: "Ganha quem acertar menos numeros no final" },
   CONSOLACAO: { title: "Consolacao", description: "Ganha quem terminar com 9 acertos" },
@@ -36,8 +23,86 @@ const prizeInfo: Record<
   INDICACAO_DIRETA: { title: "Indique e ganhe", description: "Comissao por indicacao direta/indireta" },
 };
 
-export default async function BolaoPage({ params }: { params: { id: string } }) {
-  const bolao = await getBolao(params.id);
+type Bolao = any;
+
+function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+export default function BolaoPage({ params }: { params: { id: string } }) {
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken;
+  const [bolao, setBolao] = useState<Bolao | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchBolao = async () => {
+    try {
+      setError(null);
+      const response = await api.get(`/boloes/${params.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      setBolao(response.data);
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        setBolao(null);
+      } else {
+        setError("Falha ao carregar bolao.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBolao();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id, token]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let source: EventSource | null = null;
+    let reconnect: NodeJS.Timeout | null = null;
+
+    const connect = () => {
+      source = new EventSource("/api/events");
+      source.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          const targetId = payload?.bolaoId;
+          if (!bolao || !targetId || targetId !== params.id) return;
+          fetchBolao();
+        } catch {
+          // ignore parsing errors
+        }
+      };
+      source.onerror = () => {
+        source?.close();
+        if (!reconnect) {
+          reconnect = setTimeout(() => {
+            reconnect = null;
+            connect();
+          }, 5000);
+        }
+      };
+    };
+
+    connect();
+    return () => {
+      source?.close();
+      if (reconnect) clearTimeout(reconnect);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id, bolao]);
+
+  if (loading) {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        Carregando bolao...
+      </div>
+    );
+  }
+
   if (!bolao) {
     notFound();
   }
@@ -53,9 +118,6 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
   const hasTransparency = Boolean(bolao.transparency);
   const draws = bolao.draws ?? [];
   const drawsAsc = [...draws].sort((a: any, b: any) => new Date(a.drawnAt).getTime() - new Date(b.drawnAt).getTime());
-  const firstDrawNumbers: number[] = Array.isArray(drawsAsc[0]?.numbers)
-    ? drawsAsc[0].numbers.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n))
-    : [];
   const winningNumbers: Array<number | string> = Array.from(
     new Set(
       (draws as any[])
@@ -77,6 +139,8 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
 
   return (
     <div className="space-y-6">
+      {error && <div className="rounded-2xl bg-red-900/40 p-3 text-sm text-red-100">{error}</div>}
+
       <section className="overflow-hidden rounded-3xl bg-megga-navy/80 text-white shadow-lg ring-1 ring-white/5">
         <div className="flex items-center justify-between bg-megga-purple/80 px-6 py-4 text-[11px] uppercase tracking-[0.24em] text-white/70">
           <span className="inline-flex items-center gap-2 font-semibold">
@@ -218,9 +282,7 @@ export default async function BolaoPage({ params }: { params: { id: string } }) 
                   </div>
                   <div className="text-right">
                     <p className="text-xs uppercase tracking-[0.24em] text-white/50">Total distribuido</p>
-                    <p className="text-lg font-semibold text-megga-yellow">
-                      R$ {formatCurrency(Number(prize.totalValue ?? 0))}
-                    </p>
+                    <p className="text-lg font-semibold text-megga-yellow">R$ {formatCurrency(Number(prize.totalValue ?? 0))}</p>
                   </div>
                 </div>
                 {prize.winners?.length ? (

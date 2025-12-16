@@ -5,10 +5,15 @@ import { CreateDrawDto } from "./dto/create-draw.dto";
 import { RankingsService } from "../rankings/rankings.service";
 import { ListDrawsDto } from "./dto/list-draws.dto";
 import { toSaoPauloDate } from "../common/timezone.util";
+import { EventsService } from "../events/events.service";
 
 @Injectable()
 export class DrawsService {
-  constructor(private readonly prisma: PrismaService, private readonly rankings: RankingsService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly rankings: RankingsService,
+    private readonly events: EventsService,
+  ) {}
 
   async list(filters: ListDrawsDto) {
     const where: any = {};
@@ -62,6 +67,7 @@ export class DrawsService {
       createdDraws.push({ ...draw, bolao });
       await this.rankings.recalculateForDraw(draw.id);
       await this.processPrizesAndClosure(bolao.id);
+      this.events.emit({ type: "draw.created", bolaoId: bolao.id, drawId: draw.id });
     }
 
     return createdDraws[0];
@@ -143,6 +149,8 @@ export class DrawsService {
           create: { id: "global", amount: newGlobal },
         });
       });
+      this.events.emit({ type: "pot.updated", bolaoId: bolao.id });
+      this.events.emit({ type: "bolao.updated", bolaoId: bolao.id });
       return;
     }
 
@@ -254,5 +262,7 @@ export class DrawsService {
         create: { id: "global", amount: senaPotAmount },
       });
     });
+    this.events.emit({ type: "prize.updated", bolaoId: bolao.id });
+    this.events.emit({ type: "pot.updated", bolaoId: bolao.id });
   }
 }

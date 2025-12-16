@@ -3,10 +3,11 @@ import { PrismaService } from "../prisma/prisma.service";
 import { CreateBolaoDto } from "./dto/create-bolao.dto";
 import { UpdateBolaoDto } from "./dto/update-bolao.dto";
 import { toSaoPauloDate } from "../common/timezone.util";
+import { EventsService } from "../events/events.service";
 
 @Injectable()
 export class BoloesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly events: EventsService) {}
 
   async list() {
     await this.reserveSenaPotIfNeeded();
@@ -50,14 +51,27 @@ export class BoloesService {
     if (!bolao) return null;
 
     const senaPot = await this.prisma.senaPot.findUnique({ where: { id: "global" } });
+    const hasReservedElsewhere = await this.prisma.bolao.findFirst({
+      where: { senaPotReserved: { gt: 0 }, closedAt: null },
+      select: { id: true },
+    });
+    const earliestFuture = await this.prisma.bolao.findFirst({
+      where: { closedAt: null, startsAt: { gt: new Date() } },
+      orderBy: { startsAt: "asc" },
+      select: { id: true },
+    });
     const senaPotApplied = Number(bolao.senaPotReserved ?? 0);
     const senaPotVisible = senaPotApplied;
+    const senaPotGlobalVisible =
+      senaPotApplied === 0 && !hasReservedElsewhere && earliestFuture?.id === bolao.id
+        ? Number(senaPot?.amount ?? 0)
+        : 0;
     const livePrizes = !bolao.closedAt ? this.computeLivePrizes(bolao) : [];
 
     return {
       ...bolao,
       senaPot: senaPotVisible,
-      senaPotGlobal: Number(senaPot?.amount ?? 0),
+      senaPotGlobal: senaPotGlobalVisible,
       senaPotApplied,
       livePrizes,
     };
@@ -65,7 +79,7 @@ export class BoloesService {
 
   async create(dto: CreateBolaoDto, adminId: string) {
     this.ensurePrizeDistribution(dto);
-    return this.prisma.bolao.create({
+    const bolao = await this.prisma.bolao.create({
       data: {
         name: dto.name,
         startsAt: toSaoPauloDate(dto.startsAt),
@@ -85,13 +99,15 @@ export class BoloesService {
         },
       },
     });
+    this.events.emit({ type: "bolao.updated", bolaoId: bolao.id });
+    return bolao;
   }
 
   async update(id: string, dto: UpdateBolaoDto) {
     if (dto.prizes) {
       this.ensurePrizeDistribution(dto as CreateBolaoDto);
     }
-    return this.prisma.bolao.update({
+    const bolao = await this.prisma.bolao.update({
       where: { id },
       data: {
         ...dto,
@@ -110,6 +126,8 @@ export class BoloesService {
       },
       include: { prizes: true },
     });
+    this.events.emit({ type: "bolao.updated", bolaoId: bolao.id });
+    return bolao;
   }
 
   async remove(id: string) {
@@ -127,6 +145,7 @@ export class BoloesService {
       await tx.transparencyFile.deleteMany({ where: { bolaoId: id } });
       await tx.bolao.delete({ where: { id } });
     });
+    this.events.emit({ type: "bolao.deleted", bolaoId: id });
     return { deleted: true };
   }
 

@@ -12,6 +12,7 @@ import { WalletModule } from './wallet/wallet.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { BetsModule } from './bets/bets.module';
 import { TransparencyModule } from './transparency/transparency.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { TransparencyModule } from './transparency/transparency.module';
     NotificationsModule,
     BetsModule,
     TransparencyModule,
+    EventsModule,
   ],
 })
 export class AppModule {}
