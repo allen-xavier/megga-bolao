@@ -1,9 +1,7 @@
-import Link from 'next/link';
-import { AuthForm } from '@/components/auth-form';
+"use client";
 
-export const metadata = {
-  title: 'Entrar - Megga Bolão',
-};
+import Link from "next/link";
+import { AuthForm } from "@/components/auth-form";
 
 export default function LoginPage() {
   return (
@@ -11,14 +9,14 @@ export default function LoginPage() {
       <div className="space-y-2 text-center">
         <h2 className="text-2xl font-semibold">Acesse sua conta</h2>
         <p className="text-sm text-white/70">
-          Informe seu telefone e senha. Enviaremos um código via WhatsApp para confirmação.
+          Informe seu telefone e senha. Enviaremos um codigo via WhatsApp para confirmacao.
         </p>
       </div>
       <AuthForm />
       <p className="text-center text-sm text-white/60">
-        Não tem conta?{' '}
-        <Link href="/" className="font-medium text-megga-yellow underline">
-          Conheça o Megga Bolão
+        Nao tem conta?{" "}
+        <Link href="/register" className="font-medium text-megga-yellow underline">
+          Criar conta
         </Link>
       </p>
     </div>

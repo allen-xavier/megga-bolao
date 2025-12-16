@@ -21,6 +21,7 @@ export const sections: DrawerSection[] = [
       { label: 'Aprovar saques', href: '/admin/suitpay', description: 'Avalie e libere solicitações.', adminOnly: true },
       { label: 'SuitPay Config', href: '/admin/suitpay', description: 'Chaves, webhooks e limites automáticos.', adminOnly: true },
       { label: 'Config Afiliados', href: '/admin/afiliados', description: 'Defina comissões diretas e indiretas.', adminOnly: true },
+      { label: 'Meus afiliados', href: '/afiliados', description: 'Veja seu código/link e acompanhe ganhos.' },
     ],
   },
   {
