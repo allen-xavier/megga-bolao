@@ -28,13 +28,15 @@ export class BoloesController {
   ) {}
 
   @Get()
-  list() {
-    return this.boloesService.list();
+  @UseGuards(JwtAuthGuard)
+  list(@CurrentUser() user: UserProfile) {
+    return this.boloesService.list(user);
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.boloesService.findOne(id);
+  @UseGuards(JwtAuthGuard)
+  findOne(@Param("id") id: string, @CurrentUser() user: UserProfile) {
+    return this.boloesService.findOne(id, user);
   }
 
   @Post()

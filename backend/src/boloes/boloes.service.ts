@@ -4,20 +4,34 @@ import { CreateBolaoDto } from "./dto/create-bolao.dto";
 import { UpdateBolaoDto } from "./dto/update-bolao.dto";
 import { toSaoPauloDate } from "../common/timezone.util";
 import { EventsService } from "../events/events.service";
+import { UserProfile } from "../auth/user-profile.interface";
 
 @Injectable()
 export class BoloesService {
   constructor(private readonly prisma: PrismaService, private readonly events: EventsService) {}
 
-  async list() {
+  async list(currentUser?: UserProfile) {
+    const userId = currentUser?.id;
     await this.reserveSenaPotIfNeeded();
-    return this.prisma.bolao.findMany({
+    const boloes = await this.prisma.bolao.findMany({
       include: { prizes: true, transparency: true },
       orderBy: { startsAt: "asc" },
     });
+    if (!userId) return boloes;
+    const betCounts = await this.prisma.bet.groupBy({
+      by: ["bolaoId"],
+      where: { userId },
+      _count: { _all: true },
+    });
+    const map = new Map<string, number>(betCounts.map((b) => [b.bolaoId, b._count._all]));
+    return boloes.map((bolao) => ({
+      ...bolao,
+      isParticipant: map.get(bolao.id) ? true : false,
+    }));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, currentUser?: UserProfile) {
+    const userId = currentUser?.id;
     await this.reserveSenaPotIfNeeded();
     const bolao = await this.prisma.bolao.findUnique({
       where: { id },
@@ -58,8 +72,12 @@ export class BoloesService {
     const senaPotGlobalVisible = senaPotApplied > 0 ? 0 : Number(senaPot?.amount ?? 0);
     const livePrizes = !bolao.closedAt ? this.computeLivePrizes(bolao) : [];
 
+    const myBets = userId ? bolao.bets.filter((b: any) => b.userId === userId) : [];
+
     return {
       ...bolao,
+      isParticipant: userId ? myBets.length > 0 : false,
+      myBets,
       senaPot: senaPotVisible,
       senaPotGlobal: senaPotGlobalVisible,
       senaPotApplied,
