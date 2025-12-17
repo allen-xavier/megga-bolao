@@ -64,7 +64,6 @@ export function RegisterForm() {
       const payload: RegisterPayload = { ...form, acceptedTerms: true };
       if (!payload.referralCode) delete payload.referralCode;
       await api.post('/auth/register', payload);
-      // login automatico apos cadastro
       const result = await signIn('credentials', {
         phone: form.phone,
         password: form.password,
@@ -73,7 +72,8 @@ export function RegisterForm() {
       if (result?.error) {
         throw new Error(result.error);
       }
-      router.push('/dashboard');
+      await router.replace('/dashboard');
+      router.refresh();
     } catch (err: any) {
       setMessage(err?.response?.data?.message ?? err?.message ?? 'Erro ao cadastrar.');
     } finally {

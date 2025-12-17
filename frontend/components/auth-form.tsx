@@ -22,9 +22,10 @@ export function AuthForm() {
         redirect: false,
       });
       if (!result || result.error) {
-        throw new Error(result?.error ?? 'Credenciais inválidas');
+        throw new Error(result?.error ?? 'Credenciais invalidas');
       }
-      router.push('/dashboard');
+      await router.replace('/dashboard');
+      router.refresh();
     } catch (error: any) {
       setMessage(error?.message ?? 'Erro ao autenticar.');
     } finally {

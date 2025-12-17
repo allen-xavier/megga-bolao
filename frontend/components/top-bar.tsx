@@ -24,7 +24,9 @@ export function TopBar() {
         })
         .then((response) => response.data),
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
+      refreshInterval: 15000,
+      revalidateIfStale: true,
     },
   );
   const [drawerOpen, setDrawerOpen] = useState(false);

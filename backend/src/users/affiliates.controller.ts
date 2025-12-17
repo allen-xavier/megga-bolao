@@ -45,6 +45,41 @@ export class AffiliatesController {
     };
   }
 
+  @Get("earnings")
+  async earnings(@CurrentUser() user: UserProfile) {
+    const statements = await this.prisma.walletStatement.findMany({
+      where: { wallet: { userId: user.id }, type: PaymentType.COMMISSION },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    // Mapeia referenceId (bet) -> bolão e apostador
+    const betIds = statements.map((s) => s.referenceId).filter((id): id is string => !!id);
+    const bets = await this.prisma.bet.findMany({
+      where: { id: { in: betIds } },
+      select: {
+        id: true,
+        bolaoId: true,
+        bolao: { select: { name: true } },
+        user: { select: { fullName: true, phone: true } },
+      },
+    });
+    const betMap = new Map(bets.map((b) => [b.id, b]));
+
+    return statements.map((s) => {
+      const b = s.referenceId ? betMap.get(s.referenceId) : null;
+      return {
+        id: s.id,
+        amount: Number(s.amount),
+        description: s.description,
+        createdAt: s.createdAt,
+        bolaoId: b?.bolaoId ?? null,
+        bolaoName: b?.bolao.name ?? null,
+        sourceUser: b?.user ? { name: b.user.fullName, phone: b.user.phone } : null,
+      };
+    });
+  }
+
   @Get("tree")
   async tree(@CurrentUser() user: UserProfile) {
     const direct = await this.prisma.referral.findMany({
