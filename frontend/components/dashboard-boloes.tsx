@@ -22,6 +22,17 @@ const fetcher = (url: string) => api.get(url).then((response) => response.data);
 const authedFetcher = ([url, token]: [string, string]) =>
   api.get(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined).then((response) => response.data);
 
+function getUserId(session: any): string | undefined {
+  return (
+    session?.user?.id ??
+    session?.user?._id ??
+    session?.user?.sub ??
+    session?.user?.userId ??
+    (session as any)?.id ??
+    (session as any)?.userId
+  );
+}
+
 function formatStartsAt(date: Date) {
   return date.toLocaleDateString('pt-BR', {
     day: '2-digit',
@@ -47,6 +58,7 @@ function getNextDrawLabel() {
 export function DashboardBoloes() {
   const { data: session } = useSession();
   const token = (session?.user as any)?.accessToken;
+  const userId = getUserId(session);
   const { data, isLoading } = useSWR<Bolao[]>(token ? ['/boloes', token] : '/boloes', token ? authedFetcher : fetcher, {
     revalidateOnFocus: true,
     revalidateIfStale: true,
@@ -81,7 +93,9 @@ export function DashboardBoloes() {
         const hasStarted = startsAt.getTime() <= Date.now();
         const statusLabel = hasStarted ? 'Em andamento' : 'Acumulando';
         const inferredParticipant =
-          bolao.isParticipant || (bolao.myBets?.length ?? 0) > 0 || (bolao.bets?.some?.((b: any) => b.userId) ?? false);
+          bolao.isParticipant ||
+          (bolao.myBets?.some?.((b: any) => b.userId === userId) ?? false) ||
+          (bolao.bets?.some?.((b: any) => b.userId === userId) ?? false);
         const participationLabel = inferredParticipant ? 'Participando' : statusLabel;
         const nextDrawLabel = getNextDrawLabel();
 
