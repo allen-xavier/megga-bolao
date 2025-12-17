@@ -131,27 +131,37 @@ export class AuthService {
     const referrer = await this.prisma.user.findUnique({ where: { referralCode: inviteCode } });
     if (!referrer) return;
 
-    // Nível 1
-    await this.prisma.referral.create({
-      data: {
-        userId: referrer.id,
-        referredUserId: newUserId,
-        level: 1,
-      },
+    // Nível 1 - só cria se não existir
+    const existsLevel1 = await this.prisma.referral.findFirst({
+      where: { referredUserId: newUserId, level: 1 },
     });
-
-    // Nível 2 (se o referrer tiver um referrer)
-    const referrerRef = await this.prisma.referral.findFirst({
-      where: { referredUserId: referrer.id, level: 1 },
-    });
-    if (referrerRef) {
+    if (!existsLevel1) {
       await this.prisma.referral.create({
         data: {
-          userId: referrerRef.userId,
+          userId: referrer.id,
           referredUserId: newUserId,
-          level: 2,
+          level: 1,
         },
       });
+    }
+
+    // Nível 2 (pega quem indicou o referrer, qualquer nível)
+    const referrerRef = await this.prisma.referral.findFirst({
+      where: { referredUserId: referrer.id },
+    });
+    if (referrerRef) {
+      const existsLevel2 = await this.prisma.referral.findFirst({
+        where: { referredUserId: newUserId, level: 2 },
+      });
+      if (!existsLevel2) {
+        await this.prisma.referral.create({
+          data: {
+            userId: referrerRef.userId,
+            referredUserId: newUserId,
+            level: 2,
+          },
+        });
+      }
     }
   }
 

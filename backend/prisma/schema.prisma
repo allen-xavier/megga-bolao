@@ -220,9 +220,11 @@ model Referral {
   user           User     @relation("UserReferrals", fields: [userId], references: [id])
   userId         String
   referredUser   User     @relation("UserInvited", fields: [referredUserId], references: [id])
-  referredUserId String   @unique
+  referredUserId String
   level          Int
   createdAt      DateTime @default(now())
+
+  @@unique([referredUserId, level])
 }
 
 model AuditLog {

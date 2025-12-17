@@ -31,10 +31,10 @@ function formatCurrency(value?: number) {
 export default function AfiliadosPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
-  const { data, error, isLoading } = useSWR<AffiliateInfo, any, [string, string] | null>(
+  const { data, error, isLoading, mutate } = useSWR<AffiliateInfo, any, [string, string] | null>(
     token ? ["/affiliates/me", token] as [string, string] : null,
     ([url, t]) => fetcher(url, t),
-    { revalidateOnFocus: false },
+    { revalidateOnFocus: true },
   );
   const [copied, setCopied] = useState(false);
 
@@ -92,6 +92,13 @@ export default function AfiliadosPage() {
               {copied ? "Copiado!" : "Copiar link"}
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => mutate()}
+            className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/80 transition hover:border-megga-magenta hover:text-megga-yellow"
+          >
+            Atualizar
+          </button>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Indicados</p>
