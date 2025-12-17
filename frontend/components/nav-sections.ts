@@ -8,8 +8,8 @@ export const sections: DrawerSection[] = [
     title: 'Bolões',
     items: [
       { label: 'Criar Bolão', href: '/admin/boloes/criar', description: 'Configure cotas, prêmios e taxa Megga.', adminOnly: true },
-      { label: 'Bolões em Andamento', href: '/admin/boloes', description: 'Gerencie campanhas ativas e status.', adminOnly: true },
-      { label: 'Bolões Encerrados', href: '/admin/boloes?filtro=encerrados', description: 'Consulte histórico e relatórios.', adminOnly: true },
+      { label: 'Bolões em Andamento', href: '/admin/boloes', description: 'Visualize e participe dos bolões ativos.' },
+      { label: 'Bolões Encerrados', href: '/admin/boloes?filtro=encerrados', description: 'Consulte histórico e relatórios.' },
       { label: 'Sorteios', href: '/admin/sorteios', description: 'Registrar resultados e atualizar bolões.', adminOnly: true },
     ],
   },

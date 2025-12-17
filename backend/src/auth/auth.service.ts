@@ -84,7 +84,7 @@ export class AuthService {
     while (!user && attempts < 10) {
       attempts += 1;
       const base = randomUUID().replace(/-/g, '');
-      const referralCode = `ref_${base.slice(0, 24)}`;
+      const referralCode = `ref_${base.slice(0, 16)}`;
       try {
         user = await this.prisma.user.create({
           data: {
