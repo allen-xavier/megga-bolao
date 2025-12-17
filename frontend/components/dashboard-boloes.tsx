@@ -73,11 +73,7 @@ export function DashboardBoloes() {
         const startsAt = new Date(bolao.startsAt);
         const hasStarted = startsAt.getTime() <= Date.now();
         const statusLabel = hasStarted ? 'Em andamento' : 'Acumulando';
-        const participationLabel = bolao.isParticipant
-          ? 'Participando'
-          : bolao.promotional
-          ? 'Promocional'
-          : statusLabel;
+        const participationLabel = bolao.isParticipant ? 'Participando' : statusLabel;
         const nextDrawLabel = getNextDrawLabel();
 
         return (

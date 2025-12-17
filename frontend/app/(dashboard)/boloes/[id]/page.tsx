@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
@@ -37,8 +37,10 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const [bolao, setBolao] = useState<Bolao | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [visibleDraws, setVisibleDraws] = useState(2);
-  const [visibleBets, setVisibleBets] = useState(5);
+  const [visibleDraws, setVisibleDraws] = useState(7);
+  const [visibleBets, setVisibleBets] = useState(15);
+  const drawsRef = useRef<HTMLDivElement | null>(null);
+  const betsRef = useRef<HTMLDivElement | null>(null);
   const [openSection, setOpenSection] = useState<Record<string, boolean>>({
     premiacoes: false,
     live: false,
@@ -77,8 +79,8 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   }, [params.id, token]);
 
   useEffect(() => {
-    setVisibleDraws(2);
-    setVisibleBets(5);
+    setVisibleDraws(7);
+    setVisibleBets(15);
   }, [params.id]);
 
   // Atualizacao por SSE
@@ -167,6 +169,38 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const displayTotal = prizePool + senaPotApplied;
 
   const toggle = (key: string) => setOpenSection((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  useEffect(() => {
+    const handler = () => {
+      const target = drawsRef.current;
+      if (!target) return;
+      const { scrollTop, scrollHeight, clientHeight } = target;
+      if (scrollHeight - scrollTop - clientHeight < 40 && visibleDraws < drawsList.length) {
+        setVisibleDraws((prev) => Math.min(prev + 7, drawsList.length));
+      }
+    };
+    const el = drawsRef.current;
+    if (el) el.addEventListener("scroll", handler);
+    return () => {
+      if (el) el.removeEventListener("scroll", handler);
+    };
+  }, [drawsList.length, visibleDraws]);
+
+  useEffect(() => {
+    const handler = () => {
+      const target = betsRef.current;
+      if (!target) return;
+      const { scrollTop, scrollHeight, clientHeight } = target;
+      if (scrollHeight - scrollTop - clientHeight < 40 && visibleBets < allBets.length) {
+        setVisibleBets((prev) => Math.min(prev + 15, allBets.length));
+      }
+    };
+    const el = betsRef.current;
+    if (el) el.addEventListener("scroll", handler);
+    return () => {
+      if (el) el.removeEventListener("scroll", handler);
+    };
+  }, [allBets.length, visibleBets]);
 
   return (
     <div className="space-y-6">
@@ -443,7 +477,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         </section>
       )}
 
-            <section id="sorteios" className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <section id="sorteios" className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
         <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("sorteios")}>
           <div>
             <h2 className="text-lg font-semibold">Sorteios</h2>
@@ -456,7 +490,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
             {drawsAsc.length === 0 ? (
               <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Nenhum sorteio registrado ainda.</p>
             ) : (
-              <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
+              <div ref={drawsRef} className="max-h-72 space-y-3 overflow-y-auto pr-1">
                 {visibleDrawsList.map((draw: any) => (
                   <div key={draw.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -483,15 +517,6 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
                 ))}
-                {drawsList.length > visibleDraws && (
-                  <button
-                    type="button"
-                    className="w-full rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
-                    onClick={() => setVisibleDraws((prev) => Math.min(prev + 2, drawsList.length))}
-                  >
-                    Carregar mais sorteios
-                  </button>
-                )}
               </div>
             )}
           </>
@@ -511,13 +536,13 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
           <span className="text-xl">{openSection.apostadores ? "▼" : "▶"}</span>
         </header>
         {openSection.apostadores && (
-          <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
+          <div ref={betsRef} className="max-h-96 space-y-2 overflow-y-auto pr-1">
             <BetsList bets={visibleBetsList as any[]} winningNumbers={winningNumbers} />
             {allBets.length > visibleBets && (
               <button
                 type="button"
                 className="w-full rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
-                onClick={() => setVisibleBets((prev) => Math.min(prev + 5, allBets.length))}
+                onClick={() => setVisibleBets((prev) => Math.min(prev + 15, allBets.length))}
               >
                 Carregar mais apostadores
               </button>
@@ -526,7 +551,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         )}
       </section>
 
-      {isParticipant && (
+      {(isParticipant || myBets.length > 0) && (
         <section className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
           <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("minhasApostas")}>
             <div>
@@ -547,8 +572,3 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
-
-
-
-
-
