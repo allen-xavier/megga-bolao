@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
 
 interface Bolao {
@@ -16,6 +17,8 @@ interface Bolao {
 }
 
 const fetcher = (url: string) => api.get(url).then((response) => response.data);
+const authedFetcher = ([url, token]: [string, string]) =>
+  api.get(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined).then((response) => response.data);
 
 function formatStartsAt(date: Date) {
   return date.toLocaleDateString('pt-BR', {
@@ -40,7 +43,9 @@ function getNextDrawLabel() {
 }
 
 export function DashboardBoloes() {
-  const { data, isLoading } = useSWR<Bolao[]>('/boloes', fetcher, {
+  const { data: session } = useSession();
+  const token = (session?.user as any)?.accessToken;
+  const { data, isLoading } = useSWR<Bolao[]>(token ? ['/boloes', token] : '/boloes', token ? authedFetcher : fetcher, {
     revalidateOnFocus: true,
     revalidateIfStale: true,
     refreshInterval: 15000,
