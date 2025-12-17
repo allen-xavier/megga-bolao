@@ -12,7 +12,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard").then(() => router.refresh());
+      router.replace("/dashboard");
+      router.refresh();
     }
   }, [status, router]);
 
