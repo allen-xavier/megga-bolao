@@ -44,6 +44,7 @@ export default function AdminPoliciesPage() {
       toolbar: [
         [{ font: [] }],
         [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        [{ size: ['small', false, 'large', 'huge'] }],
         ['bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block'],
         [{ list: 'ordered' }, { list: 'bullet' }],
         [{ align: [] }],
@@ -122,11 +123,32 @@ export default function AdminPoliciesPage() {
               value={content}
               onChange={setContent}
               modules={toolbarOptions}
+              formats={[
+                'header',
+                'font',
+                'size',
+                'bold',
+                'italic',
+                'underline',
+                'strike',
+                'blockquote',
+                'code-block',
+                'list',
+                'bullet',
+                'indent',
+                'link',
+                'image',
+                'video',
+                'align',
+                'color',
+                'background',
+              ]}
               className="min-h-[240px]"
             />
           </div>
           <p className="text-xs text-white/60">
-            Use o editor para inserir negrito, listas, alinhamento, cores, links, imagens ou videos.
+            Use o editor para inserir negrito, listas, alinhamento, cores, links, imagens ou vídeos. Para colocar texto e mídia lado a
+            lado, crie colunas usando alinhamento ou insira tabelas via HTML no conteúdo.
           </p>
         </div>
 
