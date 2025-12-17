@@ -10,9 +10,9 @@ import 'react-quill/dist/quill.snow.css';
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 const POLICY_OPTIONS = [
-  { key: 'termos', label: 'Termos e Condicoes' },
-  { key: 'privacidade', label: 'Politica de Privacidade' },
-  { key: 'jogo-responsavel', label: 'Jogo Responsavel' },
+  { key: 'termos', label: 'Termos e Condições' },
+  { key: 'privacidade', label: 'Política de Privacidade' },
+  { key: 'jogo-responsavel', label: 'Jogo Responsável' },
 ];
 
 const fetcher = ([url, token]: [string, string]) =>
@@ -42,13 +42,14 @@ export default function AdminPoliciesPage() {
   const toolbarOptions = useMemo(
     () => ({
       toolbar: [
-        [{ header: [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
+        [{ font: [] }],
+        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block'],
         [{ list: 'ordered' }, { list: 'bullet' }],
         [{ align: [] }],
         [{ color: [] }, { background: [] }],
-        ['link', 'image', 'video'],
         [{ indent: '-1' }, { indent: '+1' }],
+        ['link', 'image', 'video'],
         ['clean'],
       ],
     }),

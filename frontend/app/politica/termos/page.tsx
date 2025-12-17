@@ -1,15 +1,15 @@
 export const metadata = {
-  title: 'Termos e CondiÇõÇæes - Megga BolÇœo',
+  title: 'Termos e Condições - Megga Bolão',
 };
 
 async function getPolicy() {
   const base = process.env.NEXT_PUBLIC_API_BASE ?? 'https://app.allentiomolu.com.br/api';
   try {
-    const res = await fetch(`${base}/policies/termos`, { next: { revalidate: 300 } });
+    const res = await fetch(`${base}/policies/termos`, { cache: 'no-store' });
     if (!res.ok) throw new Error('failed');
     return res.json();
   } catch {
-    return { title: 'Termos e CondiÇõÇæes', content: '<p>Edite este conteÇ§do no painel administrativo.</p>' };
+    return { title: 'Termos e Condições', content: '<p>Edite este conteúdo no painel administrativo.</p>' };
   }
 }
 

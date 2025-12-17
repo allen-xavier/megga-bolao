@@ -1,15 +1,15 @@
 export const metadata = {
-  title: 'Jogo ResponsÇ­vel - Megga BolÇœo',
+  title: 'Jogo Responsável - Megga Bolão',
 };
 
 async function getPolicy() {
   const base = process.env.NEXT_PUBLIC_API_BASE ?? 'https://app.allentiomolu.com.br/api';
   try {
-    const res = await fetch(`${base}/policies/jogo-responsavel`, { next: { revalidate: 300 } });
+    const res = await fetch(`${base}/policies/jogo-responsavel`, { cache: 'no-store' });
     if (!res.ok) throw new Error('failed');
     return res.json();
   } catch {
-    return { title: 'Jogo ResponsÇ­vel', content: '<p>Edite este conteÇ§do no painel administrativo.</p>' };
+    return { title: 'Jogo Responsável', content: '<p>Edite este conteúdo no painel administrativo.</p>' };
   }
 }
 
