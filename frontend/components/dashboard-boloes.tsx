@@ -9,6 +9,7 @@ interface Bolao {
   name: string;
   startsAt: string;
   promotional: boolean;
+  isParticipant?: boolean;
   ticketPrice: string;
   minimumQuotas: number;
   closedAt?: string | null;
@@ -72,7 +73,11 @@ export function DashboardBoloes() {
         const startsAt = new Date(bolao.startsAt);
         const hasStarted = startsAt.getTime() <= Date.now();
         const statusLabel = hasStarted ? 'Em andamento' : 'Acumulando';
-        const participationLabel = bolao.promotional ? 'Promocional' : 'Participando';
+        const participationLabel = bolao.isParticipant
+          ? 'Participando'
+          : bolao.promotional
+          ? 'Promocional'
+          : statusLabel;
         const nextDrawLabel = getNextDrawLabel();
 
         return (

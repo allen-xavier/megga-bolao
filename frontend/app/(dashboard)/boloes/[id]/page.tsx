@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -37,6 +37,8 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const [bolao, setBolao] = useState<Bolao | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [visibleDraws, setVisibleDraws] = useState(2);
+  const [visibleBets, setVisibleBets] = useState(5);
   const [openSection, setOpenSection] = useState<Record<string, boolean>>({
     premiacoes: false,
     live: false,
@@ -73,6 +75,11 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     fetchBolao();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id, token]);
+
+  useEffect(() => {
+    setVisibleDraws(2);
+    setVisibleBets(5);
+  }, [params.id]);
 
   // Atualizacao por SSE
   useEffect(() => {
@@ -136,6 +143,8 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const hasTransparency = Boolean(bolao.transparency);
   const draws = bolao.draws ?? [];
   const drawsAsc = [...draws].sort((a: any, b: any) => new Date(a.drawnAt).getTime() - new Date(b.drawnAt).getTime());
+  const drawsList = [...drawsAsc].reverse();
+  const visibleDrawsList = drawsList.slice(0, visibleDraws);
   const winningNumbers: Array<number | string> = Array.from(
     new Set(
       (draws as any[])
@@ -144,6 +153,8 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         .filter((value: number) => Number.isFinite(value)),
     ),
   );
+  const allBets = bolao.bets ?? [];
+  const visibleBetsList = allBets.slice(0, visibleBets);
   const totalCollected = (bolao.bets?.length ?? 0) * Number(bolao.ticketPrice ?? 0);
   const commissionPercent = Number(bolao.commissionPercent ?? 0);
   const netPool = totalCollected * (1 - commissionPercent / 100);
@@ -253,7 +264,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
             <h2 className="text-lg font-semibold">Premiacoes</h2>
             <p className="text-sm text-white/60">Distribuicao configurada para este bolao (valores calculados).</p>
           </div>
-          <span className="text-xl">{openSection.premiacoes ? "▾" : "▸"}</span>
+          <span className="text-xl">{openSection.premiacoes ? "▼" : "▶"}</span>
         </header>
         {openSection.premiacoes && (
           <ul className="space-y-3">
@@ -317,7 +328,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
               <h2 className="text-lg font-semibold">Premiacoes ja atingidas</h2>
               <p className="text-sm text-white/60">Premios liberados antes do encerramento.</p>
             </div>
-            <span className="text-xl">{openSection.live ? "▾" : "▸"}</span>
+            <span className="text-xl">{openSection.live ? "▼" : "▶"}</span>
           </header>
           {openSection.live && (
             <div className="space-y-3">
@@ -379,7 +390,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                 .
               </p>
             </div>
-            <span className="text-xl">{openSection.resultados ? "▾" : "▸"}</span>
+            <span className="text-xl">{openSection.resultados ? "▼" : "▶"}</span>
           </header>
           {openSection.resultados && (
             <div className="space-y-3">
@@ -412,7 +423,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                             {winner.bet?.numbers && (
                               <p className="text-xs text-white/60">
                                 Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" - ")}
-                                {winner.hits ? ` • ${winner.hits} acertos` : ""}
+                                {winner.hits ? ` â€¢ ${winner.hits} acertos` : ""}
                               </p>
                             )}
                           </div>
@@ -432,21 +443,21 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         </section>
       )}
 
-      <section id="sorteios" className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+            <section id="sorteios" className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
         <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("sorteios")}>
           <div>
             <h2 className="text-lg font-semibold">Sorteios</h2>
             <p className="text-sm text-white/60">Resultados oficiais vinculados a este bolao.</p>
           </div>
-          <span className="text-xl">{openSection.sorteios ? "▾" : "▸"}</span>
+          <span className="text-xl">{openSection.sorteios ? "▼" : "▶"}</span>
         </header>
         {openSection.sorteios && (
           <>
             {drawsAsc.length === 0 ? (
               <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Nenhum sorteio registrado ainda.</p>
             ) : (
-              <div className="max-h-72 overflow-y-auto pr-1 space-y-3">
-                {[...drawsAsc].reverse().map((draw: any) => (
+              <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
+                {visibleDrawsList.map((draw: any) => (
                   <div key={draw.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="space-y-1">
@@ -472,29 +483,20 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
                 ))}
+                {drawsList.length > visibleDraws && (
+                  <button
+                    type="button"
+                    className="w-full rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
+                    onClick={() => setVisibleDraws((prev) => Math.min(prev + 2, drawsList.length))}
+                  >
+                    Carregar mais sorteios
+                  </button>
+                )}
               </div>
             )}
           </>
         )}
       </section>
-
-      {isParticipant && (
-        <section className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
-          <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("minhasApostas")}>
-            <div>
-              <h2 className="text-lg font-semibold">Minhas apostas</h2>
-              <p className="text-sm text-white/60">Visualize suas apostas neste bolao.</p>
-            </div>
-            <span className="text-xl">{openSection.minhasApostas ? "▾" : "▸"}</span>
-          </header>
-          {openSection.minhasApostas && (
-            <div className="max-h-96 overflow-y-auto pr-1">
-              <BetsList bets={myBets as any[]} winningNumbers={winningNumbers} />
-              {myBets.length === 0 && <p className="text-sm text-white/60">Nenhuma aposta sua aqui ainda.</p>}
-            </div>
-          )}
-        </section>
-      )}
 
       <section
         id="apostadores"
@@ -506,14 +508,47 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         >
           <h2 className="text-lg font-semibold text-white">Lista de apostadores</h2>
           <TransparencyDownload bolaoId={bolao.id} hasFile={hasTransparency} />
-          <span className="text-xl">{openSection.apostadores ? "▾" : "▸"}</span>
+          <span className="text-xl">{openSection.apostadores ? "▼" : "▶"}</span>
         </header>
         {openSection.apostadores && (
-          <div className="max-h-96 overflow-y-auto pr-1">
-            <BetsList bets={(bolao.bets ?? []) as any[]} winningNumbers={winningNumbers} />
+          <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
+            <BetsList bets={visibleBetsList as any[]} winningNumbers={winningNumbers} />
+            {allBets.length > visibleBets && (
+              <button
+                type="button"
+                className="w-full rounded-2xl bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
+                onClick={() => setVisibleBets((prev) => Math.min(prev + 5, allBets.length))}
+              >
+                Carregar mais apostadores
+              </button>
+            )}
           </div>
         )}
       </section>
+
+      {isParticipant && (
+        <section className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+          <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("minhasApostas")}>
+            <div>
+              <h2 className="text-lg font-semibold">Minhas apostas</h2>
+              <p className="text-sm text-white/60">Visualize suas apostas neste bolao.</p>
+            </div>
+            <span className="text-xl">{openSection.minhasApostas ? "▼" : "▶"}</span>
+          </header>
+          {openSection.minhasApostas && (
+            <div className="max-h-96 overflow-y-auto pr-1">
+              <BetsList bets={myBets as any[]} winningNumbers={winningNumbers} />
+              {myBets.length === 0 && <p className="text-sm text-white/60">Nenhuma aposta sua aqui ainda.</p>}
+            </div>
+          )}
+        </section>
+      )}
+
     </div>
   );
 }
+
+
+
+
+
