@@ -4,7 +4,7 @@ import { CreateBolaoDto } from "./dto/create-bolao.dto";
 import { UpdateBolaoDto } from "./dto/update-bolao.dto";
 import { toSaoPauloDate } from "../common/timezone.util";
 import { EventsService } from "../events/events.service";
-import { UserProfile } from "../auth/user-profile.interface";
+import { UserProfile } from "../users/entities/user.entity";
 
 @Injectable()
 export class BoloesService {
