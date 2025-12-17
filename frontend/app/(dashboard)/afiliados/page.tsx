@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
@@ -48,10 +48,7 @@ export default function AfiliadosPage() {
   );
   const { data: earnings } = useSWR<Earning[], any, [string, string] | null>(
     token ? ["/affiliates/earnings", token] as [string, string] : null,
-    ([url, t]) =>
-      api
-        .get<Earning[]>(url, { headers: { Authorization: `Bearer ${t}` } })
-        .then((res) => res.data),
+    ([url, t]) => api.get<Earning[]>(url, { headers: { Authorization: `Bearer ${t}` } }).then((res) => res.data),
     { revalidateOnFocus: true, refreshInterval: 15000, revalidateIfStale: true },
   );
   const [copied, setCopied] = useState(false);
@@ -121,7 +118,7 @@ export default function AfiliadosPage() {
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Indicados</p>
           <p className="mt-2 text-2xl font-semibold text-megga-yellow">
-            {data.directCount} diretos � {data.indirectCount} indiretos
+            {data.directCount} diretos · {data.indirectCount} indiretos
           </p>
           <p className="mt-1 text-sm text-white/60">Niveis 1 e 2</p>
         </div>
@@ -184,7 +181,7 @@ export default function AfiliadosPage() {
               </div>
               <p className="text-xs text-white/70">{e.description}</p>
               <div className="mt-2 flex flex-wrap gap-3 text-xs text-white/60">
-                {e.bolaoName && <span>Bolao: {e.bolaoName}</span>}
+                {e.bolaoName && <span>Bolao: {e.bolaoName}</span>}
                 {e.sourceUser && <span>Jogador: {e.sourceUser.name} ({e.sourceUser.phone})</span>}
               </div>
             </li>
