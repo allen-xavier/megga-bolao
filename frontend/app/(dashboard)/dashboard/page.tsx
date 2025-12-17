@@ -1,7 +1,8 @@
-import { Suspense, type ReactNode } from 'react';
+﻿import { Suspense, type ReactNode } from 'react';
 import { DashboardBoloes } from '@/components/dashboard-boloes';
 import { WalletSummary } from '@/components/wallet-summary';
 import { RankingHighlights } from '@/components/ranking-highlights';
+import { WinnersBanner } from '@/components/winners-banner';
 
 export const metadata = {
   title: 'Dashboard - Megga Bolão',
@@ -14,6 +15,7 @@ const LoadingCard = ({ children }: { children: ReactNode }) => (
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
+      <WinnersBanner />
       <Suspense fallback={<LoadingCard>Carregando carteira...</LoadingCard>}>
         <WalletSummary />
       </Suspense>
