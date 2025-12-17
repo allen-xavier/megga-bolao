@@ -87,7 +87,9 @@ export class BetsService {
       })) as BetWithUser;
 
       // Affiliate commissions and bonus
-      const directRef = await tx.referral.findUnique({ where: { referredUserId: userId } });
+      const directRef = await tx.referral.findUnique({
+        where: { referredUserId_level: { referredUserId: userId, level: 1 } },
+      });
       if (directRef) {
         const commission1 = (Number(affiliateConfig.firstLevelPercent) / 100) * ticketPrice;
         if (commission1 > 0) {
@@ -107,8 +109,10 @@ export class BetsService {
           });
         }
 
-        // Indirect (level 2)
-        const indirectRef = await tx.referral.findUnique({ where: { referredUserId: directRef.userId } });
+        // Indirect (level 2) - already stored with referredUserId = apostador, level = 2
+        const indirectRef = await tx.referral.findUnique({
+          where: { referredUserId_level: { referredUserId: userId, level: 2 } },
+        });
         if (indirectRef) {
           const commission2 = (Number(affiliateConfig.secondLevelPercent) / 100) * ticketPrice;
           if (commission2 > 0) {
@@ -213,4 +217,3 @@ export class BetsService {
     return pool.slice(0, 10).sort((a, b) => a - b);
   }
 }
-
