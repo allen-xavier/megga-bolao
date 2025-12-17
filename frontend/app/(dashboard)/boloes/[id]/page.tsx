@@ -54,10 +54,13 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     minhasApostas: true,
   });
   const myBets = useMemo(() => {
-    if (!userId) return [] as any[];
-    return (bolao?.bets ?? []).filter((b: any) => b.userId === userId);
+    if (!bolao) return [] as any[];
+    const betsSource = (bolao as any).myBets ?? bolao.bets ?? [];
+    if (!userId) return Array.isArray(betsSource) ? betsSource : [];
+    return betsSource.filter((b: any) => b.userId === userId);
   }, [bolao, userId]);
   const isParticipant = useMemo(() => {
+    if ((bolao as any)?.isParticipant) return true;
     if (myBets.length > 0) return true;
     return (bolao?.bets ?? []).some((b: any) => b.userId === userId);
   }, [bolao, myBets, userId]);
