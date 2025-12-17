@@ -5,33 +5,33 @@ export type DrawerSection = {
 
 export const sections: DrawerSection[] = [
   {
-    title: 'BolÇæes',
+    title: 'Bolões',
     items: [
-      { label: 'InÇðcio', href: '/dashboard', description: 'Resumo inicial com bolÇæes em andamento.' },
-      { label: 'BolÇæes em Andamento', href: '/admin/boloes?filtro=andamento', description: 'Visualize e participe dos bolÇæes ativos.' },
-      { label: 'BolÇæes Encerrados', href: '/admin/boloes?filtro=encerrados', description: 'Consulte histÇürico e relatÇürios.' },
-      { label: 'Criar BolÇœo', href: '/admin/boloes/criar', description: 'Configure cotas, prÇ¦mios e taxa Megga.', adminOnly: true },
-      { label: 'Sorteios', href: '/admin/sorteios', description: 'Registrar resultados e atualizar bolÇæes.', adminOnly: true },
+      { label: 'Início', href: '/dashboard', description: 'Resumo inicial com bolões em andamento.' },
+      { label: 'Bolões em andamento', href: '/admin/boloes?filtro=andamento', description: 'Visualize e participe dos bolões ativos.' },
+      { label: 'Bolões encerrados', href: '/admin/boloes?filtro=encerrados', description: 'Consulte histórico e relatórios.' },
+      { label: 'Criar bolão', href: '/admin/boloes/criar', description: 'Configure cotas, prêmios e taxa Megga.', adminOnly: true },
+      { label: 'Sorteios', href: '/admin/sorteios', description: 'Registrar resultados e atualizar bolões.', adminOnly: true },
     ],
   },
   {
     title: 'Conta',
     items: [
-      { label: 'Dashboard', href: '/admin', description: 'Resumo de premiaÇõÇæes, saques e indicaÇõÇæes.', adminOnly: true },
-      { label: 'UsuÇ­rios', href: '/admin/usuarios', description: 'Acompanhe cadastros e perfis verificados.', adminOnly: true },
-      { label: 'Aprovar saques', href: '/admin/suitpay', description: 'Avalie e libere solicitaÇõÇæes.', adminOnly: true },
-      { label: 'SuitPay Config', href: '/admin/suitpay', description: 'Chaves, webhooks e limites automÇ­ticos.', adminOnly: true },
-      { label: 'Config Afiliados', href: '/admin/afiliados', description: 'Defina comissÇæes diretas e indiretas.', adminOnly: true },
-      { label: 'Meus afiliados', href: '/afiliados', description: 'Veja seu cÇüdigo/link e acompanhe ganhos.' },
+      { label: 'Dashboard', href: '/admin', description: 'Resumo de premiações, saques e indicações.', adminOnly: true },
+      { label: 'Usuários', href: '/admin/usuarios', description: 'Acompanhe cadastros e perfis verificados.', adminOnly: true },
+      { label: 'Aprovar saques', href: '/admin/suitpay', description: 'Avalie e libere solicitações.', adminOnly: true },
+      { label: 'SuitPay Config', href: '/admin/suitpay', description: 'Chaves, webhooks e limites automáticos.', adminOnly: true },
+      { label: 'Config Afiliados', href: '/admin/afiliados', description: 'Defina comissões diretas e indiretas.', adminOnly: true },
+      { label: 'Meus afiliados', href: '/afiliados', description: 'Veja seu código/link e acompanhe ganhos.' },
     ],
   },
   {
-    title: 'PolÇðtica',
+    title: 'Política',
     items: [
-      { label: 'Termos e CondiÇõÇæes', href: '/politica/termos' },
-      { label: 'Jogo ResponsÇ­vel', href: '/politica/jogo-responsavel' },
+      { label: 'Editar políticas', href: '/admin/politicas', adminOnly: true },
+      { label: 'Termos e Condições', href: '/politica/termos' },
+      { label: 'Jogo Responsável', href: '/politica/jogo-responsavel' },
       { label: 'Privacidade', href: '/politica/privacidade' },
-      { label: 'Editar polÇiticas', href: '/admin/politicas', adminOnly: true },
     ],
   },
 ];

@@ -45,7 +45,10 @@ export default function AdminPoliciesPage() {
         [{ header: [1, 2, 3, false] }],
         ['bold', 'italic', 'underline', 'strike'],
         [{ list: 'ordered' }, { list: 'bullet' }],
+        [{ align: [] }],
+        [{ color: [] }, { background: [] }],
         ['link', 'image', 'video'],
+        [{ indent: '-1' }, { indent: '+1' }],
         ['clean'],
       ],
     }),
@@ -112,10 +115,18 @@ export default function AdminPoliciesPage() {
 
         <div className="space-y-2 text-sm text-white/80">
           <span className="text-xs uppercase tracking-[0.3em] text-white/40">Conteudo</span>
-          <div className="rounded-2xl border border-white/10 bg-white">
-            <ReactQuill theme="snow" value={content} onChange={setContent} modules={toolbarOptions} />
+          <div className="rounded-2xl border border-white/10 bg-white text-black">
+            <ReactQuill
+              theme="snow"
+              value={content}
+              onChange={setContent}
+              modules={toolbarOptions}
+              className="min-h-[240px]"
+            />
           </div>
-          <p className="text-xs text-white/60">Use o editor para inserir negrito, listas, links, imagens ou videos.</p>
+          <p className="text-xs text-white/60">
+            Use o editor para inserir negrito, listas, alinhamento, cores, links, imagens ou videos.
+          </p>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
