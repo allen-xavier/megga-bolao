@@ -14,20 +14,24 @@ export class BoloesService {
     const userId = currentUser?.id;
     await this.reserveSenaPotIfNeeded();
     const boloes = await this.prisma.bolao.findMany({
-      include: { prizes: true, transparency: true },
+      include: {
+        prizes: true,
+        transparency: true,
+        ...(userId && {
+          bets: {
+            where: { userId },
+            select: { id: true, userId: true },
+          },
+        }),
+      },
       orderBy: { startsAt: "asc" },
     });
     if (!userId) return boloes;
-    const betCounts = await this.prisma.bet.groupBy({
-      by: ["bolaoId"],
-      where: { userId },
-      _count: { _all: true },
+    return boloes.map((bolao: any) => {
+      const myBets = bolao.bets ?? [];
+      const isParticipant = myBets.length > 0;
+      return { ...bolao, myBets, isParticipant };
     });
-    const map = new Map<string, number>(betCounts.map((b) => [b.bolaoId, b._count._all]));
-    return boloes.map((bolao) => ({
-      ...bolao,
-      isParticipant: map.get(bolao.id) ? true : false,
-    }));
   }
 
   async findOne(id: string, currentUser?: UserProfile) {
