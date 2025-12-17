@@ -11,7 +11,7 @@ export class BoloesService {
   constructor(private readonly prisma: PrismaService, private readonly events: EventsService) {}
 
   async list(currentUser?: UserProfile) {
-    const userId = currentUser?.id;
+    const userId = (currentUser as any)?.id ?? (currentUser as any)?.userId ?? (currentUser as any)?.sub;
     await this.reserveSenaPotIfNeeded();
     const boloes = await this.prisma.bolao.findMany({
       include: {
@@ -35,7 +35,7 @@ export class BoloesService {
   }
 
   async findOne(id: string, currentUser?: UserProfile) {
-    const userId = currentUser?.id;
+    const userId = (currentUser as any)?.id ?? (currentUser as any)?.userId ?? (currentUser as any)?.sub;
     await this.reserveSenaPotIfNeeded();
     const bolao = await this.prisma.bolao.findUnique({
       where: { id },

@@ -24,6 +24,9 @@ type Bolao = {
   ticketPrice: number;
   closedAt?: string | null;
   prizes: Prize[];
+  isParticipant?: boolean;
+  myBets?: { userId: string }[];
+  bets?: { userId: string }[];
 };
 
 function StatusBadge({ label }: { label: string }) {
@@ -88,6 +91,13 @@ function AdminBoloesPageContent() {
   const token = session?.user?.accessToken;
   const role = (session?.user as any)?.role;
   const isAdmin = role === 'ADMIN' || role === 'SUPERVISOR';
+  const userId =
+    (session?.user as any)?.id ??
+    (session?.user as any)?._id ??
+    (session?.user as any)?.sub ??
+    (session?.user as any)?.userId ??
+    (session as any)?.id ??
+    (session as any)?.userId;
   const searchParams = useSearchParams();
   const filtro = searchParams.get('filtro');
 
@@ -138,8 +148,15 @@ function AdminBoloesPageContent() {
                 <p className="text-xs uppercase tracking-[0.3em] text-white/40">#{bolao.id}</p>
                 <h3 className="mt-1 text-lg font-semibold">{bolao.name}</h3>
                 <p className="text-xs text-white/60">
-                  Inicio: {formatSaoPaulo(bolao.startsAt)} â€¢ Cota: {formatCurrency(bolao.ticketPrice)} â€¢ Minimo: {bolao.minimumQuotas} cotas
+                  Inicio: {formatSaoPaulo(bolao.startsAt)} • Cota: {formatCurrency(bolao.ticketPrice)} • Minimo: {bolao.minimumQuotas} cotas
                 </p>
+                {(bolao.isParticipant ||
+                  bolao.myBets?.some?.((b) => b.userId === userId) ||
+                  bolao.bets?.some?.((b) => b.userId === userId)) && (
+                  <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-megga-lime/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-megga-lime">
+                    Participando
+                  </span>
+                )}
               </div>
               <StatusBadge
                 label={
@@ -234,3 +251,5 @@ export default function AdminBoloesPage() {
     </Suspense>
   );
 }
+
+
