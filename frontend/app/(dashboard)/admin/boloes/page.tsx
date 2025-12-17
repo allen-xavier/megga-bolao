@@ -1,4 +1,4 @@
-'use client';
+ï»¿'use client';
 
 import { Suspense } from 'react';
 import useSWR from 'swr';
@@ -148,7 +148,7 @@ function AdminBoloesPageContent() {
                 <p className="text-xs uppercase tracking-[0.3em] text-white/40">#{bolao.id}</p>
                 <h3 className="mt-1 text-lg font-semibold">{bolao.name}</h3>
                 <p className="text-xs text-white/60">
-                  Inicio: {formatSaoPaulo(bolao.startsAt)} • Cota: {formatCurrency(bolao.ticketPrice)} • Minimo: {bolao.minimumQuotas} cotas
+                  Inicio: {formatSaoPaulo(bolao.startsAt)} - Cota: {formatCurrency(bolao.ticketPrice)} - Minimo: {bolao.minimumQuotas} cotas
                 </p>
                 {(bolao.isParticipant ||
                   bolao.myBets?.some?.((b) => b.userId === userId) ||
@@ -251,5 +251,11 @@ export default function AdminBoloesPage() {
     </Suspense>
   );
 }
+
+
+
+
+
+
 
 
