@@ -2,7 +2,7 @@ import { ConflictException, Injectable, UnauthorizedException, NotFoundException
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, User, PaymentType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -96,18 +96,27 @@ export class AuthService {
             address: dto.address,
             city: dto.city,
             state: dto.state,
-            pixKey: dto.pixKey,
-            passwordHash,
-            role: dto.role ?? UserRole.USER,
-            acceptedTerms: dto.acceptedTerms ?? false,
-            referralCode,
-            wallet: {
-              create: {},
+              pixKey: dto.pixKey,
+              passwordHash,
+              role: dto.role ?? UserRole.USER,
+              acceptedTerms: dto.acceptedTerms ?? false,
+              referralCode,
+              wallet: {
+                create: {
+                  balance: 1000, // saldo fictício para testes
+                  statements: {
+                    create: {
+                      amount: 1000,
+                      description: 'Cr\u00e9dito inicial de teste',
+                      type: PaymentType.DEPOSIT,
+                    },
+                  },
+                },
+              },
             },
-          },
-        });
-      } catch (err: any) {
-        if (err?.code === 'P2002' && err?.meta?.target?.includes('referralCode')) {
+          });
+        } catch (err: any) {
+          if (err?.code === 'P2002' && err?.meta?.target?.includes('referralCode')) {
           continue; // tenta gerar outro
         }
         throw err;
