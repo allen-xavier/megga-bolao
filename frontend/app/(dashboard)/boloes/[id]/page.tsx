@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
@@ -32,9 +32,19 @@ function formatCurrency(value: number) {
 export default function BolaoPage({ params }: { params: { id: string } }) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
+  const userId = session?.user?.id as string | undefined;
+
   const [bolao, setBolao] = useState<Bolao | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openSection, setOpenSection] = useState<Record<string, boolean>>({
+    premiacoes: false,
+    live: false,
+    resultados: false,
+    sorteios: false,
+    apostadores: false,
+    minhasApostas: true,
+  });
 
   const fetchBolao = async () => {
     try {
@@ -59,6 +69,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id, token]);
 
+  // Atualizacao por SSE
   useEffect(() => {
     if (typeof window === "undefined") return;
     let source: EventSource | null = null;
@@ -138,6 +149,13 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const totalPct = prizes.reduce((acc: number, p: any) => acc + Number(p.percentage ?? 0), 0);
   const variablePool = Math.max(prizePool - totalFixed, 0);
   const displayTotal = prizePool + senaPotApplied;
+  const isParticipant = (bolao.bets ?? []).some((b: any) => b.userId === userId);
+  const myBets = useMemo(() => {
+    if (!userId) return [] as any[];
+    return (bolao.bets ?? []).filter((b: any) => b.userId === userId);
+  }, [bolao, userId]);
+
+  const toggle = (key: string) => setOpenSection((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
     <div className="space-y-6">
@@ -149,7 +167,10 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
             <span className={`h-2.5 w-2.5 rounded-full shadow ${isClosed ? "bg-white/60" : "bg-megga-lime"}`} aria-hidden />{" "}
             {isClosed ? "Encerrado" : "Em andamento"}
           </span>
-          <span className="rounded-full bg-white/10 px-3 py-1">Bolao #{bolao.id.slice(0, 6)}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            {isParticipant && <span className="rounded-full bg-megga-lime/30 px-3 py-1 text-white">Participando</span>}
+            <span className="rounded-full bg-white/10 px-3 py-1">Bolao #{bolao.id.slice(0, 6)}</span>
+          </div>
         </div>
         <div className="space-y-6 px-6 pb-8 pt-8">
           <header className="flex flex-wrap items-start justify-between gap-4">
@@ -223,222 +244,275 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         <PlaceBetForm bolaoId={bolao.id} ticketPrice={ticketPrice} />
       </div>
 
-      <section id="premiacoes" className="space-y-4 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <header>
-          <h2 className="text-lg font-semibold">Premiacoes</h2>
-          <p className="text-sm text-white/60">Distribuicao configurada para este bolao (valores calculados).</p>
-        </header>
-        <ul className="space-y-3">
-          {bolao.prizes?.map((prize: any) => (
-            <li key={prize.id} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm">
-              <div>
-                <p className="font-medium text-white">{prizeInfo[prize.type]?.title ?? prize.type}</p>
-                <p className="text-xs text-white/60">{prizeInfo[prize.type]?.description ?? "Premiacao prevista"}</p>
-              </div>
-              <span className="text-sm font-semibold text-megga-yellow">
-                {(() => {
-                  const fixed = Number(prize.fixedValue ?? 0);
-                  const pct = Number(prize.percentage ?? 0);
-                  const pctShare = totalPct > 0 ? pct / totalPct : 0;
-                  const baseValue = fixed + variablePool * pctShare;
-                  const bonusApplied = prize.type === "SENA_PRIMEIRO" ? (senaPotApplied > 0 ? senaPotApplied : 0) : 0;
-                  const bonusAwaiting =
-                    prize.type === "SENA_PRIMEIRO" && bonusApplied === 0 ? (senaPotRolled > 0 ? senaPotRolled : senaPotGlobal) : 0;
-                  const totalValue = baseValue + bonusApplied;
-
-                  if (bonusApplied > 0) {
-                    return (
-                      <span className="flex flex-col items-end text-right">
-                        <span>R$ {formatCurrency(totalValue)}</span>
-                        <span className="text-[11px] text-white/70">
-                          (Base R$ {formatCurrency(baseValue)} + Acum R$ {formatCurrency(bonusApplied)} = Total)
-                        </span>
-                      </span>
-                    );
-                  }
-
-                  if (bonusAwaiting > 0) {
-                    return (
-                      <span className="flex flex-col items-end text-right">
-                        <span>R$ {formatCurrency(baseValue)}</span>
-                        <span className="text-[11px] text-white/70">
-                          Acumulara para proximo bolao: R$ {formatCurrency(bonusAwaiting)}
-                        </span>
-                      </span>
-                    );
-                  }
-
-                  return `R$ ${formatCurrency(totalValue)}`;
-                })()}
-              </span>
-            </li>
-          ))}
-          {(!bolao.prizes || bolao.prizes.length === 0) && (
-            <li className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/60">
-              Nenhuma premiacao configurada para este bolao.
-            </li>
-          )}
-        </ul>
-      </section>
-
-      {!isClosed && livePrizes.length > 0 && (
-        <section className="space-y-4 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
-          <header>
-            <h2 className="text-lg font-semibold">Premiacoes ja atingidas</h2>
-            <p className="text-sm text-white/60">Premios liberados antes do encerramento.</p>
-          </header>
-          <div className="space-y-3">
-            {livePrizes.map((prize: any) => (
-              <div key={prize.prizeType} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
-                    <p className="text-base font-semibold">{prize.prizeType}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs uppercase tracking-[0.24em] text-white/50">Total distribuido</p>
-                    <p className="text-lg font-semibold text-megga-yellow">R$ {formatCurrency(Number(prize.totalValue ?? 0))}</p>
-                  </div>
-                </div>
-                {prize.winners?.length ? (
-                  <ul className="space-y-1 text-sm text-white/80">
-                    {prize.winners.map((winner: any) => (
-                      <li
-                        key={`${prize.prizeType}-${winner.bet?.id ?? winner.user?.id}`}
-                        className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2"
-                      >
-                        <div>
-                          <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
-                          {winner.bet?.numbers && (
-                            <p className="text-xs text-white/60">
-                              Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" - ")} -{" "}
-                              {winner.hits} acertos
-                            </p>
-                          )}
-                        </div>
-                        <span className="text-sm font-semibold text-megga-lime">
-                          R$ {formatCurrency(Number(winner.amount ?? 0))}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-white/60">Nenhum ganhador nesta categoria.</p>
-                )}
-              </div>
-            ))}
+      <section
+        id="premiacoes"
+        className="space-y-2 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5"
+      >
+        <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("premiacoes")}>
+          <div>
+            <h2 className="text-lg font-semibold">Premiacoes</h2>
+            <p className="text-sm text-white/60">Distribuicao configurada para este bolao (valores calculados).</p>
           </div>
-        </section>
-      )}
-
-      {isClosed && prizeResults.length > 0 && (
-        <section className="space-y-4 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
-          <header>
-            <h2 className="text-lg font-semibold">Resultados e ganhadores</h2>
-            <p className="text-sm text-white/60">
-              Bolao encerrado em{" "}
-              {new Date(bolao.closedAt).toLocaleString("pt-BR", {
-                dateStyle: "short",
-                timeStyle: "short",
-                timeZone: "America/Sao_Paulo",
-              })}
-              .
-            </p>
-          </header>
-          <div className="space-y-3">
-            {prizeResults.map((prize: any) => (
-              <div key={prize.id} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
-                    <p className="text-base font-semibold">{prizeInfo[prize.prizeType]?.title ?? prize.prizeType}</p>
-                    {prizeInfo[prize.prizeType]?.description && (
-                      <p className="text-xs text-white/60">{prizeInfo[prize.prizeType].description}</p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs uppercase tracking-[0.24em] text-white/50">Total distribuido</p>
-                    <p className="text-lg font-semibold text-megga-yellow">
-                      R$ {formatCurrency(Number(prize.totalValue ?? 0))}
-                    </p>
-                  </div>
-                </div>
-                {prize.winners?.length ? (
-                  <ul className="space-y-1 text-sm text-white/80">
-                    {prize.winners.map((winner: any) => (
-                      <li
-                        key={winner.id}
-                        className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2"
-                      >
-                        <div>
-                          <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
-                          {winner.bet?.numbers && (
-                            <p className="text-xs text-white/60">
-                              Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" - ")}
-                              {winner.hits ? ` • ${winner.hits} acertos` : ""}
-                            </p>
-                          )}
-                        </div>
-                        <span className="text-sm font-semibold text-megga-lime">
-                          R$ {formatCurrency(Number(winner.amount ?? 0))}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-white/60">Nenhum ganhador nesta categoria.</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section id="sorteios" className="space-y-3 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <header>
-          <h2 className="text-lg font-semibold">Sorteios</h2>
-          <p className="text-sm text-white/60">Resultados oficiais vinculados a este bolao.</p>
+          <span className="text-xl">{openSection.premiacoes ? "▾" : "▸"}</span>
         </header>
-        {draws.length === 0 ? (
-          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Nenhum sorteio registrado ainda.</p>
-        ) : (
+        {openSection.premiacoes && (
           <ul className="space-y-3">
-            {draws.map((draw: any) => (
-              <li key={draw.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-[0.3em] text-white/50">Data</p>
-                    <p className="font-semibold">
-                      {new Date(draw.drawnAt).toLocaleString("pt-BR", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                        timeZone: "America/Sao_Paulo",
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {draw.numbers?.map((num: number) => (
-                      <span
-                        key={num}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-megga-magenta/25 text-xs font-semibold text-megga-yellow"
-                      >
-                        {num.toString().padStart(2, "0")}
-                      </span>
-                    ))}
-                  </div>
+            {bolao.prizes?.map((prize: any) => (
+              <li key={prize.id} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm">
+                <div>
+                  <p className="font-medium text-white">{prizeInfo[prize.type]?.title ?? prize.type}</p>
+                  <p className="text-xs text-white/60">{prizeInfo[prize.type]?.description ?? "Premiacao prevista"}</p>
                 </div>
+                <span className="text-sm font-semibold text-megga-yellow">
+                  {(() => {
+                    const fixed = Number(prize.fixedValue ?? 0);
+                    const pct = Number(prize.percentage ?? 0);
+                    const pctShare = totalPct > 0 ? pct / totalPct : 0;
+                    const baseValue = fixed + variablePool * pctShare;
+                    const bonusApplied = prize.type === "SENA_PRIMEIRO" ? (senaPotApplied > 0 ? senaPotApplied : 0) : 0;
+                    const bonusAwaiting =
+                      prize.type === "SENA_PRIMEIRO" && bonusApplied === 0 ? (senaPotRolled > 0 ? senaPotRolled : senaPotGlobal) : 0;
+                    const totalValue = baseValue + bonusApplied;
+
+                    if (bonusApplied > 0) {
+                      return (
+                        <span className="flex flex-col items-end text-right">
+                          <span>R$ {formatCurrency(totalValue)}</span>
+                          <span className="text-[11px] text-white/70">
+                            (Base R$ {formatCurrency(baseValue)} + Acum R$ {formatCurrency(bonusApplied)} = Total)
+                          </span>
+                        </span>
+                      );
+                    }
+
+                    if (bonusAwaiting > 0) {
+                      return (
+                        <span className="flex flex-col items-end text-right">
+                          <span>R$ {formatCurrency(baseValue)}</span>
+                          <span className="text-[11px] text-white/70">
+                            Acumulara para proximo bolao: R$ {formatCurrency(bonusAwaiting)}
+                          </span>
+                        </span>
+                      );
+                    }
+
+                    return `R$ ${formatCurrency(totalValue)}`;
+                  })()}
+                </span>
               </li>
             ))}
+            {(!bolao.prizes || bolao.prizes.length === 0) && (
+              <li className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/60">
+                Nenhuma premiacao configurada para este bolao.
+              </li>
+            )}
           </ul>
         )}
       </section>
 
-      <section id="apostadores" className="space-y-4">
-        <header className="flex flex-wrap items-center justify-between gap-4">
+      {!isClosed && livePrizes.length > 0 && (
+        <section className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+          <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("live")}>
+            <div>
+              <h2 className="text-lg font-semibold">Premiacoes ja atingidas</h2>
+              <p className="text-sm text-white/60">Premios liberados antes do encerramento.</p>
+            </div>
+            <span className="text-xl">{openSection.live ? "▾" : "▸"}</span>
+          </header>
+          {openSection.live && (
+            <div className="space-y-3">
+              {livePrizes.map((prize: any) => (
+                <div key={prize.prizeType} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
+                      <p className="text-base font-semibold">{prize.prizeType}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs uppercase tracking-[0.24em] text-white/50">Total distribuido</p>
+                      <p className="text-lg font-semibold text-megga-yellow">R$ {formatCurrency(Number(prize.totalValue ?? 0))}</p>
+                    </div>
+                  </div>
+                  {prize.winners?.length ? (
+                    <ul className="space-y-1 text-sm text-white/80">
+                      {prize.winners.map((winner: any) => (
+                        <li
+                          key={`${prize.prizeType}-${winner.bet?.id ?? winner.user?.id}`}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2"
+                        >
+                          <div>
+                            <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
+                            {winner.bet?.numbers && (
+                              <p className="text-xs text-white/60">
+                                Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" - ")} - {winner.hits} acertos
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold text-megga-lime">
+                            R$ {formatCurrency(Number(winner.amount ?? 0))}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-white/60">Nenhum ganhador nesta categoria.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {isClosed && prizeResults.length > 0 && (
+        <section className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+          <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("resultados")}>
+            <div>
+              <h2 className="text-lg font-semibold">Resultados e ganhadores</h2>
+              <p className="text-sm text-white/60">
+                Bolao encerrado em{" "}
+                {new Date(bolao.closedAt).toLocaleString("pt-BR", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                  timeZone: "America/Sao_Paulo",
+                })}
+                .
+              </p>
+            </div>
+            <span className="text-xl">{openSection.resultados ? "▾" : "▸"}</span>
+          </header>
+          {openSection.resultados && (
+            <div className="space-y-3">
+              {prizeResults.map((prize: any) => (
+                <div key={prize.id} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
+                      <p className="text-base font-semibold">{prizeInfo[prize.prizeType]?.title ?? prize.prizeType}</p>
+                      {prizeInfo[prize.prizeType]?.description && (
+                        <p className="text-xs text-white/60">{prizeInfo[prize.prizeType].description}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs uppercase tracking-[0.24em] text-white/50">Total distribuido</p>
+                      <p className="text-lg font-semibold text-megga-yellow">
+                        R$ {formatCurrency(Number(prize.totalValue ?? 0))}
+                      </p>
+                    </div>
+                  </div>
+                  {prize.winners?.length ? (
+                    <ul className="space-y-1 text-sm text-white/80">
+                      {prize.winners.map((winner: any) => (
+                        <li
+                          key={winner.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2"
+                        >
+                          <div>
+                            <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
+                            {winner.bet?.numbers && (
+                              <p className="text-xs text-white/60">
+                                Jogo: {winner.bet.numbers.map((n: number) => n.toString().padStart(2, "0")).join(" - ")}
+                                {winner.hits ? ` • ${winner.hits} acertos` : ""}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold text-megga-lime">
+                            R$ {formatCurrency(Number(winner.amount ?? 0))}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-white/60">Nenhum ganhador nesta categoria.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      <section id="sorteios" className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("sorteios")}>
+          <div>
+            <h2 className="text-lg font-semibold">Sorteios</h2>
+            <p className="text-sm text-white/60">Resultados oficiais vinculados a este bolao.</p>
+          </div>
+          <span className="text-xl">{openSection.sorteios ? "▾" : "▸"}</span>
+        </header>
+        {openSection.sorteios && (
+          <>
+            {drawsAsc.length === 0 ? (
+              <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Nenhum sorteio registrado ainda.</p>
+            ) : (
+              <div className="max-h-72 overflow-y-auto pr-1 space-y-3">
+                {[...drawsAsc].reverse().map((draw: any) => (
+                  <div key={draw.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Data</p>
+                        <p className="font-semibold">
+                          {new Date(draw.drawnAt).toLocaleString("pt-BR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                            timeZone: "America/Sao_Paulo",
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {draw.numbers?.map((num: number) => (
+                          <span
+                            key={num}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-megga-magenta/25 text-xs font-semibold text-megga-yellow"
+                          >
+                            {num.toString().padStart(2, "0")}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {isParticipant && (
+        <section className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+          <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("minhasApostas")}>
+            <div>
+              <h2 className="text-lg font-semibold">Minhas apostas</h2>
+              <p className="text-sm text-white/60">Visualize suas apostas neste bolao.</p>
+            </div>
+            <span className="text-xl">{openSection.minhasApostas ? "▾" : "▸"}</span>
+          </header>
+          {openSection.minhasApostas && (
+            <div className="max-h-96 overflow-y-auto pr-1">
+              <BetsList bets={myBets as any[]} winningNumbers={winningNumbers} />
+              {myBets.length === 0 && <p className="text-sm text-white/60">Nenhuma aposta sua aqui ainda.</p>}
+            </div>
+          )}
+        </section>
+      )}
+
+      <section
+        id="apostadores"
+        className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5"
+      >
+        <header
+          className="flex cursor-pointer flex-wrap items-center justify-between gap-4"
+          onClick={() => toggle("apostadores")}
+        >
           <h2 className="text-lg font-semibold text-white">Lista de apostadores</h2>
           <TransparencyDownload bolaoId={bolao.id} hasFile={hasTransparency} />
+          <span className="text-xl">{openSection.apostadores ? "▾" : "▸"}</span>
         </header>
-        <BetsList bets={(bolao.bets ?? []) as any[]} winningNumbers={winningNumbers} />
+        {openSection.apostadores && (
+          <div className="max-h-96 overflow-y-auto pr-1">
+            <BetsList bets={(bolao.bets ?? []) as any[]} winningNumbers={winningNumbers} />
+          </div>
+        )}
       </section>
     </div>
   );
