@@ -1,4 +1,4 @@
-FROM ghcr.io/library/node:20-alpine AS deps
+FROM ghcr.io/nodejs/node:20-alpine AS deps
 ENV npm_config_loglevel=error \
     npm_config_progress=false \
     npm_config_fund=false \
@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci || npm i
 
-FROM ghcr.io/library/node:20-alpine AS build
+FROM ghcr.io/nodejs/node:20-alpine AS build
 ENV npm_config_loglevel=error \
     npm_config_progress=false \
     npm_config_fund=false \
@@ -18,7 +18,7 @@ COPY . .
 RUN npm run build
 
 # Instala apenas as dependências necessárias para execução
-FROM ghcr.io/library/node:20-alpine AS prod-deps
+FROM ghcr.io/nodejs/node:20-alpine AS prod-deps
 ENV npm_config_loglevel=error \
     npm_config_progress=false \
     npm_config_fund=false \
@@ -27,7 +27,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev || npm i --omit=dev
 
-FROM ghcr.io/library/node:20-alpine
+FROM ghcr.io/nodejs/node:20-alpine
 ENV npm_config_loglevel=error \
     npm_config_progress=false \
     npm_config_fund=false \
