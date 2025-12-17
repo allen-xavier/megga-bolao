@@ -74,7 +74,13 @@ function toSections(boloes: Bolao[]) {
     }
   });
 
-  return { andamento, futuros, encerrados };
+  encerrados.sort((a, b) => {
+    const ca = a.closedAt ? new Date(a.closedAt).getTime() : 0;
+    const cb = b.closedAt ? new Date(b.closedAt).getTime() : 0;
+    return cb - ca;
+  });
+
+  return { andamento, futuros, encerrados: encerrados.slice(0, 5) };
 }
 
 function AdminBoloesPageContent() {

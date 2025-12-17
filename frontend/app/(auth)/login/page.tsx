@@ -1,9 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { AuthForm } from "@/components/auth-form";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [status, router]);
+
   return (
     <div className="mx-auto max-w-md space-y-6 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
       <div className="space-y-2 text-center">
