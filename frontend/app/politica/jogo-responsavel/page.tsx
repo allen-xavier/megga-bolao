@@ -2,6 +2,8 @@ export const metadata = {
   title: 'Jogo Responsável - Megga Bolão',
 };
 
+import 'react-quill/dist/quill.snow.css';
+
 async function getPolicy() {
   const base = process.env.NEXT_PUBLIC_API_BASE ?? 'https://app.allentiomolu.com.br/api';
   try {
@@ -19,7 +21,9 @@ export default async function JogoResponsavelPage() {
   return (
     <article className="space-y-4">
       <h1 className="text-2xl font-semibold">{policy.title}</h1>
-      <div className="prose prose-invert max-w-none prose-p:leading-relaxed" dangerouslySetInnerHTML={{ __html: policy.content }} />
+      <div className="ql-snow rounded-2xl bg-white/5 p-4">
+        <div className="ql-editor prose prose-invert max-w-none prose-p:leading-relaxed" dangerouslySetInnerHTML={{ __html: policy.content }} />
+      </div>
     </article>
   );
 }

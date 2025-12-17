@@ -21,6 +21,7 @@ const fetcher = ([url, token]: [string, string]) =>
 export default function AdminPoliciesPage() {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
+  const quillRef = useRef<any>(null);
 
   const [currentKey, setCurrentKey] = useState('termos');
   const { data, mutate, isLoading } = useSWR(token ? [`/admin/policies/${currentKey}`, token] : null, fetcher, {
@@ -56,6 +57,17 @@ export default function AdminPoliciesPage() {
     }),
     [],
   );
+
+  const insertTable = (cols: number) => {
+    const editor = quillRef.current?.getEditor?.();
+    if (!editor) return;
+    const index = editor.getSelection()?.index ?? editor.getLength();
+    const cells = Array.from({ length: cols })
+      .map((_, i) => `<td style="padding:8px; border:1px solid #ccc;">Coluna ${i + 1}</td>`)
+      .join('');
+    const table = `<table style="width:100%; border-collapse:collapse; margin:12px 0;"><tbody><tr>${cells}</tr></tbody></table>`;
+    editor.clipboard.dangerouslyPasteHTML(index, table, 'silent');
+  };
 
   const save = async () => {
     if (!token) return;
@@ -143,12 +155,29 @@ export default function AdminPoliciesPage() {
                 'color',
                 'background',
               ]}
+              ref={quillRef}
               className="min-h-[240px]"
             />
           </div>
+          <div className="flex flex-wrap gap-2 text-xs text-white/70">
+            <button
+              type="button"
+              onClick={() => insertTable(2)}
+              className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+            >
+              Inserir tabela 2 colunas
+            </button>
+            <button
+              type="button"
+              onClick={() => insertTable(3)}
+              className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+            >
+              Inserir tabela 3 colunas
+            </button>
+          </div>
           <p className="text-xs text-white/60">
             Use o editor para inserir negrito, listas, alinhamento, cores, links, imagens ou vídeos. Para colocar texto e mídia lado a
-            lado, crie colunas usando alinhamento ou insira tabelas via HTML no conteúdo.
+            lado, use as ações de tabela para criar colunas.
           </p>
         </div>
 
