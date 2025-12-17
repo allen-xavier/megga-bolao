@@ -33,10 +33,27 @@ export function WinnersBanner() {
   });
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    containerRef.current.scrollLeft = 0;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const speed = 0.3; // pixels/frame
+    const step = () => {
+      if (!container) return;
+      container.scrollLeft += speed;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      if (container.scrollLeft >= maxScroll) {
+        container.scrollLeft = 0;
+      }
+      animationRef.current = requestAnimationFrame(step);
+    };
+
+    animationRef.current = requestAnimationFrame(step);
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
   }, [data]);
 
   if (!data || data.length === 0) {

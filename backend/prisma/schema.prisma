@@ -212,6 +212,7 @@ model AffiliateConfig {
   firstLevelPercent Decimal  @default(2.0) @db.Decimal(5, 2)
   secondLevelPercent Decimal @default(1.0) @db.Decimal(5, 2)
   firstBetBonus     Decimal  @default(0.0) @db.Decimal(12, 2)
+  firstBetBonusEnabled Boolean @default(false)
   updatedAt         DateTime @updatedAt
 }
 

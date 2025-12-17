@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+﻿import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PaymentType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBetDto } from './dto/create-bet.dto';
@@ -30,11 +30,11 @@ export class BetsService {
     });
 
     if (!bolao) {
-      throw new NotFoundException('Bolão não encontrado');
+      throw new NotFoundException('BolÃ£o nÃ£o encontrado');
     }
 
     if (bolao.closedAt) {
-      throw new BadRequestException('Este bolão já foi encerrado');
+      throw new BadRequestException('Este bolÃ£o jÃ¡ foi encerrado');
     }
 
     const numbers = this.resolveNumbers(dto);
@@ -50,7 +50,7 @@ export class BetsService {
       const affiliateConfig =
         (await tx.affiliateConfig.findUnique({ where: { id: 'global' } })) ||
         (await tx.affiliateConfig.create({
-          data: { id: 'global', firstLevelPercent: 2, secondLevelPercent: 1, firstBetBonus: 0 },
+          data: { id: 'global', firstLevelPercent: 2, secondLevelPercent: 1, firstBetBonus: 0, firstBetBonusEnabled: false },
         }));
 
       const transparency = await this.transparency.ensureRecord(tx, bolao.id);
@@ -62,7 +62,7 @@ export class BetsService {
           statements: {
             create: {
               amount: -ticketPrice,
-              description: `Aposta no bolão ${bolao.name}`,
+              description: `Aposta no bolÃ£o ${bolao.name}`,
               type: PaymentType.WITHDRAW,
               referenceId: bolao.id,
             },
@@ -100,7 +100,7 @@ export class BetsService {
               statements: {
                 create: {
                   amount: commission1,
-                  description: `Comissão direta pela aposta de ${bet.user.fullName}`,
+                  description: `ComissÃ£o direta pela aposta de ${bet.user.fullName}`,
                   type: PaymentType.COMMISSION,
                   referenceId: bet.id,
                 },
@@ -123,7 +123,7 @@ export class BetsService {
                 statements: {
                   create: {
                     amount: commission2,
-                    description: `Comissão indireta pela aposta de ${bet.user.fullName}`,
+                    description: `ComissÃ£o indireta pela aposta de ${bet.user.fullName}`,
                     type: PaymentType.COMMISSION,
                     referenceId: bet.id,
                   },
@@ -145,7 +145,7 @@ export class BetsService {
                 statements: {
                   create: {
                     amount: bonus,
-                    description: `Bônus pela primeira aposta de ${bet.user.fullName}`,
+                    description: `BÃ´nus pela primeira aposta de ${bet.user.fullName}`,
                     type: PaymentType.COMMISSION,
                     referenceId: bet.id,
                   },
@@ -217,3 +217,5 @@ export class BetsService {
     return pool.slice(0, 10).sort((a, b) => a - b);
   }
 }
+
+
