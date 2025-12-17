@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
-import { UserProfile } from './entities/user.entity';
+import { UserProfile, UserRole } from './entities/user.entity';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -28,6 +39,16 @@ export class UsersController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  async remove(@Param('id') id: string, @CurrentUser() user: UserProfile) {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERVISOR) {
+      throw new ForbiddenException('Apenas administradores podem excluir usu\u00e1rios.');
+    }
+    await this.usersService.remove(id);
+    return { deleted: true };
   }
 
   @Get('me/prizes')

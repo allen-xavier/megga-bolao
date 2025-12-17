@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
@@ -69,5 +69,29 @@ export class UsersService {
   private toSafeUser(user: any) {
     const { passwordHash, ...safe } = user;
     return safe;
+  }
+
+  async remove(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    const betCount = await this.prisma.bet.count({ where: { userId: id } });
+    const paymentCount = await this.prisma.payment.count({ where: { userId: id } });
+    const prizeCount = await this.prisma.prizeResultWinner.count({ where: { userId: id } });
+
+    if (betCount > 0 || paymentCount > 0 || prizeCount > 0) {
+      throw new BadRequestException('Não é possível excluir usuário com histórico de apostas ou pagamentos.');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.referral.deleteMany({ where: { OR: [{ userId: id }, { referredUserId: id }] } }),
+      this.prisma.walletStatement.deleteMany({ where: { wallet: { userId: id } } }),
+      this.prisma.wallet.deleteMany({ where: { userId: id } }),
+      this.prisma.user.delete({ where: { id } }),
+    ]);
+
+    return { deleted: true };
   }
 }

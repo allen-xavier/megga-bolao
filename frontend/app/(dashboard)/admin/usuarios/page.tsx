@@ -48,8 +48,9 @@ export default function AdminUsuariosPage() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "verificado" | "pendente">("todos");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: users, isLoading, error } = useSWR<User[]>(
+  const { data: users, isLoading, error, mutate } = useSWR<User[]>(
     token ? ["/users", token] as const : null,
     ([url, t]: [string, string]) => fetcher(url, t),
     { revalidateOnFocus: false },
@@ -74,6 +75,22 @@ export default function AdminUsuariosPage() {
       return matchesTerm && matchesStatus;
     });
   }, [users, query, statusFilter]);
+
+  async function handleDelete(id: string) {
+    if (!token) return;
+    const ok = window.confirm("Excluir o usu\u00e1rio? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.");
+    if (!ok) return;
+    try {
+      setDeletingId(id);
+      await api.delete(`/users/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await mutate((prev) => (prev ? prev.filter((u) => u.id !== id) : prev), false);
+    } catch (err: any) {
+      const message = err?.response?.data?.message ?? "N\u00e3o foi poss\u00edvel excluir o usu\u00e1rio.";
+      alert(message);
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -170,7 +187,7 @@ export default function AdminUsuariosPage() {
                     </p>
                   </div>
                 )}
-                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-4">
                   <button
                     type="button"
                     onClick={() => setExpanded(isOpen ? null : user.id)}
@@ -190,6 +207,14 @@ export default function AdminUsuariosPage() {
                   >
                     Liberar saque
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(user.id)}
+                    disabled={deletingId === user.id}
+                    className="rounded-2xl border border-red-500/50 bg-red-500/10 py-3 font-semibold text-red-200 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {deletingId === user.id ? "Excluindo..." : "Excluir"}
+                  </button>
                 </div>
               </li>
             );
