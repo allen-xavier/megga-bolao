@@ -109,11 +109,16 @@ function AdminBoloesPageContent() {
       ? [{ title: 'Encerrados', list: visibleEncerrados }]
       : filtro === 'futuros'
         ? [{ title: 'Futuros', list: futuros }]
-        : [
-            { title: 'Em andamento', list: andamento },
-            { title: 'Futuros', list: futuros },
-            { title: 'Encerrados', list: visibleEncerrados },
-          ];
+        : isAdmin
+          ? [
+              { title: 'Em andamento', list: andamento },
+              { title: 'Futuros', list: futuros },
+              { title: 'Encerrados', list: visibleEncerrados },
+            ]
+          : [
+              { title: 'Em andamento', list: andamento },
+              { title: 'Futuros', list: futuros },
+            ];
 
   const renderList = (title: string, list: Bolao[]) => (
     <section className="space-y-4">
