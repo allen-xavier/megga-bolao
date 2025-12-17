@@ -1,0 +1,1 @@
+-- Prisma migration placeholder (logic in migration.sql)

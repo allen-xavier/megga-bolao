@@ -30,11 +30,11 @@ export class BetsService {
     });
 
     if (!bolao) {
-      throw new NotFoundException('BolÃ£o nÃ£o encontrado');
+      throw new NotFoundException('Bolão não encontrado');
     }
 
     if (bolao.closedAt) {
-      throw new BadRequestException('Este bolÃ£o jÃ¡ foi encerrado');
+      throw new BadRequestException('Este bolão já foi encerrado');
     }
 
     const numbers = this.resolveNumbers(dto);
@@ -62,7 +62,7 @@ export class BetsService {
           statements: {
             create: {
               amount: -ticketPrice,
-              description: `Aposta no bolÃ£o ${bolao.name}`,
+              description: `Aposta no bolão ${bolao.name}`,
               type: PaymentType.WITHDRAW,
               referenceId: bolao.id,
             },
@@ -100,7 +100,7 @@ export class BetsService {
               statements: {
                 create: {
                   amount: commission1,
-                  description: `ComissÃ£o direta pela aposta de ${bet.user.fullName}`,
+                  description: `Comissão direta pela aposta de ${bet.user.fullName}`,
                   type: PaymentType.COMMISSION,
                   referenceId: bet.id,
                 },
@@ -109,7 +109,6 @@ export class BetsService {
           });
         }
 
-        // Indirect (level 2) - already stored with referredUserId = apostador, level = 2
         const indirectRef = await tx.referral.findUnique({
           where: { referredUserId_level: { referredUserId: userId, level: 2 } },
         });
@@ -123,7 +122,7 @@ export class BetsService {
                 statements: {
                   create: {
                     amount: commission2,
-                    description: `ComissÃ£o indireta pela aposta de ${bet.user.fullName}`,
+                    description: `Comissão indireta pela aposta de ${bet.user.fullName}`,
                     type: PaymentType.COMMISSION,
                     referenceId: bet.id,
                   },
@@ -133,9 +132,9 @@ export class BetsService {
           }
         }
 
-        // Bonus first bet for direct referrer
+        // Bonus first bet for direct referrer (only if enabled)
         const previousBets = await tx.bet.count({ where: { userId } });
-        if (previousBets === 0) {
+        if (affiliateConfig.firstBetBonusEnabled && previousBets === 0) {
           const bonus = Number(affiliateConfig.firstBetBonus ?? 0);
           if (bonus > 0) {
             await tx.wallet.update({
@@ -145,7 +144,7 @@ export class BetsService {
                 statements: {
                   create: {
                     amount: bonus,
-                    description: `BÃ´nus pela primeira aposta de ${bet.user.fullName}`,
+                    description: `Bônus pela primeira aposta de ${bet.user.fullName}`,
                     type: PaymentType.COMMISSION,
                     referenceId: bet.id,
                   },
@@ -217,5 +216,3 @@ export class BetsService {
     return pool.slice(0, 10).sort((a, b) => a - b);
   }
 }
-
-

@@ -1,18 +1,66 @@
-'use client';
+﻿'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import useSWR from 'swr';
+import { useSession } from 'next-auth/react';
+import { api } from '@/lib/api';
 
 export default function AdminAfiliadosClient() {
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken;
+
+  const { data, mutate } = useSWR(
+    token ? ['/admin/affiliate-config', token] : null,
+    ([url, t]) => api.get(url, { headers: { Authorization: `Bearer ${t}` } }).then((res) => res.data),
+    { revalidateOnFocus: false },
+  );
+
   const [firstCommission, setFirstCommission] = useState(2);
   const [secondCommission, setSecondCommission] = useState(1);
-  const [firstBetBonus, setFirstBetBonus] = useState(10);
+  const [firstBetBonus, setFirstBetBonus] = useState(0);
+  const [firstBetBonusEnabled, setFirstBetBonusEnabled] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (data) {
+      setFirstCommission(Number(data.firstLevelPercent ?? 0));
+      setSecondCommission(Number(data.secondLevelPercent ?? 0));
+      setFirstBetBonus(Number(data.firstBetBonus ?? 0));
+      setFirstBetBonusEnabled(Boolean(data.firstBetBonusEnabled));
+    }
+  }, [data]);
 
   const totalCommission = useMemo(() => firstCommission + secondCommission, [firstCommission, secondCommission]);
 
   const resetValues = () => {
     setFirstCommission(2);
     setSecondCommission(1);
-    setFirstBetBonus(10);
+    setFirstBetBonus(0);
+    setFirstBetBonusEnabled(false);
+  };
+
+  const save = async () => {
+    try {
+      setSaving(true);
+      setMessage(null);
+      await api.put(
+        '/admin/affiliate-config',
+        {
+          firstLevelPercent: firstCommission,
+          secondLevelPercent: secondCommission,
+          firstBetBonus,
+          firstBetBonusEnabled,
+        },
+        token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+      );
+      await mutate();
+      setMessage('Configuração salva.');
+    } catch (err: any) {
+      setMessage(err?.response?.data?.message ?? 'Erro ao salvar configurações.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -24,6 +72,7 @@ export default function AdminAfiliadosClient() {
           Defina percentuais de comissão por indicação direta e indireta e configure o bônus para a primeira aposta do indicado.
         </p>
       </header>
+      {message && <p className="rounded-2xl bg-white/10 px-4 py-2 text-sm text-megga-lime">{message}</p>}
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm text-white/80">
@@ -56,6 +105,15 @@ export default function AdminAfiliadosClient() {
             />
             <span className="text-xs text-white/60">Valor em reais creditado após a primeira aposta do indicado.</span>
           </label>
+          <label className="flex items-center gap-3 text-sm text-white/80 md:col-span-2">
+            <input
+              type="checkbox"
+              checked={firstBetBonusEnabled}
+              onChange={(e) => setFirstBetBonusEnabled(e.target.checked)}
+              className="h-5 w-5 rounded border-white/20 bg-white/5 text-megga-magenta focus:ring-megga-magenta"
+            />
+            <span>Ativar bônus na primeira aposta do indicado (apenas nível 1)</span>
+          </label>
         </div>
         <div className="rounded-2xl bg-white/5 p-4 text-sm text-white/80">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Resumo das comissões</p>
@@ -74,9 +132,11 @@ export default function AdminAfiliadosClient() {
           </button>
           <button
             type="button"
+            onClick={save}
             className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95"
+            disabled={saving}
           >
-            Salvar configurações
+            {saving ? 'Salvando...' : 'Salvar configurações'}
           </button>
         </div>
       </section>
