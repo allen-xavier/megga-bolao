@@ -32,7 +32,7 @@ function formatCurrency(value: number) {
 export default function BolaoPage({ params }: { params: { id: string } }) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
-  const userId = session?.user?.id as string | undefined;
+  const userId = (session?.user as any)?.id as string | undefined;
 
   const [bolao, setBolao] = useState<Bolao | null>(null);
   const [loading, setLoading] = useState(true);
