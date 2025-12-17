@@ -45,6 +45,11 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     apostadores: false,
     minhasApostas: true,
   });
+  const isParticipant = useMemo(() => (bolao?.bets ?? []).some((b: any) => b.userId === userId), [bolao, userId]);
+  const myBets = useMemo(() => {
+    if (!userId) return [] as any[];
+    return (bolao?.bets ?? []).filter((b: any) => b.userId === userId);
+  }, [bolao, userId]);
 
   const fetchBolao = async () => {
     try {
@@ -149,11 +154,6 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const totalPct = prizes.reduce((acc: number, p: any) => acc + Number(p.percentage ?? 0), 0);
   const variablePool = Math.max(prizePool - totalFixed, 0);
   const displayTotal = prizePool + senaPotApplied;
-  const isParticipant = (bolao.bets ?? []).some((b: any) => b.userId === userId);
-  const myBets = useMemo(() => {
-    if (!userId) return [] as any[];
-    return (bolao.bets ?? []).filter((b: any) => b.userId === userId);
-  }, [bolao, userId]);
 
   const toggle = (key: string) => setOpenSection((prev) => ({ ...prev, [key]: !prev[key] }));
 
