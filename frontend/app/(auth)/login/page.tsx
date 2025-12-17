@@ -8,13 +8,21 @@ import { AuthForm } from "@/components/auth-form";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { status } = useSession();
+  const { status, data: session } = useSession();
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      router.replace("/dashboard").then(() => router.refresh());
     }
   }, [status, router]);
+
+  if (status === "authenticated") {
+    return (
+      <div className="mx-auto max-w-md space-y-4 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-center text-sm text-white/70">Redirecionando para o painel...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-md space-y-6 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
