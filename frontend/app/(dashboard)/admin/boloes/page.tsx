@@ -80,12 +80,14 @@ function toSections(boloes: Bolao[]) {
     return cb - ca;
   });
 
-  return { andamento, futuros, encerrados: encerrados.slice(0, 5) };
+  return { andamento, futuros, encerrados };
 }
 
 function AdminBoloesPageContent() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
+  const role = (session?.user as any)?.role;
+  const isAdmin = role === 'ADMIN' || role === 'SUPERVISOR';
   const searchParams = useSearchParams();
   const filtro = searchParams.get('filtro');
 
@@ -101,15 +103,16 @@ function AdminBoloesPageContent() {
   );
 
   const { andamento, futuros, encerrados } = toSections(data ?? []);
+  const visibleEncerrados = isAdmin ? encerrados : encerrados.slice(0, 5);
   const sectionsToRender =
     filtro === 'encerrados'
-      ? [{ title: 'Encerrados', list: encerrados }]
+      ? [{ title: 'Encerrados', list: visibleEncerrados }]
       : filtro === 'futuros'
         ? [{ title: 'Futuros', list: futuros }]
         : [
             { title: 'Em andamento', list: andamento },
             { title: 'Futuros', list: futuros },
-            { title: 'Encerrados', list: encerrados },
+            { title: 'Encerrados', list: visibleEncerrados },
           ];
 
   const renderList = (title: string, list: Bolao[]) => (

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import useSWR from 'swr';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ interface Bolao {
   promotional: boolean;
   ticketPrice: string;
   minimumQuotas: number;
+  closedAt?: string | null;
 }
 
 const fetcher = (url: string) => api.get(url).then((response) => response.data);
@@ -34,19 +35,27 @@ function getNextDrawLabel() {
       return candidate.toLocaleDateString('pt-BR', { weekday: 'long' });
     }
   }
-  return '—';
+  return '';
 }
 
 export function DashboardBoloes() {
   const { data, isLoading } = useSWR<Bolao[]>('/boloes', fetcher, {
-    revalidateOnFocus: false,
+    revalidateOnFocus: true,
+    revalidateIfStale: true,
+    refreshInterval: 15000,
+  });
+
+  const now = Date.now();
+  const ativos = (data ?? []).filter((b) => {
+    const closedTs = b.closedAt ? new Date(b.closedAt).getTime() : null;
+    return !closedTs || closedTs > now;
   });
 
   if (isLoading) {
     return <div className="rounded-3xl bg-megga-navy/60 p-6 text-sm text-white/60">Carregando bolões...</div>;
   }
 
-  if (!data || data.length === 0) {
+  if (!ativos || ativos.length === 0) {
     return (
       <section className="rounded-3xl bg-megga-navy/60 p-6 text-sm text-white/70 shadow-lg">
         <h2 className="text-lg font-semibold text-white">Bolões em andamento</h2>
@@ -59,7 +68,7 @@ export function DashboardBoloes() {
 
   return (
     <section className="space-y-4">
-      {data.map((bolao) => {
+      {ativos.map((bolao) => {
         const startsAt = new Date(bolao.startsAt);
         const hasStarted = startsAt.getTime() <= Date.now();
         const statusLabel = hasStarted ? 'Em andamento' : 'Acumulando';
