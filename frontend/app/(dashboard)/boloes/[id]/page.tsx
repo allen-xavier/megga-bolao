@@ -32,7 +32,7 @@ function formatCurrency(value: number) {
 export default function BolaoPage({ params }: { params: { id: string } }) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
-  const userId =
+  const sessionUserId =
     ((session?.user as any)?.id ||
       (session?.user as any)?.sub ||
       (session?.user as any)?._id ||
@@ -57,17 +57,19 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   });
   const myBets = useMemo(() => {
     if (!bolao) return [] as any[];
-    if (!userId) return [];
+    const effectiveUserId = (bolao as any)?.currentUserId ?? sessionUserId;
+    if (!effectiveUserId) return [];
     const betsSource = (bolao as any).myBets ?? null;
     if (Array.isArray(betsSource)) return betsSource;
     const fallback = bolao.bets ?? [];
-    return fallback.filter((b: any) => b.userId === userId || b.user?.id === userId);
-  }, [bolao, userId]);
+    return fallback.filter((b: any) => b.userId === effectiveUserId || b.user?.id === effectiveUserId);
+  }, [bolao, sessionUserId]);
   const isParticipant = useMemo(() => {
     if ((bolao as any)?.isParticipant) return true;
     if (myBets.length > 0) return true;
-    return (bolao?.bets ?? []).some((b: any) => b.userId === userId || b.user?.id === userId);
-  }, [bolao, myBets, userId]);
+    const effectiveUserId = (bolao as any)?.currentUserId ?? sessionUserId;
+    return (bolao?.bets ?? []).some((b: any) => b.userId === effectiveUserId || b.user?.id === effectiveUserId);
+  }, [bolao, myBets, sessionUserId]);
 
   const fetchBolao = async () => {
     try {

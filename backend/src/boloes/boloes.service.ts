@@ -82,6 +82,7 @@ export class BoloesService {
       ...bolao,
       isParticipant: userId ? myBets.length > 0 : false,
       myBets,
+      currentUserId: userId ?? null,
       senaPot: senaPotVisible,
       senaPotGlobal: senaPotGlobalVisible,
       senaPotApplied,
