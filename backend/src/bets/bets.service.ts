@@ -41,6 +41,9 @@ export class BetsService {
     const ticketPrice = Number(bolao.ticketPrice);
 
     const result = await this.prisma.$transaction(async (tx) => {
+      // Conta apostas existentes ANTES de criar a atual (usado para bônus de primeira aposta)
+      const previousBets = await tx.bet.count({ where: { userId } });
+
       const wallet = await tx.wallet.findUnique({ where: { userId } });
       if (!wallet || Number(wallet.balance) < ticketPrice) {
         throw new BadRequestException('Saldo insuficiente para realizar a aposta');
@@ -133,7 +136,6 @@ export class BetsService {
         }
 
         // Bonus first bet for direct referrer (only if enabled)
-        const previousBets = await tx.bet.count({ where: { userId } });
         if (affiliateConfig.firstBetBonusEnabled && previousBets === 0) {
           const bonus = Number(affiliateConfig.firstBetBonus ?? 0);
           if (bonus > 0) {
