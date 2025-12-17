@@ -11,6 +11,8 @@ interface Bolao {
   startsAt: string;
   promotional: boolean;
   isParticipant?: boolean;
+  myBets?: { userId: string }[];
+  bets?: { userId: string }[];
   ticketPrice: string;
   minimumQuotas: number;
   closedAt?: string | null;
@@ -78,7 +80,9 @@ export function DashboardBoloes() {
         const startsAt = new Date(bolao.startsAt);
         const hasStarted = startsAt.getTime() <= Date.now();
         const statusLabel = hasStarted ? 'Em andamento' : 'Acumulando';
-        const participationLabel = bolao.isParticipant ? 'Participando' : statusLabel;
+        const inferredParticipant =
+          bolao.isParticipant || (bolao.myBets?.length ?? 0) > 0 || (bolao.bets?.some?.((b: any) => b.userId) ?? false);
+        const participationLabel = inferredParticipant ? 'Participando' : statusLabel;
         const nextDrawLabel = getNextDrawLabel();
 
         return (

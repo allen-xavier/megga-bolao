@@ -36,7 +36,9 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     ((session?.user as any)?.id ||
       (session?.user as any)?.sub ||
       (session?.user as any)?._id ||
-      (session?.user as any)?.userId) as string | undefined;
+      (session?.user as any)?.userId ||
+      (session as any)?.id ||
+      (session as any)?.user?.id) as string | undefined;
 
   const [bolao, setBolao] = useState<Bolao | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,9 +57,11 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   });
   const myBets = useMemo(() => {
     if (!bolao) return [] as any[];
-    const betsSource = (bolao as any).myBets ?? bolao.bets ?? [];
+    const betsSource = (bolao as any).myBets ?? null;
+    if (Array.isArray(betsSource)) return betsSource;
+    const fallback = bolao.bets ?? [];
     if (!userId) return Array.isArray(betsSource) ? betsSource : [];
-    return betsSource.filter((b: any) => b.userId === userId);
+    return fallback.filter((b: any) => b.userId === userId);
   }, [bolao, userId]);
   const isParticipant = useMemo(() => {
     if ((bolao as any)?.isParticipant) return true;
