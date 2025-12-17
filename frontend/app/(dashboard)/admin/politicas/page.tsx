@@ -1,13 +1,12 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
 import 'react-quill/dist/quill.snow.css';
 
-// tipamos como any para permitir ref direto no componente carregado dinamicamente
 const ReactQuill: any = dynamic(() => import('react-quill'), { ssr: false });
 
 const POLICY_OPTIONS = [
@@ -22,7 +21,6 @@ const fetcher = ([url, token]: [string, string]) =>
 export default function AdminPoliciesPage() {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
-  const quillRef = useRef<any>(null);
 
   const [currentKey, setCurrentKey] = useState('termos');
   const { data, mutate, isLoading } = useSWR(token ? [`/admin/policies/${currentKey}`, token] : null, fetcher, {
@@ -58,26 +56,6 @@ export default function AdminPoliciesPage() {
     }),
     [],
   );
-
-  const insertColumns = (cols: number) => {
-    const editor = quillRef.current?.getEditor?.();
-    if (!editor) return;
-    const index = editor.getSelection()?.index ?? editor.getLength();
-    if (cols <= 1) {
-      editor.clipboard.dangerouslyPasteHTML(index, '<div style="margin:12px 0;">Novo parágrafo</div>', 'silent');
-      return;
-    }
-    const blocks = Array.from({ length: cols })
-      .map(
-        (_, i) =>
-          `<div style="flex:1; padding:12px; border:1px solid #ccc; border-radius:12px; background:#f9f9f9; color:#111;">Coluna ${
-            i + 1
-          }</div>`,
-      )
-      .join('');
-    const layout = `<div style="display:flex; gap:12px; margin:12px 0;">${blocks}</div>`;
-    editor.clipboard.dangerouslyPasteHTML(index, layout, 'silent');
-  };
 
   const save = async () => {
     if (!token) return;
@@ -165,32 +143,8 @@ export default function AdminPoliciesPage() {
                 'color',
                 'background',
               ]}
-              ref={quillRef}
               className="min-h-[240px]"
             />
-          </div>
-          <div className="flex flex-wrap gap-2 text-xs text-white/70">
-            <button
-              type="button"
-              onClick={() => insertColumns(1)}
-              className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white transition hover:border-megga-magenta hover:text-megga-yellow"
-            >
-              Bloco simples (1 coluna)
-            </button>
-            <button
-              type="button"
-              onClick={() => insertColumns(2)}
-              className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white transition hover:border-megga-magenta hover:text-megga-yellow"
-            >
-              Inserir 2 colunas
-            </button>
-            <button
-              type="button"
-              onClick={() => insertColumns(3)}
-              className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-white transition hover:border-megga-magenta hover:text-megga-yellow"
-            >
-              Inserir 3 colunas
-            </button>
           </div>
           <p className="text-xs text-white/60">
             Use o editor para inserir negrito, listas, alinhamento, cores, links, imagens ou vídeos. Para colocar texto e mídia lado a

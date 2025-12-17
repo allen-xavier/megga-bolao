@@ -39,7 +39,7 @@ export function WinnersBanner() {
     const container = containerRef.current;
     if (!container) return;
 
-    const speed = 0.3; // pixels/frame
+    const speed = 0.6; // pixels/frame para rolagem visível
     const step = () => {
       if (!container) return;
       container.scrollLeft += speed;
@@ -77,10 +77,10 @@ export function WinnersBanner() {
           >
             <p className="text-sm font-semibold text-megga-lime">{formatCurrency(w.amount)}</p>
             <p className="text-xs text-white/80">
-              {firstName(w.winner.name)} · {w.winner.city ?? '--'} - {w.winner.state ?? '--'}
+              {firstName(w.winner.name)} • {w.winner.city ?? '--'} - {w.winner.state ?? '--'}
             </p>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-white/50 mt-1">
-              {w.prizeType.replace(/_/g, ' ')} {w.bolaoName ? ` · ${w.bolaoName}` : ''}
+            <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-white/50">
+              {w.prizeType.replace(/_/g, ' ')} {w.bolaoName ? ` • ${w.bolaoName}` : ''}
             </p>
           </div>
         ))}
