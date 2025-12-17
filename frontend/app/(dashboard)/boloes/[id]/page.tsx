@@ -61,12 +61,12 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     const betsSource = (bolao as any).myBets ?? null;
     if (Array.isArray(betsSource)) return betsSource;
     const fallback = bolao.bets ?? [];
-    return fallback.filter((b: any) => b.userId === userId);
+    return fallback.filter((b: any) => b.userId === userId || b.user?.id === userId);
   }, [bolao, userId]);
   const isParticipant = useMemo(() => {
     if ((bolao as any)?.isParticipant) return true;
     if (myBets.length > 0) return true;
-    return (bolao?.bets ?? []).some((b: any) => b.userId === userId);
+    return (bolao?.bets ?? []).some((b: any) => b.userId === userId || b.user?.id === userId);
   }, [bolao, myBets, userId]);
 
   const fetchBolao = async () => {
