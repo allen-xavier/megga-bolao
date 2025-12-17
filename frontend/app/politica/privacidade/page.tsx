@@ -1,15 +1,25 @@
 export const metadata = {
-  title: 'Política de Privacidade - Megga Bolão',
+  title: 'PolÇðtica de Privacidade - Megga BolÇœo',
 };
 
-export default function PrivacidadePage() {
+async function getPolicy() {
+  const base = process.env.NEXT_PUBLIC_API_BASE ?? 'https://app.allentiomolu.com.br/api';
+  try {
+    const res = await fetch(`${base}/policies/privacidade`, { next: { revalidate: 300 } });
+    if (!res.ok) throw new Error('failed');
+    return res.json();
+  } catch {
+    return { title: 'PolÇðtica de Privacidade', content: '<p>Edite este conteÇ§do no painel administrativo.</p>' };
+  }
+}
+
+export default async function PrivacidadePage() {
+  const policy = await getPolicy();
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Política de Privacidade</h1>
-      <p className="text-sm text-white/70">
-        Detalhe aqui como os dados pessoais e financeiros são coletados, armazenados e compartilhados. Descreva o uso do Pix,
-        integrações com SuitPay, Evolution API e práticas de segurança para resguardar as informações dos participantes.
-      </p>
-    </div>
+    <article className="space-y-4">
+      <h1 className="text-2xl font-semibold">{policy.title}</h1>
+      <div className="prose prose-invert max-w-none prose-p:leading-relaxed" dangerouslySetInnerHTML={{ __html: policy.content }} />
+    </article>
   );
 }

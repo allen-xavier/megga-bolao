@@ -1,16 +1,25 @@
 export const metadata = {
-  title: 'Termos e Condições - Megga Bolão',
+  title: 'Termos e CondiÇõÇæes - Megga BolÇœo',
 };
 
-export default function TermosPage() {
+async function getPolicy() {
+  const base = process.env.NEXT_PUBLIC_API_BASE ?? 'https://app.allentiomolu.com.br/api';
+  try {
+    const res = await fetch(`${base}/policies/termos`, { next: { revalidate: 300 } });
+    if (!res.ok) throw new Error('failed');
+    return res.json();
+  } catch {
+    return { title: 'Termos e CondiÇõÇæes', content: '<p>Edite este conteÇ§do no painel administrativo.</p>' };
+  }
+}
+
+export default async function TermosPage() {
+  const policy = await getPolicy();
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Termos e Condições</h1>
-      <p className="text-sm text-white/70">
-        Documento de referência para participação no Megga Bolão. Personalize este conteúdo com as regras oficiais do seu
-        regulamento, incluindo requisitos de idade, responsabilidades do usuário, critérios de cancelamento e comunicação de
-        resultados.
-      </p>
-    </div>
+    <article className="space-y-4">
+      <h1 className="text-2xl font-semibold">{policy.title}</h1>
+      <div className="prose prose-invert max-w-none prose-p:leading-relaxed" dangerouslySetInnerHTML={{ __html: policy.content }} />
+    </article>
   );
 }

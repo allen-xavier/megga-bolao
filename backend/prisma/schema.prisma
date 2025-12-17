@@ -247,3 +247,11 @@ model SuitpayConfig {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model Policy {
+  key       String   @id
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
