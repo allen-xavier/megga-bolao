@@ -7,7 +7,8 @@ import { useSession } from 'next-auth/react';
 import { api } from '@/lib/api';
 import 'react-quill/dist/quill.snow.css';
 
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+// tipamos como any para permitir ref direto no componente carregado dinamicamente
+const ReactQuill: any = dynamic(() => import('react-quill'), { ssr: false });
 
 const POLICY_OPTIONS = [
   { key: 'termos', label: 'Termos e Condições' },
