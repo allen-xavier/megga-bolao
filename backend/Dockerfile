@@ -1,4 +1,4 @@
-ARG NODE_IMAGE=ghcr.io/nodejs/node:20-bullseye
+ARG NODE_IMAGE=public.ecr.aws/docker/library/node:20-bullseye
 
 FROM ${NODE_IMAGE} AS base
 RUN apt-get update \
