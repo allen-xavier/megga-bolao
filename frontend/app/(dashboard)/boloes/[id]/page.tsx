@@ -121,6 +121,44 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id, bolao, token]);
 
+  // Scroll infinito: sorteios
+  useEffect(() => {
+    const handler = () => {
+      const target = drawsRef.current;
+      if (!target) return;
+      const draws = bolao?.draws ?? [];
+      const drawsAsc = [...draws].sort((a: any, b: any) => new Date(a.drawnAt).getTime() - new Date(b.drawnAt).getTime());
+      const list = [...drawsAsc].reverse();
+      const { scrollTop, scrollHeight, clientHeight } = target;
+      if (scrollHeight - scrollTop - clientHeight < 40 && visibleDraws < list.length) {
+        setVisibleDraws((prev) => Math.min(prev + 7, list.length));
+      }
+    };
+    const el = drawsRef.current;
+    if (el) el.addEventListener("scroll", handler);
+    return () => {
+      if (el) el.removeEventListener("scroll", handler);
+    };
+  }, [bolao, visibleDraws]);
+
+  // Scroll infinito: apostadores
+  useEffect(() => {
+    const handler = () => {
+      const target = betsRef.current;
+      if (!target) return;
+      const bets = bolao?.bets ?? [];
+      const { scrollTop, scrollHeight, clientHeight } = target;
+      if (scrollHeight - scrollTop - clientHeight < 40 && visibleBets < bets.length) {
+        setVisibleBets((prev) => Math.min(prev + 15, bets.length));
+      }
+    };
+    const el = betsRef.current;
+    if (el) el.addEventListener("scroll", handler);
+    return () => {
+      if (el) el.removeEventListener("scroll", handler);
+    };
+  }, [bolao, visibleBets]);
+
   if (loading) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
@@ -169,38 +207,6 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const displayTotal = prizePool + senaPotApplied;
 
   const toggle = (key: string) => setOpenSection((prev) => ({ ...prev, [key]: !prev[key] }));
-
-  useEffect(() => {
-    const handler = () => {
-      const target = drawsRef.current;
-      if (!target) return;
-      const { scrollTop, scrollHeight, clientHeight } = target;
-      if (scrollHeight - scrollTop - clientHeight < 40 && visibleDraws < drawsList.length) {
-        setVisibleDraws((prev) => Math.min(prev + 7, drawsList.length));
-      }
-    };
-    const el = drawsRef.current;
-    if (el) el.addEventListener("scroll", handler);
-    return () => {
-      if (el) el.removeEventListener("scroll", handler);
-    };
-  }, [drawsList.length, visibleDraws]);
-
-  useEffect(() => {
-    const handler = () => {
-      const target = betsRef.current;
-      if (!target) return;
-      const { scrollTop, scrollHeight, clientHeight } = target;
-      if (scrollHeight - scrollTop - clientHeight < 40 && visibleBets < allBets.length) {
-        setVisibleBets((prev) => Math.min(prev + 15, allBets.length));
-      }
-    };
-    const el = betsRef.current;
-    if (el) el.addEventListener("scroll", handler);
-    return () => {
-      if (el) el.removeEventListener("scroll", handler);
-    };
-  }, [allBets.length, visibleBets]);
 
   return (
     <div className="space-y-6">
