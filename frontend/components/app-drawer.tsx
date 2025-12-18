@@ -51,6 +51,8 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
     }))
     .filter((section) => section.items.length > 0);
 
+  const handleNavigate = () => onClose();
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm md:hidden">
       <button
@@ -95,6 +97,7 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      onClick={handleNavigate}
                       className="block rounded-2xl border border-white/10 bg-white/5 px-4 py-3 transition hover:border-[#3fdc7c]/70 hover:bg-[#121623]"
                     >
                       <p className="text-sm font-medium text-white">
