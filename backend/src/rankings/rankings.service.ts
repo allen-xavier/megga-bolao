@@ -10,6 +10,8 @@ export interface RankingEntry {
   totalHits: number;
   bestBetHits: number;
   lastBetAt: Date;
+  totalPrizesWon: number;
+  totalPrizeValue: number;
 }
 
 export interface RankingSnapshot {
@@ -31,6 +33,7 @@ export class RankingsService {
       return { lastDraw: null, entries: [] };
     }
 
+    const prizeStats = await this.getPrizeStats(lastDraw.drawnAt);
     const bets = await this.prisma.bet.findMany({
       where: { createdAt: { lte: lastDraw.drawnAt } },
       include: {
@@ -38,7 +41,7 @@ export class RankingsService {
       },
     });
 
-    const entries = this.buildRankingEntries(bets, lastDraw.numbers).slice(0, limit);
+    const entries = this.buildRankingEntries(bets, lastDraw.numbers, prizeStats).slice(0, limit);
 
     return {
       lastDraw: {
@@ -56,6 +59,8 @@ export class RankingsService {
       this.prisma.bolao.findUnique({ where: { id: bolaoId }, select: { id: true, name: true } }),
     ]);
 
+    const cutoff = lastDraw?.drawnAt ?? null;
+    const prizeStats = await this.getPrizeStats(cutoff, bolaoId);
     const bets = await this.prisma.bet.findMany({
       where: {
         bolaoId,
@@ -66,7 +71,7 @@ export class RankingsService {
       },
     });
 
-    const entries = this.buildRankingEntries(bets, lastDraw?.numbers ?? []).slice(0, limit);
+    const entries = this.buildRankingEntries(bets, lastDraw?.numbers ?? [], prizeStats).slice(0, limit);
 
     return {
       bolao,
@@ -90,7 +95,8 @@ export class RankingsService {
       },
     });
 
-    const entries = this.buildRankingEntries(bets, draw.numbers);
+    const prizeStats = await this.getPrizeStats(draw.drawnAt);
+    const entries = this.buildRankingEntries(bets, draw.numbers, prizeStats);
     return {
       lastDraw: { id: draw.id, drawnAt: draw.drawnAt, numbers: draw.numbers },
       entries,
@@ -105,6 +111,13 @@ export class RankingsService {
       user: { id: string; fullName: string; city: string; state: string };
     }>,
     drawNumbers: number[],
+    prizeStats: Map<
+      string,
+      {
+        totalPrizesWon: number;
+        totalPrizeValue: number;
+      }
+    >,
   ): RankingEntry[] {
     const scoreboard = new Map<string, RankingEntry>();
     const numbers = new Set(drawNumbers);
@@ -115,6 +128,7 @@ export class RankingsService {
         : 0;
 
       const current = scoreboard.get(bet.userId);
+      const prizes = prizeStats.get(bet.userId);
       const entry: RankingEntry = current ?? {
         userId: bet.userId,
         fullName: bet.user.fullName,
@@ -124,6 +138,8 @@ export class RankingsService {
         totalHits: 0,
         bestBetHits: 0,
         lastBetAt: bet.createdAt,
+        totalPrizesWon: prizes?.totalPrizesWon ?? 0,
+        totalPrizeValue: prizes?.totalPrizeValue ?? 0,
       };
 
       entry.totalBets += 1;
@@ -146,5 +162,41 @@ export class RankingsService {
       }
       return b.lastBetAt.getTime() - a.lastBetAt.getTime();
     });
+  }
+
+  private async getPrizeStats(cutoff: Date | null, bolaoId?: string) {
+    const winners = await this.prisma.prizeResultWinner.findMany({
+      where: {
+        ...(cutoff ? { createdAt: { lte: cutoff } } : {}),
+        ...(bolaoId
+          ? {
+              prizeResult: {
+                bolaoResult: { bolaoId },
+              },
+            }
+          : {}),
+      },
+      select: {
+        userId: true,
+        amount: true,
+      },
+    });
+
+    const map = new Map<
+      string,
+      {
+        totalPrizesWon: number;
+        totalPrizeValue: number;
+      }
+    >();
+
+    for (const w of winners) {
+      const current = map.get(w.userId) ?? { totalPrizesWon: 0, totalPrizeValue: 0 };
+      current.totalPrizesWon += 1;
+      current.totalPrizeValue += Number(w.amount ?? 0);
+      map.set(w.userId, current);
+    }
+
+    return map;
   }
 }

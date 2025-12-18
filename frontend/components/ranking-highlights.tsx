@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import useSWR from 'swr';
 import { api } from '@/lib/api';
@@ -12,6 +12,8 @@ interface RankingEntry {
   totalHits: number;
   bestBetHits: number;
   lastBetAt: string;
+  totalPrizesWon: number;
+  totalPrizeValue: number;
 }
 
 interface RankingResponse {
@@ -26,6 +28,11 @@ function formatLocation(entry: RankingEntry) {
     return 'Localização não informada';
   }
   return `${entry.city} - ${entry.state}`;
+}
+
+function formatCurrency(value: number | null | undefined) {
+  if (value === null || value === undefined) return 'R$ 0,00';
+  return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 export function RankingHighlights() {
@@ -46,7 +53,7 @@ export function RankingHighlights() {
         <div>
           <h2 className="text-lg font-semibold">Top apostadores</h2>
           <p className="text-xs text-white/60">
-            Ranking calculado considerando os acertos do último sorteio disponível.
+            Ranking calculado considerando acertos e premiações até o último sorteio disponível.
           </p>
         </div>
         <span className="rounded-full bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-white/60">
@@ -93,7 +100,7 @@ export function RankingHighlights() {
               <p className="font-medium text-white">{entry.fullName.split(' ')[0]}</p>
               <p className="text-xs text-white/50">{formatLocation(entry)}</p>
               <p className="text-xs text-white/60">
-                {entry.bestBetHits} acertos · {entry.totalBets} apostas · {entry.totalHits} acertos acumulados
+                Total de apostas: {entry.totalBets} · Premiações: {entry.totalPrizesWon} · Recebido: {formatCurrency(entry.totalPrizeValue)}
               </p>
             </div>
             <span className="rounded-full bg-megga-surface/80 px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-megga-yellow">
