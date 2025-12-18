@@ -181,9 +181,11 @@ export function DashboardBoloes() {
 
               <Link
                 href={`/boloes/${bolao.id}`}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f7b500] px-4 py-3 text-sm font-semibold text-[#0f1117] shadow transition hover:brightness-105"
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f7b500] px-4 py-3 text-sm font-semibold text-[#0f1117] shadow transition hover:brightness-105 ${
+                  hasStarted ? "" : "animate-pulse"
+                }`}
               >
-                Acompanhar agora
+                {hasStarted ? "Acompanhar agora" : "Aposte agora!"}
               </Link>
             </div>
           </article>
