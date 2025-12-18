@@ -65,10 +65,10 @@ export function WinnersBanner() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-megga-purple via-megga-navy to-megga-teal px-4 py-4 ring-1 ring-white/10 shadow-[0_0_32px_rgba(108,99,255,0.35)]">
-      <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-white/70">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0b0d1c] via-[#10152b] to-[#0b1220] px-4 py-4 ring-1 ring-white/10 shadow-[0_0_24px_rgba(0,0,0,0.4)]">
+      <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-white/70">
         <span
-          className="h-2 w-2 rounded-full bg-megga-lime shadow-[0_0_8px_rgba(161,255,94,0.8)]"
+          className="h-2 w-2 rounded-full bg-megga-purple/70 shadow-[0_0_6px_rgba(120,85,255,0.7)]"
           aria-hidden
         />
         Últimos vencedores
@@ -80,25 +80,20 @@ export function WinnersBanner() {
         {data.map((w) => (
           <div
             key={w.id}
-            className="min-w-[220px] rounded-2xl bg-white/10 px-4 py-3 shadow-lg ring-1 ring-white/15 backdrop-blur"
+            className="min-w-[220px] rounded-2xl bg-white/5 px-4 py-3 shadow-lg ring-1 ring-white/10 backdrop-blur"
           >
-            <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
-              <span
-                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-megga-yellow to-megga-lime text-[10px] font-bold text-megga-navy shadow"
-                aria-hidden
-              >
-                ✦
-              </span>
+            <div className="mb-1 inline-flex items-center gap-2 rounded-full bg-white/5 px-2 py-1 text-[11px] uppercase tracking-[0.2em] text-white/70">
+              <span className="h-2 w-2 rounded-full bg-megga-yellow/80" aria-hidden />
               <span>{w.prizeType.replace(/_/g, " ")}</span>
             </div>
-            <p className="text-base font-semibold text-megga-lime">
+            <p className="mt-1 text-base font-semibold text-[#f6c960]">
               {formatCurrency(w.amount)}
             </p>
             <p className="text-xs text-white/80">
               {firstName(w.winner.name)} · {w.winner.city ?? "--"} -{" "}
               {w.winner.state ?? "--"}
             </p>
-            <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-white/50">
+            <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/55">
               {w.bolaoName ? `Bolão ${w.bolaoName}` : "Premiação"}{" "}
               {w.closedAt
                 ? `· ${new Date(w.closedAt).toLocaleDateString("pt-BR")}`
