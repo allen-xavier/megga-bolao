@@ -125,9 +125,9 @@ export function DashboardBoloes() {
             className="overflow-hidden rounded-2xl border border-white/5 bg-[#0f1117] text-white shadow-lg"
           >
             <div className="flex items-center justify-between bg-[#151824] px-5 py-3 text-[11px] uppercase tracking-[0.18em]">
-              <span className="inline-flex items-center gap-2 font-semibold text-[#f7b500]">
+              <span className="inline-flex items-center gap-2 font-semibold text-[#3fdc7c]">
                 <span
-                  className="h-2.5 w-2.5 rounded-full bg-[#f7b500] shadow"
+                  className="h-2.5 w-2.5 rounded-full bg-[#3fdc7c] shadow-[0_0_8px_rgba(63,220,124,0.65)]"
                   aria-hidden
                 />
                 {participationLabel}
@@ -181,11 +181,11 @@ export function DashboardBoloes() {
 
               <Link
                 href={`/boloes/${bolao.id}`}
-                className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f7b500] px-4 py-3 text-sm font-semibold text-[#0f1117] shadow transition hover:brightness-105 ${
-                  hasStarted ? "" : "animate-pulse"
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f7b500] px-4 py-3 text-sm font-semibold text-[#0f1117] shadow-lg transition hover:brightness-110 ${
+                  hasStarted ? "" : "animate-[wiggle_1s_ease-in-out_infinite]"
                 }`}
               >
-                {hasStarted ? "Acompanhar agora" : "Aposte agora!"}
+                {hasStarted ? "Acompanhar agora" : "Aposte Agora!"}
               </Link>
             </div>
           </article>
