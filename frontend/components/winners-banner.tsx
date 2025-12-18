@@ -1,8 +1,8 @@
 'use client';
 
-import useSWR from 'swr';
-import { api } from '@/lib/api';
-import { useEffect, useRef } from 'react';
+import useSWR from "swr";
+import { api } from "@/lib/api";
+import { useEffect, useRef } from "react";
 
 type Winner = {
   id: string;
@@ -14,20 +14,24 @@ type Winner = {
   createdAt: string;
 };
 
-const fetcher = (url: string) => api.get(url).then((res) => res.data as Winner[]);
+const fetcher = (url: string) =>
+  api.get(url).then((res) => res.data as Winner[]);
 
 function formatCurrency(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 }
 
 function firstName(full?: string | null) {
-  if (!full) return 'Ganhador';
-  const parts = full.split(' ');
+  if (!full) return "Ganhador";
+  const parts = full.split(" ");
   return parts[0] ?? full;
 }
 
 export function WinnersBanner() {
-  const { data } = useSWR<Winner[]>('/winners/latest?limit=20', fetcher, {
+  const { data } = useSWR<Winner[]>("/winners/latest?limit=20", fetcher, {
     refreshInterval: 30000,
     revalidateOnFocus: true,
   });
@@ -39,7 +43,7 @@ export function WinnersBanner() {
     const container = containerRef.current;
     if (!container) return;
 
-    const speed = 0.6; // pixels/frame para rolagem visível
+    const speed = 0.6; // pixels/frame para rolagem suave
     const step = () => {
       if (!container) return;
       container.scrollLeft += speed;
@@ -61,9 +65,12 @@ export function WinnersBanner() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-megga-purple/80 via-megga-navy/90 to-megga-teal/70 px-4 py-3 ring-1 ring-white/10">
-      <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-white/60">
-        <span className="h-2 w-2 rounded-full bg-megga-lime shadow" aria-hidden />
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-megga-purple via-megga-navy to-megga-teal px-4 py-4 ring-1 ring-white/10 shadow-[0_0_32px_rgba(108,99,255,0.35)]">
+      <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-white/70">
+        <span
+          className="h-2 w-2 rounded-full bg-megga-lime shadow-[0_0_8px_rgba(161,255,94,0.8)]"
+          aria-hidden
+        />
         Últimos vencedores
       </div>
       <div
@@ -73,14 +80,29 @@ export function WinnersBanner() {
         {data.map((w) => (
           <div
             key={w.id}
-            className="min-w-[220px] rounded-xl bg-white/10 px-3 py-2 shadow-sm ring-1 ring-white/10"
+            className="min-w-[220px] rounded-2xl bg-white/10 px-4 py-3 shadow-lg ring-1 ring-white/15 backdrop-blur"
           >
-            <p className="text-sm font-semibold text-megga-lime">{formatCurrency(w.amount)}</p>
+            <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
+              <span
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-megga-yellow to-megga-lime text-[10px] font-bold text-megga-navy shadow"
+                aria-hidden
+              >
+                ✦
+              </span>
+              <span>{w.prizeType.replace(/_/g, " ")}</span>
+            </div>
+            <p className="text-base font-semibold text-megga-lime">
+              {formatCurrency(w.amount)}
+            </p>
             <p className="text-xs text-white/80">
-              {firstName(w.winner.name)} • {w.winner.city ?? '--'} - {w.winner.state ?? '--'}
+              {firstName(w.winner.name)} · {w.winner.city ?? "--"} -{" "}
+              {w.winner.state ?? "--"}
             </p>
             <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-white/50">
-              {w.prizeType.replace(/_/g, ' ')} {w.bolaoName ? ` • ${w.bolaoName}` : ''}
+              {w.bolaoName ? `Bolão ${w.bolaoName}` : "Premiação"}{" "}
+              {w.closedAt
+                ? `· ${new Date(w.closedAt).toLocaleDateString("pt-BR")}`
+                : ""}
             </p>
           </div>
         ))}
