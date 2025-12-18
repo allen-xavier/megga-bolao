@@ -76,8 +76,8 @@ export const sections: DrawerSection[] = [
       },
       {
         label: "Minha carteira",
-        href: "/perfil",
-        description: "Gerencie saldo e dados da conta.",
+        href: "/carteira",
+        description: "Saldo e histórico de movimentos.",
       },
       {
         label: "Meus afiliados",
