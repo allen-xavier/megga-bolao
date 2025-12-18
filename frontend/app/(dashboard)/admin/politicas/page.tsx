@@ -156,18 +156,18 @@ export default function AdminPoliciesPage() {
           <button
             type="button"
             onClick={() => mutate()}
-            className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+            className="flex-1 rounded-2xl bg-[#f7b500] py-3 text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
             disabled={isLoading}
           >
-            Recarregar conteudo
+            Recarregar conteúdo
           </button>
           <button
             type="button"
             onClick={save}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95"
+            className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
             disabled={saving || isLoading}
           >
-            {saving ? 'Salvando...' : 'Salvar conteudo'}
+            {saving ? 'Salvando...' : 'Salvar conteúdo'}
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
@@ -148,7 +148,7 @@ export default function AdminSorteiosClient() {
             />
           </label>
           <div className="flex-1 space-y-2">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/40">Números selecionados</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/40">números selecionados</p>
             <div className="flex flex-wrap gap-2">
               {formattedNumbers.map((number) => (
                 <span
@@ -159,7 +159,7 @@ export default function AdminSorteiosClient() {
                 </span>
               ))}
             </div>
-            <p className="text-xs text-white/60">Selecione exatamente 6 números para validar o sorteio.</p>
+            <p className="text-xs text-white/60">Selecione exatamente 6 números.</p>
           </div>
         </div>
 
@@ -187,7 +187,7 @@ export default function AdminSorteiosClient() {
           <button
             type="button"
             onClick={() => setSelectedNumbers(new Set())}
-            className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+            className="flex-1 rounded-2xl bg-[#f7b500] py-3 text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
           >
             Limpar seleção
           </button>
@@ -195,7 +195,7 @@ export default function AdminSorteiosClient() {
             type="button"
             onClick={registerDraw}
             disabled={loading}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-sm font-semibold text-[#0f1117] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Registrando...' : 'Registrar sorteio'}
           </button>
@@ -251,7 +251,7 @@ export default function AdminSorteiosClient() {
                     {new Date(draw.drawnAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
                   </p>
                   <p className="text-xs text-white/60">
-                    Bolão: {draw.bolao?.name ? `${draw.bolao.name} (${draw.bolao.id.slice(0, 6)})` : 'Não vinculado'}
+                    bolão: {draw.bolao?.name ? `${draw.bolao.name} (${draw.bolao.id.slice(0, 6)})` : 'Não vinculado'}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -279,3 +279,17 @@ export default function AdminSorteiosClient() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

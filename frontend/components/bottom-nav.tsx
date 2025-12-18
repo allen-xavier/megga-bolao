@@ -65,7 +65,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-6 left-1/2 w-[calc(100%-2.5rem)] max-w-[410px] -translate-x-1/2 rounded-3xl border border-white/5 bg-megga-surface/95 px-4 py-3 text-white shadow-glow backdrop-blur md:hidden">
+    <nav className="fixed bottom-6 left-1/2 w-[calc(100%-2rem)] max-w-[440px] -translate-x-1/2 rounded-3xl border border-white/10 bg-[#0f1117]/95 px-4 py-3 text-white shadow-lg backdrop-blur md:hidden">
       <ul className="grid grid-cols-4 gap-2 text-center text-[11px] font-medium">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');
@@ -74,7 +74,7 @@ export function BottomNav() {
               <Link
                 href={item.href}
                 className={`group inline-flex h-full w-full flex-col items-center gap-1 rounded-2xl px-2 py-2 transition ${
-                  isActive ? 'bg-megga-purple text-megga-yellow' : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  isActive ? 'bg-[#f7b500] text-[#0f1117]' : 'text-white/80 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-white/5 text-sm text-inherit group-hover:bg-white/10">

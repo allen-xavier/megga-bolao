@@ -144,7 +144,7 @@ export function DashboardBoloes() {
 
             <div className="space-y-5 px-5 pb-6 pt-7">
               <header className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-[200px]">
+                <div className="min-w-0">
                   <h3 className="text-xl font-semibold leading-tight text-white">
                     {bolao.name}
                   </h3>

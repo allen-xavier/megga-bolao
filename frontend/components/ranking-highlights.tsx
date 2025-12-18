@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import useSWR from 'swr';
 import { api } from '@/lib/api';
@@ -48,7 +48,7 @@ export function RankingHighlights() {
   const entries = (data?.entries ?? []).slice(0, 5);
 
   return (
-    <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+    <section className="rounded-3xl bg-[#111218] p-6 text-white shadow-lg ring-1 ring-white/5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Top apostadores</h2>
@@ -65,7 +65,7 @@ export function RankingHighlights() {
         <div className="mt-5 space-y-3 rounded-2xl bg-white/5 p-4 text-sm text-white/80">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-xs uppercase tracking-[0.3em] text-white/50">Último sorteio</span>
-            <span className="rounded-full bg-megga-purple/60 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-white/80">
+            <span className="rounded-full bg-[#1ea7a4]/20 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-[#1ea7a4]">
               {drawDate?.toLocaleDateString('pt-BR')} às{' '}
               {drawDate?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </span>
@@ -74,7 +74,7 @@ export function RankingHighlights() {
             {data.lastDraw.numbers.map((number, index) => (
               <span
                 key={`${number}-${index}`}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-megga-surface/70 text-sm font-semibold text-megga-yellow"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#1a1c25] text-sm font-semibold text-[#f7b500]"
               >
                 {number.toString().padStart(2, '0')}
               </span>
@@ -93,7 +93,7 @@ export function RankingHighlights() {
             key={entry.userId}
             className="grid grid-cols-[auto,1fr,auto] items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/80"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-megga-purple/80 text-base font-semibold text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7b500] text-base font-semibold text-[#0f1117]">
               #{index + 1}
             </span>
             <div>
@@ -103,7 +103,7 @@ export function RankingHighlights() {
                 Premiações: {entry.totalPrizesWon} · Recebido: {formatCurrency(entry.totalPrizeValue)}
               </p>
             </div>
-            <span className="rounded-full bg-megga-surface/80 px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-megga-yellow">
+            <span className="rounded-full bg-[#1a1c25] px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-[#1ea7a4]">
               {drawDate ? 'Atual' : 'Prévia'}
             </span>
           </li>

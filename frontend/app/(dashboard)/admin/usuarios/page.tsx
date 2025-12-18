@@ -191,19 +191,19 @@ export default function AdminUsuariosPage() {
                   <button
                     type="button"
                     onClick={() => setExpanded(isOpen ? null : user.id)}
-                    className="rounded-2xl border border-white/10 bg-white/5 py-3 font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+                    className="rounded-2xl bg-[#f7b500] py-3 font-semibold text-[#0f1117] transition hover:brightness-110"
                   >
                     {isOpen ? "Fechar perfil" : "Ver perfil"}
                   </button>
                   <Link
                     href={`/admin/usuarios/${user.id}/editar`}
-                    className="rounded-2xl border border-white/10 bg-white/5 py-3 text-center font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+                    className="rounded-2xl bg-[#1ea7a4] py-3 text-center font-semibold text-[#0f1117] transition hover:brightness-110"
                   >
                     Editar perfil
                   </Link>
                   <Link
                     href={`/admin/suitpay?userId=${user.id}`}
-                    className="rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-center font-semibold text-white transition hover:opacity-95"
+                    className="rounded-2xl bg-[#1ea7a4] py-3 text-center font-semibold text-[#0f1117] transition hover:brightness-110"
                   >
                     Liberar saque
                   </Link>

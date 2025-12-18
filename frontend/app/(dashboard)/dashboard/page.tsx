@@ -15,7 +15,7 @@ const LoadingCard = ({ children }: { children: ReactNode }) => (
 
 export default function DashboardPage() {
   return (
-    <div className="w-full max-w-screen-xl space-y-6 overflow-x-hidden px-4 pb-10 pt-4 sm:px-6">
+    <div className="space-y-6 overflow-x-hidden">
       <WinnersBanner />
       <Suspense fallback={<LoadingCard>Carregando bolões...</LoadingCard>}>
         <DashboardBoloes />

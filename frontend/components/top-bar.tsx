@@ -11,8 +11,6 @@ interface WalletResponse {
   balance: string;
 }
 
-const fetcher = (url: string) => api.get(url).then((response) => response.data);
-
 export function TopBar() {
   const { data: session } = useSession();
   const { data } = useSWR<WalletResponse>(
@@ -38,7 +36,7 @@ export function TopBar() {
 
   return (
     <>
-      <header className="rounded-3xl border border-white/5 bg-[#0f1117] px-5 py-4 text-white shadow-lg">
+      <header className="w-full rounded-3xl border border-white/5 bg-[#0f1117] px-5 py-4 text-white shadow-lg">
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"
@@ -78,9 +76,7 @@ export function TopBar() {
             </span>
           </div>
           <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
-            <span className="uppercase tracking-[0.26em] text-white/45">
-              Próximo Sorteio
-            </span>
+            <span className="uppercase tracking-[0.26em] text-white/45">Próximo Sorteio</span>
             <span className="flex items-center gap-2 font-semibold text-[#1ea7a4]">
               <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
                 <path

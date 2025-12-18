@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -68,15 +68,15 @@ const toNumber = (value: string | number) => {
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 
-export default function CreateBolaoClient() {
+export default function CreatebolãoClient() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const bolaoId = searchParams.get("id");
+  const bolãoId = searchParams.get("id");
 
   const [prizes, setPrizes] = useState<PrizeOption[]>(() => basePrizes.map((prize) => ({ ...prize })));
   const [guaranteedPrize, setGuaranteedPrize] = useState("10000,00");
-  const [name, setName] = useState("Bolao Promocional");
+  const [name, setName] = useState("bolão Promocional");
   const [startsAt, setStartsAt] = useState(() => formatInputDate(new Date())); // data/hora atual SP
   const [ticketPrice, setTicketPrice] = useState(35);
   const [minimumQuotas, setMinimumQuotas] = useState(500);
@@ -92,12 +92,12 @@ export default function CreateBolaoClient() {
   }, [prizes]);
 
   useEffect(() => {
-    if (!bolaoId || status !== "authenticated" || !session?.user?.accessToken) return;
+    if (!bolãoId || status !== "authenticated" || !session?.user?.accessToken) return;
 
-    const loadBolao = async () => {
+    const loadbolão = async () => {
       try {
         setLoading(true);
-        const { data } = await api.get(`/boloes/${bolaoId}`, {
+        const { data } = await api.get(`/boloes/${bolãoId}`, {
           headers: { Authorization: `Bearer ${session.user.accessToken}` },
         });
 
@@ -119,14 +119,14 @@ export default function CreateBolaoClient() {
           error?.response?.data?.message ||
           error?.message ||
           (typeof error === "string" ? error : null);
-        setMessage(backendMessage ? String(backendMessage) : "Erro ao carregar bolao.");
+        setMessage(backendMessage ? String(backendMessage) : "Erro ao carregar bolão.");
       } finally {
         setLoading(false);
       }
     };
 
-    loadBolao();
-  }, [bolaoId, session?.user?.accessToken, status]);
+    loadbolão();
+  }, [bolãoId, session?.user?.accessToken, status]);
 
   const togglePrize = (id: string) => {
     setPrizes((current) =>
@@ -170,38 +170,38 @@ export default function CreateBolaoClient() {
           })),
       };
 
-      if (bolaoId) {
-        await api.put(`/boloes/${bolaoId}`, payload, {
+      if (bolãoId) {
+        await api.put(`/boloes/${bolãoId}`, payload, {
           headers: {
             Authorization: `Bearer ${session.user.accessToken}`,
           },
         });
-        setMessage("Bolao atualizado com sucesso.");
+        setMessage("bolão atualizado com sucesso.");
       } else {
         await api.post("/boloes", payload, {
           headers: {
             Authorization: `Bearer ${session.user.accessToken}`,
           },
         });
-        setMessage("Bolao criado com sucesso.");
+        setMessage("bolão criado com sucesso.");
       }
     } catch (error: any) {
       const backendMessage =
         error?.response?.data?.message ||
         error?.message ||
         (typeof error === "string" ? error : null);
-      setMessage(backendMessage ? String(backendMessage) : "Erro ao salvar bolao.");
+      setMessage(backendMessage ? String(backendMessage) : "Erro ao salvar bolão.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!bolaoId) {
-      setMessage("Nenhum bolao selecionado para excluir.");
+    if (!bolãoId) {
+      setMessage("Nenhum bolão selecionado para excluir.");
       return;
     }
-    if (!confirm("Tem certeza que deseja excluir este bolao?")) {
+    if (!confirm("Tem certeza que deseja excluir este bolão?")) {
       return;
     }
     try {
@@ -212,19 +212,19 @@ export default function CreateBolaoClient() {
         throw new Error("Faca login como administrador para excluir.");
       }
 
-      await api.delete(`/boloes/${bolaoId}`, {
+      await api.delete(`/boloes/${bolãoId}`, {
         headers: {
           Authorization: `Bearer ${session.user.accessToken}`,
         },
       });
-      setMessage("Bolao excluido com sucesso.");
+      setMessage("bolão excluido com sucesso.");
       router.push("/admin/boloes");
     } catch (error: any) {
       const backendMessage =
         error?.response?.data?.message ||
         error?.message ||
         (typeof error === "string" ? error : null);
-      setMessage(backendMessage ? String(backendMessage) : "Erro ao excluir bolao.");
+      setMessage(backendMessage ? String(backendMessage) : "Erro ao excluir bolão.");
     } finally {
       setDeleting(false);
     }
@@ -234,8 +234,8 @@ export default function CreateBolaoClient() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">{bolaoId ? "Editar bolao" : "Novo bolao"}</p>
-          <h1 className="text-2xl font-semibold">{bolaoId ? "Editar bolao" : "Criar bolao promocional"}</h1>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">{bolãoId ? "Editar bolão" : "Novo bolão"}</p>
+          <h1 className="text-2xl font-semibold">{bolãoId ? "Editar bolão" : "Criar bolão promocional"}</h1>
         </div>
         <button
           type="button"
@@ -243,17 +243,17 @@ export default function CreateBolaoClient() {
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95 disabled:opacity-60"
           disabled={saving}
         >
-          {saving ? "Salvando..." : "Salvar"}
+          {saving ? "Salvando" : "Salvar"}
         </button>
       </header>
 
       {message && <p className="rounded-2xl bg-megga-navy/70 p-3 text-sm text-megga-lime">{message}</p>}
-      {loading && <p className="rounded-2xl bg-megga-navy/70 p-3 text-sm text-white/70">Carregando dados do bolao...</p>}
+      {loading && <p className="rounded-2xl bg-megga-navy/70 p-3 text-sm text-white/70">Carregando dados do bolão...</p>}
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm text-white/80">
-            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Nome do bolao</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Nome do bolão</span>
             <input
               type="text"
               value={name}
@@ -262,14 +262,14 @@ export default function CreateBolaoClient() {
             />
           </label>
           <label className="space-y-2 text-sm text-white/80">
-            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Premiacao garantida</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Premiação garantida</span>
             <input
               type="text"
               value={guaranteedPrize}
               onChange={(event) => setGuaranteedPrize(event.target.value)}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
             />
-            <span className="text-xs text-white/60">Valor minimo garantido. So entra na conta apos superar o arrecadado.</span>
+            <span className="text-xs text-white/60">Valor mínimo garantido. So entra na conta apos superar o arrecadado.</span>
           </label>
           <label className="space-y-2 text-sm text-white/80">
             <span className="text-xs uppercase tracking-[0.3em] text-white/40">Valor da cota</span>
@@ -281,7 +281,7 @@ export default function CreateBolaoClient() {
             />
           </label>
           <label className="space-y-2 text-sm text-white/80">
-            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Minimo de cotas</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Mínimo de cotas</span>
             <input
               type="number"
               value={minimumQuotas}
@@ -290,7 +290,7 @@ export default function CreateBolaoClient() {
             />
           </label>
           <label className="space-y-2 text-sm text-white/80">
-            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Data de inicio</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Data de início</span>
             <input
               type="datetime-local"
               value={startsAt}
@@ -301,18 +301,18 @@ export default function CreateBolaoClient() {
         </div>
         <div className="rounded-2xl bg-white/5 p-4 text-sm text-white/80">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Resumo financeiro</p>
-          <p className="mt-2 text-base font-semibold text-megga-yellow">{totalPercentage}% destinado a premios</p>
+          <p className="mt-2 text-base font-semibold text-megga-yellow">{totalPercentage}% destinado a prêmios</p>
           <p className="text-xs text-white/60">
-            A Taxa Megga atual e de <span className="font-semibold text-megga-yellow">{meggaTax}%</span>. Ajuste as premiacoes para nao exceder o arrecadado.
+            A Taxa Megga atual e de <span className="font-semibold text-megga-yellow">{meggaTax}%</span>. Ajuste as premiações para não exceder o arrecadado.
           </p>
         </div>
       </section>
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <header className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Premiacoes</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">premiações</p>
           <h2 className="text-xl font-semibold">Percentuais configuraveis</h2>
-          <p className="text-sm text-white/60">Ative ou desative premios conforme a estrategia do bolao.</p>
+          <p className="text-sm text-white/60">Ative ou desative prêmios conforme a estrategia do bolão.</p>
         </header>
         <div className="grid gap-4 md:grid-cols-2">
           {prizes.map((prize) => (
@@ -349,20 +349,20 @@ export default function CreateBolaoClient() {
           <button
             type="button"
             onClick={resetPrizes}
-            className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition hover:border-megga-magenta hover:text-megga-yellow"
+            className="flex-1 rounded-2xl bg-[#f7b500] py-3 text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
           >
-            Restaurar padrao
+            Restaurar padrão
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-60"
+            className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-sm font-semibold text-[#0f1117] transition hover:brightness-110 disabled:opacity-60"
             disabled={saving}
           >
-            {saving ? "Salvando..." : "Salvar configuracoes"}
+            {saving ? "Salvando" : "Salvar configurações"}
           </button>
         </div>
-        {bolaoId && (
+        {bolãoId && (
           <div className="mt-3 flex justify-end">
             <button
               type="button"
@@ -370,7 +370,7 @@ export default function CreateBolaoClient() {
               className="rounded-2xl border border-red-400/60 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-500/10 disabled:opacity-60"
               disabled={deleting}
             >
-              {deleting ? "Excluindo..." : "Excluir bolao"}
+              {deleting ? "Excluindo..." : "Excluir bolão"}
             </button>
           </div>
         )}

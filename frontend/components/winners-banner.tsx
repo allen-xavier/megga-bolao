@@ -66,10 +66,10 @@ export function WinnersBanner() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0b0d1c] via-[#10152b] to-[#0b1220] px-4 py-4 ring-1 ring-white/10 shadow-[0_0_24px_rgba(0,0,0,0.4)]">
+    <div className="relative w-full max-w-full overflow-hidden rounded-3xl bg-[#0f1014] px-4 py-4 ring-1 ring-white/10 shadow-[0_0_24px_rgba(0,0,0,0.45)]">
       <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-white/70">
         <span
-          className="h-2 w-2 rounded-full bg-megga-purple/70 shadow-[0_0_6px_rgba(120,85,255,0.7)]"
+          className="h-2 w-2 rounded-full bg-[#1ea7a4] shadow-[0_0_8px_rgba(30,167,164,0.6)]"
           aria-hidden
         />
         Últimos vencedores
@@ -81,13 +81,13 @@ export function WinnersBanner() {
         {data.map((w) => (
           <div
             key={w.id}
-            className="min-w-[220px] rounded-2xl bg-white/5 px-4 py-3 shadow-lg ring-1 ring-white/10 backdrop-blur"
+            className="min-w-[180px] sm:min-w-[220px] rounded-2xl bg-white/5 px-4 py-3 shadow-lg ring-1 ring-white/10 backdrop-blur"
           >
             <div className="mb-1 inline-flex items-center gap-2 rounded-full bg-white/5 px-2 py-1 text-[11px] uppercase tracking-[0.2em] text-white/70">
-              <span className="h-2 w-2 rounded-full bg-megga-yellow/80" aria-hidden />
+              <span className="h-2 w-2 rounded-full bg-[#1ea7a4]" aria-hidden />
               <span>{w.prizeType.replace(/_/g, " ")}</span>
             </div>
-            <p className="mt-1 text-base font-semibold text-[#f6c960]">
+            <p className="mt-1 text-base font-semibold text-[#f7b500]">
               {formatCurrency(w.amount)}
             </p>
             <p className="text-xs text-white/80">

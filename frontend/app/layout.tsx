@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { TopBar } from "@/components/top-bar";
@@ -10,6 +10,13 @@ export const metadata: Metadata = {
   description: "Sistema completo de bolões com foco em transparência e mobilidade",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
@@ -18,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="flex min-h-screen w-full bg-megga-gradient text-white">
             <AppSidebar />
             <div className="flex min-h-screen flex-1 flex-col items-center">
-              <div className="container-app flex w-full flex-1 flex-col px-4 pb-28 pt-8 sm:px-6 md:px-8 md:pb-10">
+              <div className="container-app flex w-full flex-1 flex-col pb-28 pt-8">
                 <TopBar />
                 <div className="mt-6 flex-1 space-y-6 pb-8">{children}</div>
               </div>
