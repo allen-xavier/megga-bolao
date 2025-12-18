@@ -84,6 +84,10 @@ export function DashboardBoloes() {
     return !closedTs || closedTs > now;
   });
 
+  const futuros = ativos.filter((b) => new Date(b.startsAt).getTime() > now);
+  const andamento = ativos.filter((b) => new Date(b.startsAt).getTime() <= now);
+  const cards = [...futuros, ...andamento];
+
   if (isLoading) {
     return (
       <div className="rounded-3xl bg-[#0f1117] p-6 text-sm text-white/75 ring-1 ring-white/5 shadow-lg">
@@ -92,7 +96,7 @@ export function DashboardBoloes() {
     );
   }
 
-  if (!ativos || ativos.length === 0) {
+  if (!cards || cards.length === 0) {
     return (
       <section className="rounded-3xl bg-[#0f1117] p-6 text-sm text-white/75 shadow-lg ring-1 ring-white/5">
         <h2 className="text-lg font-semibold text-white">Bolões em andamento</h2>
@@ -106,9 +110,10 @@ export function DashboardBoloes() {
 
   return (
     <section className="space-y-4">
-      {ativos.map((bolao) => {
-        const startsAt = new Date(bolao.startsAt);
-        const hasStarted = startsAt.getTime() <= Date.now();
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {cards.map((bolao) => {
+          const startsAt = new Date(bolao.startsAt);
+          const hasStarted = startsAt.getTime() <= Date.now();
         const statusLabel = hasStarted ? "Em andamento" : "Acumulando";
         const inferredParticipant =
           bolao.isParticipant ||
@@ -119,11 +124,11 @@ export function DashboardBoloes() {
           : statusLabel;
         const nextDrawLabel = getNextDrawLabel();
 
-        return (
-          <article
-            key={bolao.id}
-            className="overflow-hidden rounded-2xl border border-white/5 bg-[#0f1117] text-white shadow-lg"
-          >
+          return (
+            <article
+              key={bolao.id}
+              className="overflow-hidden rounded-2xl border border-white/5 bg-[#0f1117] text-white shadow-lg"
+            >
             <div className="flex items-center justify-between bg-[#151824] px-5 py-3 text-[11px] uppercase tracking-[0.18em]">
               <span className="inline-flex items-center gap-2 font-semibold text-[#3fdc7c]">
                 <span
@@ -181,8 +186,10 @@ export function DashboardBoloes() {
 
               <Link
                 href={`/boloes/${bolao.id}`}
-                className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f7b500] px-4 py-3 text-sm font-semibold text-[#0f1117] shadow-lg transition hover:brightness-110 ${
-                  hasStarted ? "" : "animate-[wiggle_1s_ease-in-out_infinite]"
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg transition ${
+                  hasStarted
+                    ? "bg-[#f7b500] text-[#0f1117] hover:brightness-110"
+                    : "bg-[#3fdc7c] text-[#0f1117] hover:brightness-110 animate-bounce"
                 }`}
               >
                 {hasStarted ? "Acompanhar agora" : "Aposte Agora!"}
@@ -191,6 +198,7 @@ export function DashboardBoloes() {
           </article>
         );
       })}
+      </div>
     </section>
   );
 }
