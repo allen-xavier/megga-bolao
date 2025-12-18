@@ -45,7 +45,7 @@ export function RankingHighlights() {
   }
 
   const drawDate = data?.lastDraw?.drawnAt ? new Date(data.lastDraw.drawnAt) : null;
-  const entries = data?.entries ?? [];
+  const entries = (data?.entries ?? []).slice(0, 5);
 
   return (
     <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
@@ -100,7 +100,7 @@ export function RankingHighlights() {
               <p className="font-medium text-white">{entry.fullName.split(' ')[0]}</p>
               <p className="text-xs text-white/50">{formatLocation(entry)}</p>
               <p className="text-xs text-white/60">
-                Total de apostas: {entry.totalBets} · Premiações: {entry.totalPrizesWon} · Recebido: {formatCurrency(entry.totalPrizeValue)}
+                Premiações: {entry.totalPrizesWon} · Recebido: {formatCurrency(entry.totalPrizeValue)}
               </p>
             </div>
             <span className="rounded-full bg-megga-surface/80 px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-megga-yellow">
