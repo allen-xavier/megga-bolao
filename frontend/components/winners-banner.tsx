@@ -45,11 +45,12 @@ export function WinnersBanner() {
 
     const speed = 0.6; // pixels/frame para rolagem suave
     const step = () => {
-      if (!container) return;
-      container.scrollLeft += speed;
-      const maxScroll = container.scrollWidth - container.clientWidth;
-      if (container.scrollLeft >= maxScroll) {
-        container.scrollLeft = 0;
+      const el = containerRef.current;
+      if (!el) return;
+      el.scrollLeft += speed;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (el.scrollLeft >= maxScroll) {
+        el.scrollLeft = 0;
       }
       animationRef.current = requestAnimationFrame(step);
     };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -14,8 +14,9 @@ interface AppDrawerProps {
 
 export function AppDrawer({ open, onClose }: AppDrawerProps) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const role = session?.user?.role;
+  const lastPathRef = useRef(pathname);
 
   useEffect(() => {
     if (!open) return;
@@ -29,10 +30,17 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
   }, [open, onClose]);
 
   useEffect(() => {
-    if (open) onClose();
+    if (!open) {
+      lastPathRef.current = pathname;
+      return;
+    }
+    if (pathname !== lastPathRef.current) {
+      lastPathRef.current = pathname;
+      onClose();
+    }
   }, [pathname, open, onClose]);
 
-  if (!open) return null;
+  if (!open || status !== "authenticated") return null;
 
   const filteredSections = sections
     .map((section) => ({

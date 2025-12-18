@@ -83,8 +83,8 @@ export function WalletSummary() {
         <p className="text-[11px] uppercase tracking-[0.3em] text-white/60">
           Últimos movimentos
         </p>
-        <ul className="mt-3 space-y-3 text-sm">
-          {data?.statements?.slice(0, 3).map((item) => {
+        <ul className="mt-3 max-h-60 space-y-3 overflow-y-auto pr-1 text-sm">
+          {data?.statements?.slice(0, 10).map((item) => {
             const amount = Number(item.amount);
             const formattedAmount = amount.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,
