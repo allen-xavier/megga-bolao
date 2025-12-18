@@ -1,5 +1,7 @@
-import { Suspense, type ReactNode } from "react";
+'use client';
+
 import useSWR from "swr";
+import { Suspense, type ReactNode } from "react";
 import { api } from "@/lib/api";
 import { WalletSummary } from "@/components/wallet-summary";
 
