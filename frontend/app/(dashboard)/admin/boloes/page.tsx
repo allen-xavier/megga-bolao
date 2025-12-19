@@ -34,7 +34,7 @@ function StatusBadge({ label }: { label: string }) {
   const color = isActive
     ? 'bg-[#1ea7a4]/15 text-[#1ea7a4] border-[#1ea7a4]/30'
     : label === 'Encerrado'
-      ? 'bg-white/10 text-white border-white/20'
+      ? 'bg-red-700/30 text-red-300 border-red-400/40'
       : 'bg-[#f7b500]/10 text-[#f7b500] border-[#f7b500]/30';
   return (
     <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] ${color}`}>
@@ -120,16 +120,19 @@ function AdminBoloesPageContent() {
       : filtro === 'futuros'
         ? [{ title: 'Futuros', list: futuros }]
         : filtro === 'andamento'
-          ? [{ title: 'Em andamento', list: andamento }]
+          ? [
+              { title: 'Futuros', list: futuros },
+              { title: 'Em andamento', list: andamento },
+            ]
           : isAdmin
             ? [
-                { title: 'Em andamento', list: andamento },
                 { title: 'Futuros', list: futuros },
+                { title: 'Em andamento', list: andamento },
                 { title: 'Encerrados', list: visibleEncerrados },
               ]
             : [
-                { title: 'Em andamento', list: andamento },
                 { title: 'Futuros', list: futuros },
+                { title: 'Em andamento', list: andamento },
               ];
 
   const renderList = (title: string, list: Bolao[]) => (
@@ -212,6 +215,17 @@ function AdminBoloesPageContent() {
     );
   }
 
+  if (!isAdmin) {
+    return (
+      <div className="space-y-4 rounded-2xl bg-[#111218] p-5 text-white shadow-lg ring-1 ring-white/5">
+        <h2 className="text-lg font-semibold">Acesso restrito</h2>
+        <p className="text-sm text-white/70">
+          Esta página é exclusiva para administradores. Entre com uma conta com permissão de administrador para continuar.
+        </p>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return <p className="rounded-2xl bg-[#111218] p-4 text-sm text-white/70 ring-1 ring-white/5">Carregando bolões...</p>;
   }
@@ -251,9 +265,6 @@ export default function AdminBoloesPage() {
     </Suspense>
   );
 }
-
-
-
 
 
 

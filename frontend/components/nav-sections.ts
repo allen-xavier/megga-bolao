@@ -21,11 +21,13 @@ export const sections: DrawerSection[] = [
         label: "Bolões em andamento",
         href: "/admin/boloes?filtro=andamento",
         description: "Visualize e participe dos bolões ativos.",
+        adminOnly: true,
       },
       {
         label: "Bolões encerrados",
         href: "/admin/boloes?filtro=encerrados",
         description: "Consulte histórico e relatórios.",
+        adminOnly: true,
       },
       {
         label: "Criar bolão",

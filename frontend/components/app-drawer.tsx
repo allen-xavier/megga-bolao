@@ -116,7 +116,7 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition hover:border-[#3fdc7c] hover:text-[#f7b500]"
+              className="w-full rounded-2xl border border-red-400/40 bg-red-600/30 px-4 py-3 text-left text-sm font-semibold text-white transition hover:border-red-300 hover:bg-red-600/50"
             >
               Sair da conta
             </button>
