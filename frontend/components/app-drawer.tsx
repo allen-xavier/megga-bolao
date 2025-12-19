@@ -54,19 +54,17 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
   const handleNavigate = () => onClose();
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm md:hidden">
+    <div className="fixed inset-0 z-50 flex justify-start bg-black/70 backdrop-blur-sm md:hidden">
       <button
         type="button"
         onClick={onClose}
         className="absolute inset-0 h-full w-full cursor-pointer"
         aria-label="Fechar menu lateral"
       />
-      <aside className="relative h-full w-[280px] max-w-[80%] overflow-y-auto border-l border-white/10 bg-[#0f1117] p-6 text-white shadow-lg">
+      <aside className="relative h-full w-[280px] max-w-[80%] overflow-y-auto border-r border-white/10 bg-[#0f1117] p-6 text-white shadow-lg">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">
-              Megga Bolão
-            </p>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-white/55">Megga Bolão</p>
             <p className="mt-1 text-lg font-semibold">Painel</p>
           </div>
           <button
@@ -118,7 +116,7 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/85 transition hover:border-[#3fdc7c] hover:text-[#f7b500]"
+              className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition hover:border-[#3fdc7c] hover:text-[#f7b500]"
             >
               Sair da conta
             </button>

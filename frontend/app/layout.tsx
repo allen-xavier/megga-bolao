@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { TopBar } from "@/components/top-bar";
@@ -25,9 +25,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="flex min-h-screen w-full bg-megga-gradient text-white">
             <AppSidebar />
             <div className="flex min-h-screen flex-1 flex-col items-center">
-              <div className="container-app flex w-full flex-1 flex-col pb-28 pt-8">
-                <TopBar />
-                <div className="mt-6 flex-1 space-y-6 pb-8">{children}</div>
+              <TopBar />
+              <div className="container-app flex w-full flex-1 flex-col pb-28 pt-[160px] md:pt-8">
+                <div className="mt-1 flex-1 space-y-6 pb-8 md:mt-4">{children}</div>
               </div>
               <BottomNav />
             </div>

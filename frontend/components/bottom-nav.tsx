@@ -65,7 +65,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-6 left-1/2 w-[calc(100%-2rem)] max-w-[440px] -translate-x-1/2 rounded-3xl border border-white/10 bg-[#0f1117]/95 px-4 py-3 text-white shadow-lg backdrop-blur md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 w-full border-t border-white/10 bg-[#0f1117]/98 px-4 py-3 text-white shadow-[0_-6px_18px_rgba(0,0,0,0.45)] backdrop-blur md:hidden">
       <ul className="grid grid-cols-4 gap-2 text-center text-[11px] font-medium">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');

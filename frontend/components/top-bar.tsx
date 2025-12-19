@@ -11,22 +11,19 @@ interface WalletResponse {
   balance: string;
 }
 
+const authedFetcher = ([url, token]: [string, string]) =>
+  api
+    .get(url, { headers: { Authorization: `Bearer ${token}` } })
+    .then((response) => response.data as WalletResponse);
+
 export function TopBar() {
   const { data: session } = useSession();
-  const { data } = useSWR<WalletResponse>(
-    session?.user?.accessToken ? ["/wallet/me", session.user.accessToken] : null,
-    ([url, token]) =>
-      api
-        .get(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => response.data),
-    {
-      revalidateOnFocus: true,
-      refreshInterval: 15000,
-      revalidateIfStale: true,
-    }
-  );
+  const token = (session?.user as any)?.accessToken;
+  const { data } = useSWR<WalletResponse>(token ? ["/wallet/me", token] : null, authedFetcher, {
+    revalidateOnFocus: true,
+    refreshInterval: 15000,
+    revalidateIfStale: true,
+  });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const balance = Number(data?.balance ?? 0).toLocaleString("pt-BR", {
@@ -36,8 +33,8 @@ export function TopBar() {
 
   return (
     <>
-      <header className="w-full rounded-3xl border border-white/5 bg-[#0f1117] px-5 py-4 text-white shadow-lg">
-        <div className="flex items-center justify-between gap-3">
+      <header className="fixed inset-x-0 top-0 z-40 w-full bg-[#0f1117] px-3 py-3 text-white shadow-lg md:static md:rounded-3xl md:border md:border-white/5 md:bg-[#0f1117]/90 md:px-5 md:py-4 md:ring-1 md:ring-white/5">
+        <div className="mx-auto flex max-w-6xl items-center gap-3">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
@@ -45,21 +42,22 @@ export function TopBar() {
             aria-label="Abrir menu"
           >
             <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
-              <path
-                d="M4 7h16M4 12h16M4 17h16"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <div className="flex flex-1 flex-col items-center">
-            <span className="text-[11px] uppercase tracking-[0.28em] text-white/55">
-              Bolão entre Amigos
-            </span>
-            <span className="mt-1 text-lg font-semibold">Megga Bolão</span>
+
+          <div className="flex flex-1 items-center gap-3">
+            <div className="flex flex-col justify-center">
+              <span className="text-[10px] uppercase tracking-[0.28em] text-white/50">Bolão entre Amigos</span>
+              <span className="mt-0.5 text-base font-semibold leading-tight md:text-lg">Megga Bolão</span>
+            </div>
+
+            <div className="ml-auto flex flex-col items-start gap-0.5 text-[11px] text-white/75 md:inline-flex md:flex-row md:items-center md:gap-3 md:rounded-2xl md:border md:border-white/10 md:bg-white/5 md:px-4 md:py-3 md:text-sm">
+              <span className="uppercase tracking-[0.26em] text-white/45">Saldo</span>
+              <span className="text-[13px] font-semibold text-[#f7b500] md:text-base">R$ {balance}</span>
+            </div>
           </div>
+
           <Link
             href="/perfil"
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white/80 transition hover:border-[#1ea7a4] hover:text-[#f7b500]"
@@ -68,39 +66,8 @@ export function TopBar() {
             <span aria-hidden>MB</span>
           </Link>
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
-            <span className="uppercase tracking-[0.26em] text-white/45">Saldo</span>
-            <span className="text-base font-semibold text-[#f7b500]">
-              R$ {balance}
-            </span>
-          </div>
-          <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
-            <span className="uppercase tracking-[0.26em] text-white/45">Próximo Sorteio</span>
-            <span className="flex items-center gap-2 font-semibold text-[#1ea7a4]">
-              <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
-                <path
-                  d="M12 3a9 9 0 1 1-6.364 2.636"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M12 7v5l3 2"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Quinta-feira
-            </span>
-          </div>
-        </div>
       </header>
+
       <AppDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </>
   );
