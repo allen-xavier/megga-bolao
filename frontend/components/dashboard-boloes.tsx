@@ -58,6 +58,14 @@ function getNextDrawLabel() {
   return '';
 }
 
+function parseAmount(value: number | string | undefined | null): number {
+  if (value === undefined || value === null) return 0;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  const normalized = value.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function formatCurrency(value: number) {
   if (Number.isNaN(value)) return 'Em atualização';
   return value.toLocaleString('pt-BR', {
@@ -125,14 +133,20 @@ export function DashboardBoloes() {
           const participationLabel = inferredParticipant ? 'Participando' : statusLabel;
           const nextDrawLabel = getNextDrawLabel();
 
-          const garantido = Number(bolao.guaranteedPrize ?? 0);
-          const senaPot = Number(bolao.senaAccumulated ?? 0);
+          const garantido = parseAmount(bolao.guaranteedPrize);
+          const senaPot = parseAmount(bolao.senaAccumulated);
           const totalEstimado = garantido + senaPot;
-          const premiosPrevistos = bolao.prizeCount ?? 0;
+          const premiosPrevistos = Math.max(
+            0,
+            bolao.prizeCount ??
+              (bolao as any)?.prizes?.length ??
+              (bolao as any)?.prizeConfigurations?.length ??
+              0,
+          );
 
           const buttonClass = hasStarted
             ? 'bg-megga-yellow text-megga-navy hover:opacity-90'
-            : 'bg-[#2fdb7b] text-[#0b1218] animate-shake-strong hover:opacity-95';
+            : 'bg-[#2fdb7b] text-[#0b1218] animate-shake-strong btn-shake-xy hover:opacity-95 scale-100 hover:scale-105 transition-transform';
 
           return (
             <article
@@ -171,7 +185,7 @@ export function DashboardBoloes() {
                     <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white shadow-inner">
                       <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/50">
                         <span>Valor estimado até o momento</span>
-                        <span className="text-red-400 animate-bounce text-base">↑</span>
+                        <span className="text-red-400 animate-bounce text-2xl leading-none">↑</span>
                       </div>
                       <p className="mt-1 text-2xl font-semibold text-megga-yellow">{formatCurrency(totalEstimado)}</p>
                     </div>
@@ -189,9 +203,7 @@ export function DashboardBoloes() {
                       </div>
                       <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white">
                         <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Prêmios previstos</span>
-                        <span className="mt-1 block text-base font-semibold text-white">
-                          {premiosPrevistos > 0 ? `${premiosPrevistos} prêmios` : '—'}
-                        </span>
+                        <span className="mt-1 block text-base font-semibold text-white">{`${premiosPrevistos} prêmios`}</span>
                       </div>
                     </div>
 

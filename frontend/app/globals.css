@@ -19,3 +19,29 @@ body {
 .container-app {
   @apply mx-auto w-full max-w-full px-2 pt-20 sm:px-4 md:max-w-6xl md:px-8 md:pt-0;
 }
+
+/* Animação extra para CTA tremer em X e Y com leve variação de escala */
+.btn-shake-xy {
+  animation: shake-xy 0.8s ease-in-out infinite;
+}
+
+@keyframes shake-xy {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  20% {
+    transform: translate(-2px, 2px) scale(1.05);
+  }
+  40% {
+    transform: translate(2px, -2px) scale(0.98);
+  }
+  60% {
+    transform: translate(-3px, -1px) scale(1.06);
+  }
+  80% {
+    transform: translate(3px, 1px) scale(0.97);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
