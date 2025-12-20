@@ -351,7 +351,7 @@ export function DashboardBoloes() {
                     />
                     {participationLabel}
                     {hasPrize && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-[#ff4d4f]/35 bg-[#ff4d4f]/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#ff4d4f] animate-shake-strong btn-shake-xy">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#ff4d4f]/35 bg-[#ff4d4f]/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#ff4d4f] winner-badge-pulse">
                         <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden>
                           <path
                             d="M3 7h18v4H3zM5 11h14v9H5zM12 7v13M9 7c-1.1 0-2-.9-2-2s.9-2 2-2c2 0 3 2 3 4M15 7c1.1 0 2-.9 2-2s-.9-2-2-2c-2 0-3 2-3 4"

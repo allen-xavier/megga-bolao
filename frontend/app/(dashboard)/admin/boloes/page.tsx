@@ -114,8 +114,9 @@ function AdminBoloesPageContent() {
 
   const { andamento, futuros, encerrados } = toSections(data ?? []);
   const visibleEncerrados = isAdmin ? encerrados : encerrados.slice(0, 5);
-  const sectionsToRender =
-    filtro === 'encerrados'
+  const sectionsToRender = !isAdmin
+    ? [{ title: 'Encerrados', list: visibleEncerrados }]
+    : filtro === 'encerrados'
       ? [{ title: 'Encerrados', list: visibleEncerrados }]
       : filtro === 'futuros'
         ? [{ title: 'Futuros', list: futuros }]
@@ -124,16 +125,11 @@ function AdminBoloesPageContent() {
               { title: 'Futuros', list: futuros },
               { title: 'Em andamento', list: andamento },
             ]
-          : isAdmin
-            ? [
-                { title: 'Futuros', list: futuros },
-                { title: 'Em andamento', list: andamento },
-                { title: 'Encerrados', list: visibleEncerrados },
-              ]
-            : [
-                { title: 'Futuros', list: futuros },
-                { title: 'Em andamento', list: andamento },
-              ];
+          : [
+              { title: 'Futuros', list: futuros },
+              { title: 'Em andamento', list: andamento },
+              { title: 'Encerrados', list: visibleEncerrados },
+            ];
 
   const renderList = (title: string, list: Bolao[]) => (
     <section className="space-y-4">
@@ -194,12 +190,14 @@ function AdminBoloesPageContent() {
               >
                 Visualizar bolão
               </Link>
-              <Link
-                href={`/admin/boloes/criar?id=${bolao.id}`}
-                className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
-              >
-                Editar / pausar
-              </Link>
+              {isAdmin && (
+                <Link
+                  href={`/admin/boloes/criar?id=${bolao.id}`}
+                  className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
+                >
+                  Editar / pausar
+                </Link>
+              )}
             </div>
           </article>
         ))
@@ -210,19 +208,8 @@ function AdminBoloesPageContent() {
   if (status !== 'authenticated') {
     return (
       <p className="rounded-2xl bg-[#111218] p-4 text-sm text-white/70 ring-1 ring-white/5">
-        Faça login como administrador para visualizar os bolões.
+        Faca login para visualizar os boloes.
       </p>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="space-y-4 rounded-2xl bg-[#111218] p-5 text-white shadow-lg ring-1 ring-white/5">
-        <h2 className="text-lg font-semibold">Acesso restrito</h2>
-        <p className="text-sm text-white/70">
-          Esta página é exclusiva para administradores. Entre com uma conta com permissão de administrador para continuar.
-        </p>
-      </div>
     );
   }
 
@@ -242,15 +229,19 @@ function AdminBoloesPageContent() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Gestão de bolões</p>
-          <h1 className="text-2xl font-semibold">Bolões</h1>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">
+            {isAdmin ? 'Gestao de boloes' : 'Historico de boloes'}
+          </p>
+          <h1 className="text-2xl font-semibold">{isAdmin ? 'Boloes' : 'Boloes encerrados'}</h1>
         </div>
-        <Link
-          href="/admin/boloes/criar"
-          className="inline-flex items-center gap-2 rounded-full bg-[#f7b500] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#0f1117] transition hover:brightness-110"
-        >
-          Criar novo bolão
-        </Link>
+        {isAdmin && (
+          <Link
+            href="/admin/boloes/criar"
+            className="inline-flex items-center gap-2 rounded-full bg-[#f7b500] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#0f1117] transition hover:brightness-110"
+          >
+            Criar novo bolão
+          </Link>
+        )}
       </header>
 
       {sectionsToRender.map((section) => renderList(section.title, section.list))}

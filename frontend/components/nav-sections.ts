@@ -27,7 +27,6 @@ export const sections: DrawerSection[] = [
         label: "Bolões encerrados",
         href: "/admin/boloes?filtro=encerrados",
         description: "Consulte histórico e relatórios.",
-        adminOnly: true,
       },
       {
         label: "Criar bolão",
