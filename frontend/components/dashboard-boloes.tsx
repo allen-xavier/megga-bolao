@@ -320,7 +320,7 @@ export function DashboardBoloes() {
                         <svg
                           viewBox="0 0 64 32"
                           aria-hidden
-                          className="h-10 w-14 text-red-400 animate-trend-up"
+                          className="h-10 w-14 text-red-400"
                         >
                           <defs>
                             <linearGradient id="rise" x1="0%" y1="100%" x2="0%" y2="0%">
@@ -336,9 +336,18 @@ export function DashboardBoloes() {
                             strokeWidth="3"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            className="animate-trend-up"
+                            className="trend-line-base"
                           />
-                          <circle cx="60" cy="8" r="3.2" fill="currentColor" className="animate-trend-up" />
+                          <polyline
+                            points="4,26 16,16 26,19 36,11 48,17 60,8"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="trend-line-draw"
+                          />
+                          <circle cx="4" cy="26" r="3.2" fill="currentColor" className="trend-dot-move" />
                         </svg>
                       </div>
                       <p className="mt-0.5 text-center text-3xl font-bold text-[#3fdc7c] animate-[pulse_0.9s_ease-in-out_infinite]">
