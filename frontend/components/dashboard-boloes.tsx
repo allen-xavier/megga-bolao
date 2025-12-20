@@ -1,29 +1,46 @@
-'use client';
+/**
+ * Cartões de bolões para o dashboard.
+ * Mantém o layout base e aplica melhorias apenas no card "Acumulando":
+ * - Valor estimado (premiação garantida + sena acumulada/pot/reservada ou totalPrize).
+ * - Prêmios previstos (conta configurados).
+ * - CTA verde com animação de tremor.
+ * Corrige também strings corrompidas para PT-BR.
+ */
+"use client";
 
-import Link from 'next/link';
-import useSWR from 'swr';
-import { useSession } from 'next-auth/react';
-import { api } from '@/lib/api';
+import Link from "next/link";
+import useSWR from "swr";
+import { useSession } from "next-auth/react";
+import { api } from "@/lib/api";
+
+type PrizeConfig = { type: string; value: number };
+type BetLite = { userId: string };
 
 interface Bolao {
   id: string;
   name: string;
   startsAt: string;
-  promotional: boolean;
-  isParticipant?: boolean;
-  myBets?: { userId: string }[];
-  bets?: { userId: string }[];
+  closedAt?: string | null;
   ticketPrice: string;
   minimumQuotas: number;
-  closedAt?: string | null;
   prizeCount?: number;
   guaranteedPrize?: number | string;
   senaAccumulated?: number | string;
+  senaPot?: number | string;
+  senaReserved?: number | string;
+  totalPrize?: number | string;
+  prizeConfigurations?: PrizeConfig[];
+  prizes?: PrizeConfig[];
+  isParticipant?: boolean;
+  myBets?: BetLite[];
+  bets?: BetLite[];
 }
 
 const fetcher = (url: string) => api.get(url).then((response) => response.data);
 const authedFetcher = ([url, token]: [string, string]) =>
-  api.get(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined).then((response) => response.data);
+  api
+    .get(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
+    .then((response) => response.data);
 
 function getUserId(session: any): string | undefined {
   return (
@@ -37,42 +54,56 @@ function getUserId(session: any): string | undefined {
 }
 
 function formatStartsAt(date: Date) {
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 }
 
 function getNextDrawLabel() {
   const now = new Date();
-  const nowSp = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  const nowSp = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
   const targetDays = [2, 4, 6]; // terça, quinta, sábado
   for (let add = 0; add < 7; add += 1) {
     const candidate = new Date(nowSp.getTime() + add * 24 * 60 * 60 * 1000);
     if (targetDays.includes(candidate.getDay())) {
-      if (add === 0) return 'Hoje';
-      return candidate.toLocaleDateString('pt-BR', { weekday: 'long' });
+      if (add === 0) return "Hoje";
+      return candidate.toLocaleDateString("pt-BR", { weekday: "long" });
     }
   }
-  return '';
+  return "";
 }
 
 function parseAmount(value: number | string | undefined | null): number {
   if (value === undefined || value === null) return 0;
-  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
-  const normalized = value.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const normalized = value.replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function formatCurrency(value: number) {
-  if (Number.isNaN(value)) return 'Em atualização';
-  return value.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
     minimumFractionDigits: 2,
   });
+}
+
+function getStartLabel(startsAt: Date) {
+  const nowSp = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const startSp = new Date(startsAt.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+
+  const startMidnight = new Date(startSp);
+  startMidnight.setHours(0, 0, 0, 0);
+  const nowMidnight = new Date(nowSp);
+  nowMidnight.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor((startMidnight.getTime() - nowMidnight.getTime()) / (24 * 60 * 60 * 1000));
+  if (diffDays === 0) return "HOJE";
+  if (diffDays === 1) return "AMANHÃ";
+  return formatStartsAt(startSp);
 }
 
 export function DashboardBoloes() {
@@ -80,11 +111,15 @@ export function DashboardBoloes() {
   const token = (session?.user as any)?.accessToken;
   const userId = getUserId(session);
 
-  const { data, isLoading } = useSWR<Bolao[]>(token ? ['/boloes', token] : '/boloes', token ? authedFetcher : fetcher, {
-    revalidateOnFocus: true,
-    revalidateIfStale: true,
-    refreshInterval: 15000,
-  });
+  const { data, isLoading } = useSWR<Bolao[]>(
+    token ? ["/boloes", token] : "/boloes",
+    token ? authedFetcher : fetcher,
+    {
+      revalidateOnFocus: true,
+      revalidateIfStale: true,
+      refreshInterval: 15000,
+    }
+  );
 
   const now = Date.now();
   const ativos = (data ?? []).filter((b) => {
@@ -97,14 +132,20 @@ export function DashboardBoloes() {
   const cards = [...futuros, ...andamento];
 
   if (isLoading) {
-    return <div className="rounded-3xl bg-megga-surface p-6 text-sm text-white/75 ring-1 ring-white/5 shadow-lg">Carregando bolões...</div>;
+    return (
+      <div className="rounded-3xl bg-megga-surface p-6 text-sm text-white/75 ring-1 ring-white/5 shadow-lg">
+        Carregando bolões...
+      </div>
+    );
   }
 
   if (!cards || cards.length === 0) {
     return (
       <section className="rounded-3xl bg-megga-surface p-6 text-sm text-white/75 shadow-lg ring-1 ring-white/5">
         <h2 className="text-lg font-semibold text-white">Bolões em andamento</h2>
-        <p className="mt-4 text-sm text-white/65">Nenhum bolão ativo no momento. Volte mais tarde para acompanhar novas oportunidades.</p>
+        <p className="mt-4 text-sm text-white/65">
+          Nenhum bolão ativo no momento. Volte mais tarde para acompanhar novas oportunidades.
+        </p>
       </section>
     );
   }
@@ -114,39 +155,43 @@ export function DashboardBoloes() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
         {cards.map((bolao) => {
           const startsAt = new Date(bolao.startsAt);
-          const nowSp = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-          const startSp = new Date(startsAt.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+          const hasStarted = startsAt.getTime() <= now;
+          const startLabel = getStartLabel(startsAt);
 
-          const startMidnight = new Date(startSp);
-          startMidnight.setHours(0, 0, 0, 0);
-          const nowMidnight = new Date(nowSp);
-          nowMidnight.setHours(0, 0, 0, 0);
-          const diffDays = Math.floor((startMidnight.getTime() - nowMidnight.getTime()) / (24 * 60 * 60 * 1000));
-          const hasStarted = diffDays <= 0;
-          const startLabel = diffDays === 0 ? 'HOJE' : diffDays === 1 ? 'AMANHÃ' : formatStartsAt(startSp);
-
-          const statusLabel = hasStarted ? 'Em andamento' : 'Acumulando';
+          const statusLabel = hasStarted ? "Em andamento" : "Acumulando";
           const inferredParticipant =
             bolao.isParticipant ||
             (bolao.myBets?.some?.((b: any) => b.userId === userId) ?? false) ||
             (bolao.bets?.some?.((b: any) => b.userId === userId) ?? false);
-          const participationLabel = inferredParticipant ? 'Participando' : statusLabel;
+          const participationLabel = inferredParticipant ? "Participando" : statusLabel;
           const nextDrawLabel = getNextDrawLabel();
 
           const garantido = parseAmount(bolao.guaranteedPrize);
-          const senaPot = parseAmount(bolao.senaAccumulated);
-          const totalEstimado = garantido + senaPot;
-          const premiosPrevistos = Math.max(
-            0,
+          const sena =
+            parseAmount(bolao.senaAccumulated) +
+            parseAmount(bolao.senaPot) +
+            parseAmount(bolao.senaReserved) +
+            parseAmount((bolao as any)?.senaAcumulada) +
+            parseAmount((bolao as any)?.senaAcumuladaValor) +
+            parseAmount((bolao as any)?.senaAccumulatedValue) +
+            parseAmount((bolao as any)?.senaReservedAmount);
+          const totalPrizeRaw =
+            parseAmount(bolao.totalPrize) +
+            parseAmount((bolao as any)?.prizeTotal) +
+            parseAmount((bolao as any)?.totalPrizeValue) +
+            parseAmount((bolao as any)?.estimatedTotalPrize) +
+            parseAmount((bolao as any)?.estimatedPrize);
+          const totalEstimado = totalPrizeRaw > 0 ? totalPrizeRaw : garantido + sena;
+
+          const premiosPrevistos =
             bolao.prizeCount ??
-              (bolao as any)?.prizes?.length ??
-              (bolao as any)?.prizeConfigurations?.length ??
-              0,
-          );
+            bolao.prizes?.length ??
+            bolao.prizeConfigurations?.length ??
+            0;
 
           const buttonClass = hasStarted
-            ? 'bg-megga-yellow text-megga-navy hover:opacity-90'
-            : 'bg-[#2fdb7b] text-[#0b1218] animate-shake-strong btn-shake-xy hover:opacity-95 scale-100 hover:scale-105 transition-transform';
+            ? "bg-megga-yellow text-megga-navy hover:opacity-90"
+            : "bg-[#2fdb7b] text-[#0b1218] animate-shake-strong btn-shake-xy hover:opacity-95 scale-100 hover:scale-105 transition-transform";
 
           return (
             <article
@@ -164,53 +209,79 @@ export function DashboardBoloes() {
                 <span className="rounded-full bg-white/10 px-3 py-1 text-white/75">{statusLabel}</span>
               </div>
 
-              <div className="space-y-4 px-4 pb-5 pt-6 md:space-y-5 md:px-5 md:pb-6 md:pt-7">
-                <header className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
+              <div className="space-y-2 px-4 pb-5 pt-3 md:space-y-3 md:px-5 md:pb-6 md:pt-5">
+                <header className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0 self-center">
                     <h3 className="text-xl font-semibold leading-tight text-white">{bolao.name}</h3>
-                    <p className="mt-1 text-xs text-white/65">
-                      {hasStarted ? 'Bolão em andamento' : 'Bolão inicia em ' + formatStartsAt(startSp)}
+                    <p className="mt-0.5 text-xs text-white/65">
+                      {hasStarted ? "Bolão em andamento" : "Bolão inicia em " + formatStartsAt(startsAt)}
                     </p>
                   </div>
                   <div className="flex flex-col items-end justify-end self-end rounded-xl border border-white/10 bg-[#141823] px-4 py-3 text-right md:rounded-2xl">
                     <p className="text-[10px] uppercase tracking-[0.18em] text-white/50 md:tracking-[0.2em]">Cota</p>
                     <p className="text-lg font-semibold text-[#f7b500]">
-                      R$ {Number(bolao.ticketPrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      R$ {Number(bolao.ticketPrice).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 </header>
 
                 {!hasStarted && (
                   <div className="space-y-3">
-                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white shadow-inner">
+                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-2 text-white shadow-inner">
                       <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/50">
                         <span>Valor estimado até o momento</span>
-                        <span className="text-red-400 animate-bounce text-2xl leading-none">↑</span>
+                        <svg
+                          viewBox="0 0 64 32"
+                          aria-hidden
+                          className="h-12 w-16 -translate-y-2 text-red-400 animate-trend-up"
+                        >
+                          <defs>
+                            <linearGradient id="rise" x1="0%" y1="100%" x2="0%" y2="0%">
+                              <stop offset="0%" stopColor="currentColor" stopOpacity="0.15" />
+                              <stop offset="100%" stopColor="currentColor" stopOpacity="0.35" />
+                            </linearGradient>
+                          </defs>
+                          <path d="M4 26 L16 16 L26 19 L36 11 L48 17 L60 8 V30 H4 Z" fill="url(#rise)" opacity="0.4" />
+                          <polyline
+                            points="4,26 16,16 26,19 36,11 48,17 60,8"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="animate-trend-up"
+                          />
+                          <circle cx="60" cy="8" r="3.2" fill="currentColor" className="animate-trend-up" />
+                        </svg>
                       </div>
-                      <p className="mt-1 text-2xl font-semibold text-megga-yellow">{formatCurrency(totalEstimado)}</p>
+                      <p className="mt-1 text-center text-3xl font-bold text-[#3fdc7c] animate-pulse">
+                        {formatCurrency(totalEstimado)}
+                      </p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white">
                         <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Inicia em</span>
                         <span
                           className={`mt-1 block text-base font-semibold ${
-                            startLabel === 'HOJE' || startLabel === 'AMANHÃ' ? 'animate-pulse text-megga-yellow' : 'text-white'
+                            startLabel === "HOJE" || startLabel === "AMANHÃ" ? "animate-pulse text-megga-yellow" : "text-white"
                           }`}
                         >
-                          {startLabel === 'HOJE' || startLabel === 'AMANHÃ' ? startLabel : formatStartsAt(startSp)}
+                          {startLabel}
                         </span>
                       </div>
                       <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white">
                         <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Prêmios previstos</span>
-                        <span className="mt-1 block text-base font-semibold text-white">{`${premiosPrevistos} prêmios`}</span>
+                        <span className="mt-1 block text-base font-semibold text-white">
+                          {premiosPrevistos > 0 ? `${premiosPrevistos} prêmios` : "Em configuração"}
+                        </span>
                       </div>
                     </div>
 
-                    {senaPot > 0 && (
+                    {sena > 0 && (
                       <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white">
                         <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">Sena acumulada</p>
-                        <p className="mt-1 text-base font-semibold text-[#3fdc7c]">{formatCurrency(senaPot)}</p>
+                        <p className="mt-1 text-base font-semibold text-[#3fdc7c]">{formatCurrency(sena)}</p>
                       </div>
                     )}
                   </div>
@@ -225,7 +296,7 @@ export function DashboardBoloes() {
                     <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
                       <span className="block text-[10px] text-white/40">Prêmios configurados</span>
                       <span className="mt-1 block text-base font-semibold text-white">
-                        {premiosPrevistos > 0 ? `${premiosPrevistos} prêmios` : 'Em configuração'}
+                        {premiosPrevistos > 0 ? `${premiosPrevistos} prêmios` : "Em configuração"}
                       </span>
                     </div>
                   </div>
@@ -235,7 +306,7 @@ export function DashboardBoloes() {
                   href={`/boloes/${bolao.id}`}
                   className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow transition md:rounded-2xl md:shadow-lg ${buttonClass}`}
                 >
-                  {hasStarted ? 'Acompanhar agora' : 'Aposte Agora!'}
+                  {hasStarted ? "Acompanhar agora" : "Aposte Agora!"}
                 </Link>
               </div>
             </article>
