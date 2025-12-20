@@ -1,19 +1,15 @@
 /**
  * Cartões de bolões para o dashboard.
- * Mantém o layout base e aplica melhorias apenas no card "Acumulando":
- * - Valor estimado (premiação garantida + sena acumulada/pot/reservada ou totalPrize).
- * - Prêmios previstos (conta configurados).
- * - CTA verde com animação de tremor.
- * Corrige também strings corrompidas para PT-BR.
+ * Foco: melhorar o card "Acumulando" sem alterar fluxo geral.
  */
 "use client";
 
 import Link from "next/link";
-import useSWR from "swr";
 import { useSession } from "next-auth/react";
+import useSWR from "swr";
 import { api } from "@/lib/api";
 
-type PrizeConfig = { type: string; value: number };
+type PrizeConfig = { type?: string; value?: number };
 type BetLite = { userId: string };
 
 interface Bolao {
@@ -21,19 +17,48 @@ interface Bolao {
   name: string;
   startsAt: string;
   closedAt?: string | null;
-  ticketPrice: string;
+  ticketPrice: string | number;
   minimumQuotas: number;
   prizeCount?: number;
-  guaranteedPrize?: number | string;
-  senaAccumulated?: number | string;
-  senaPot?: number | string;
-  senaReserved?: number | string;
-  totalPrize?: number | string;
   prizeConfigurations?: PrizeConfig[];
   prizes?: PrizeConfig[];
   isParticipant?: boolean;
   myBets?: BetLite[];
   bets?: BetLite[];
+  commissionPercent?: number | string;
+  comissaoPercentual?: number | string;
+  commission?: number | string;
+  guaranteedPrize?: number | string;
+  premiacaoGarantida?: number | string;
+  premiacaoTotal?: number | string;
+  prizeTotal?: number | string;
+  prizePool?: number | string;
+  prizePoolValue?: number | string;
+  prizePoolList?: number | string;
+  estimatedPrize?: number | string;
+  estimatedTotalPrize?: number | string;
+  estimatedPool?: number | string;
+  totalPrize?: number | string;
+  totalPrizeValue?: number | string;
+  // Variantes de sena acumulada
+  sena?: number | string;
+  senaAcumulada?: number | string;
+  senaAcumuladaValor?: number | string;
+  senaAccumulated?: number | string;
+  senaAccumulatedValue?: number | string;
+  senaReserved?: number | string;
+  senaReservedAmount?: number | string;
+  senaPot?: number | string;
+  senaPotValue?: number | string;
+  senaPotAmount?: number | string;
+  senaPotApplied?: number | string;
+  senaApplied?: number | string;
+  senaCurrentPot?: number | string;
+  senaPotCurrent?: number | string;
+  senaPotRollover?: number | string;
+  senaPotTotal?: number | string;
+  senaPotAccumulated?: number | string;
+  senaAcumuladaTotal?: number | string;
 }
 
 const fetcher = (url: string) => api.get(url).then((response) => response.data);
@@ -41,6 +66,22 @@ const authedFetcher = ([url, token]: [string, string]) =>
   api
     .get(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
     .then((response) => response.data);
+
+function parseAmount(value: number | string | undefined | null): number {
+  if (value === undefined || value === null) return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const normalized = value.replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+  });
+}
 
 function getUserId(session: any): string | undefined {
   return (
@@ -61,6 +102,21 @@ function formatStartsAt(date: Date) {
   });
 }
 
+function getStartLabel(startsAt: Date) {
+  const nowSp = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const startSp = new Date(startsAt.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+
+  const startMidnight = new Date(startSp);
+  startMidnight.setHours(0, 0, 0, 0);
+  const nowMidnight = new Date(nowSp);
+  nowMidnight.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor((startMidnight.getTime() - nowMidnight.getTime()) / (24 * 60 * 60 * 1000));
+  if (diffDays === 0) return "HOJE";
+  if (diffDays === 1) return "AMANHÃ";
+  return formatStartsAt(startSp);
+}
+
 function getNextDrawLabel() {
   const now = new Date();
   const nowSp = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
@@ -75,35 +131,62 @@ function getNextDrawLabel() {
   return "";
 }
 
-function parseAmount(value: number | string | undefined | null): number {
-  if (value === undefined || value === null) return 0;
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-  const normalized = value.replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
+function estimatePrize(bolao: Bolao) {
+  const ticket = parseAmount(bolao.ticketPrice);
+  const betsCount = bolao.bets?.length ?? 0;
+  const commissionPercent =
+    parseAmount(bolao.commissionPercent) ||
+    parseAmount(bolao.commission) ||
+    parseAmount(bolao.comissaoPercentual);
+  const commissionRate = Math.min(Math.max(commissionPercent / 100, 0), 1);
+  const netPool = betsCount * ticket * (1 - commissionRate);
 
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-  });
-}
+  const garantido =
+    parseAmount(bolao.guaranteedPrize) ||
+    parseAmount(bolao.premiacaoGarantida);
 
-function getStartLabel(startsAt: Date) {
-  const nowSp = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-  const startSp = new Date(startsAt.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const totalPrizeRaw =
+    parseAmount(bolao.totalPrize) +
+    parseAmount(bolao.premiacaoTotal) +
+    parseAmount(bolao.prizeTotal) +
+    parseAmount(bolao.totalPrizeValue) +
+    parseAmount(bolao.estimatedTotalPrize) +
+    parseAmount(bolao.estimatedPrize) +
+    parseAmount(bolao.estimatedPool) +
+    parseAmount(bolao.prizePool) +
+    parseAmount(bolao.prizePoolValue) +
+    parseAmount(bolao.prizePoolList);
 
-  const startMidnight = new Date(startSp);
-  startMidnight.setHours(0, 0, 0, 0);
-  const nowMidnight = new Date(nowSp);
-  nowMidnight.setHours(0, 0, 0, 0);
+  const senaTotal =
+    parseAmount(bolao.sena) +
+    parseAmount(bolao.senaAcumulada) +
+    parseAmount(bolao.senaAcumuladaValor) +
+    parseAmount(bolao.senaAccumulated) +
+    parseAmount(bolao.senaAccumulatedValue) +
+    parseAmount(bolao.senaReserved) +
+    parseAmount(bolao.senaReservedAmount) +
+    parseAmount(bolao.senaPot) +
+    parseAmount(bolao.senaPotValue) +
+    parseAmount(bolao.senaPotAmount) +
+    parseAmount(bolao.senaPotApplied) +
+    parseAmount(bolao.senaApplied) +
+    parseAmount(bolao.senaCurrentPot) +
+    parseAmount(bolao.senaPotCurrent) +
+    parseAmount(bolao.senaPotRollover) +
+    parseAmount(bolao.senaPotTotal) +
+    parseAmount(bolao.senaPotAccumulated) +
+    parseAmount(bolao.senaAcumuladaTotal);
 
-  const diffDays = Math.floor((startMidnight.getTime() - nowMidnight.getTime()) / (24 * 60 * 60 * 1000));
-  if (diffDays === 0) return "HOJE";
-  if (diffDays === 1) return "AMANHÃ";
-  return formatStartsAt(startSp);
+  const basePool = Math.max(garantido, netPool, totalPrizeRaw);
+  const totalEstimado = basePool + senaTotal;
+
+  const premiosPrevistos =
+    bolao.prizeCount ??
+    bolao.prizes?.length ??
+    bolao.prizeConfigurations?.length ??
+    0;
+
+  return { totalEstimado, senaTotal, premiosPrevistos };
 }
 
 export function DashboardBoloes() {
@@ -121,16 +204,6 @@ export function DashboardBoloes() {
     }
   );
 
-  const now = Date.now();
-  const ativos = (data ?? []).filter((b) => {
-    const closedTs = b.closedAt ? new Date(b.closedAt).getTime() : null;
-    return !closedTs || closedTs > now;
-  });
-
-  const futuros = ativos.filter((b) => new Date(b.startsAt).getTime() > now);
-  const andamento = ativos.filter((b) => new Date(b.startsAt).getTime() <= now);
-  const cards = [...futuros, ...andamento];
-
   if (isLoading) {
     return (
       <div className="rounded-3xl bg-megga-surface p-6 text-sm text-white/75 ring-1 ring-white/5 shadow-lg">
@@ -139,7 +212,7 @@ export function DashboardBoloes() {
     );
   }
 
-  if (!cards || cards.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <section className="rounded-3xl bg-megga-surface p-6 text-sm text-white/75 shadow-lg ring-1 ring-white/5">
         <h2 className="text-lg font-semibold text-white">Bolões em andamento</h2>
@@ -149,6 +222,16 @@ export function DashboardBoloes() {
       </section>
     );
   }
+
+  const now = Date.now();
+  const futuros = data.filter((b) => new Date(b.startsAt).getTime() > now);
+  const andamento = data.filter((b) => {
+    const start = new Date(b.startsAt).getTime();
+    const closed = b.closedAt ? new Date(b.closedAt).getTime() : null;
+    return start <= now && (!closed || closed > now);
+  });
+
+  const cards = [...futuros, ...andamento];
 
   return (
     <section className="space-y-4 md:space-y-5">
@@ -161,37 +244,12 @@ export function DashboardBoloes() {
           const statusLabel = hasStarted ? "Em andamento" : "Acumulando";
           const inferredParticipant =
             bolao.isParticipant ||
-            (bolao.myBets?.some?.((b: any) => b.userId === userId) ?? false) ||
-            (bolao.bets?.some?.((b: any) => b.userId === userId) ?? false);
+            bolao.myBets?.some?.((b) => b.userId === userId) ||
+            bolao.bets?.some?.((b) => b.userId === userId);
           const participationLabel = inferredParticipant ? "Participando" : statusLabel;
           const nextDrawLabel = getNextDrawLabel();
 
-          const garantido = parseAmount(bolao.guaranteedPrize);
-          const sena =
-            parseAmount(bolao.senaAccumulated) +
-            parseAmount(bolao.senaPot) +
-            parseAmount(bolao.senaReserved) +
-            parseAmount((bolao as any)?.senaAcumulada) +
-            parseAmount((bolao as any)?.senaAcumuladaValor) +
-            parseAmount((bolao as any)?.senaAccumulatedValue) +
-            parseAmount((bolao as any)?.senaReservedAmount);
-          const totalPrizeRaw =
-            parseAmount(bolao.totalPrize) +
-            parseAmount((bolao as any)?.prizeTotal) +
-            parseAmount((bolao as any)?.totalPrizeValue) +
-            parseAmount((bolao as any)?.estimatedTotalPrize) +
-            parseAmount((bolao as any)?.estimatedPrize) +
-            parseAmount((bolao as any)?.displayTotal) +
-            parseAmount((bolao as any)?.prizePool) +
-            parseAmount((bolao as any)?.prizePoolValue) +
-            parseAmount((bolao as any)?.estimatedPool);
-          const totalEstimado = totalPrizeRaw > 0 ? totalPrizeRaw : garantido + sena;
-
-          const premiosPrevistos =
-            bolao.prizeCount ??
-            bolao.prizes?.length ??
-            bolao.prizeConfigurations?.length ??
-            0;
+          const { totalEstimado, senaTotal, premiosPrevistos } = estimatePrize(bolao);
 
           const buttonClass = hasStarted
             ? "bg-megga-yellow text-megga-navy hover:opacity-90"
@@ -213,7 +271,7 @@ export function DashboardBoloes() {
                 <span className="rounded-full bg-white/10 px-3 py-1 text-white/75">{statusLabel}</span>
               </div>
 
-              <div className="space-y-2 px-4 pb-5 pt-1.5 md:space-y-3 md:px-5 md:pb-6 md:pt-4">
+              <div className="space-y-2 px-4 pb-4 pt-1.5 md:space-y-3 md:px-5 md:pb-6 md:pt-4">
                 <header className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0 self-center">
                     <h3 className="text-xl font-semibold leading-tight text-white">{bolao.name}</h3>
@@ -224,20 +282,20 @@ export function DashboardBoloes() {
                   <div className="flex flex-col items-end justify-end self-end rounded-xl border border-white/10 bg-[#141823] px-4 py-3 text-right md:rounded-2xl">
                     <p className="text-[10px] uppercase tracking-[0.18em] text-white/50 md:tracking-[0.2em]">Cota</p>
                     <p className="text-lg font-semibold text-[#f7b500]">
-                      R$ {Number(bolao.ticketPrice).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R$ {parseAmount(bolao.ticketPrice).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 </header>
 
                 {!hasStarted && (
                   <div className="space-y-3">
-                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-1.5 text-white shadow-inner">
+                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-1 text-white shadow-inner">
                       <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/50">
                         <span>Valor estimado até o momento</span>
                         <svg
                           viewBox="0 0 64 32"
                           aria-hidden
-                          className="h-12 w-16 -translate-y-3 text-red-400 animate-trend-up"
+                          className="h-10 w-14 text-red-400 animate-trend-up"
                         >
                           <defs>
                             <linearGradient id="rise" x1="0%" y1="100%" x2="0%" y2="0%">
@@ -261,6 +319,11 @@ export function DashboardBoloes() {
                       <p className="mt-0.5 text-center text-3xl font-bold text-[#3fdc7c] animate-[pulse_0.9s_ease-in-out_infinite]">
                         {formatCurrency(totalEstimado)}
                       </p>
+                      {senaTotal > 0 && (
+                        <p className="text-center text-xs font-semibold text-[#3fdc7c]">
+                          Sena acumulada {formatCurrency(senaTotal)}
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -277,17 +340,10 @@ export function DashboardBoloes() {
                       <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white">
                         <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Prêmios previstos</span>
                         <span className="mt-1 block text-base font-semibold text-white">
-                          {premiosPrevistos > 0 ? `${premiosPrevistos} prêmios` : "Em configuração"}
+                          {premiosPrevistos > 0 ? `${premiosPrevistos} prêmio${premiosPrevistos > 1 ? "s" : ""}` : "Em configuração"}
                         </span>
                       </div>
                     </div>
-
-                    {sena > 0 && (
-                      <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">Sena acumulada</p>
-                        <p className="mt-1 text-base font-semibold text-[#3fdc7c]">{formatCurrency(sena)}</p>
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -300,18 +356,20 @@ export function DashboardBoloes() {
                     <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
                       <span className="block text-[10px] text-white/40">Prêmios configurados</span>
                       <span className="mt-1 block text-base font-semibold text-white">
-                        {premiosPrevistos > 0 ? `${premiosPrevistos} prêmios` : "Em configuração"}
+                        {premiosPrevistos > 0 ? `${premiosPrevistos} prêmio${premiosPrevistos > 1 ? "s" : ""}` : "Em configuração"}
                       </span>
                     </div>
                   </div>
                 )}
 
-                <Link
-                  href={`/boloes/${bolao.id}`}
-                  className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow transition md:rounded-2xl md:shadow-lg ${buttonClass}`}
-                >
-                  {hasStarted ? "Acompanhar agora" : "Aposte Agora!"}
-                </Link>
+                <div className="pb-1">
+                  <Link
+                    href={`/boloes/${bolao.id}`}
+                    className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow transition md:rounded-2xl md:shadow-lg ${buttonClass}`}
+                  >
+                    {hasStarted ? "Acompanhar agora" : "Aposte Agora!"}
+                  </Link>
+                </div>
               </div>
             </article>
           );
