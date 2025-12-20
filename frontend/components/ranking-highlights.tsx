@@ -52,7 +52,6 @@ export function RankingHighlights() {
             Ranking calculado considerando acertos e premiações até o último sorteio disponível.
           </p>
         </div>
-        <span className="text-[11px] uppercase tracking-[0.24em] text-white/60">Atualizado</span>
       </div>
 
       <div className="mt-4 space-y-3">

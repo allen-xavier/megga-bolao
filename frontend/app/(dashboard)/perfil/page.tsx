@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth-options';
 import { ProfileForm, type UserProfile } from '@/components/profile-form';
+import { ProfileLogoutButton } from '@/components/profile-logout-button';
 
 export const metadata = {
   title: 'Meu Perfil - Megga Bolão',
@@ -26,6 +27,9 @@ export default async function ProfilePage() {
       </section>
       <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
         <ProfileForm user={user} />
+      </section>
+      <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <ProfileLogoutButton />
       </section>
     </div>
   );
