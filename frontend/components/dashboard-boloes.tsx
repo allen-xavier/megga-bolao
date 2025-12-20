@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 
 type PrizeConfig = { type?: string; value?: number };
 type BetLite = { userId: string };
+type BetCount = { bets?: number };
 
 interface Bolao {
   id: string;
@@ -40,6 +41,7 @@ interface Bolao {
   estimatedPool?: number | string;
   totalPrize?: number | string;
   totalPrizeValue?: number | string;
+  _count?: BetCount;
   // Variantes de sena acumulada
   sena?: number | string;
   senaAcumulada?: number | string;
@@ -51,6 +53,7 @@ interface Bolao {
   senaPot?: number | string;
   senaPotValue?: number | string;
   senaPotAmount?: number | string;
+  senaPotReserved?: number | string;
   senaPotApplied?: number | string;
   senaApplied?: number | string;
   senaCurrentPot?: number | string;
@@ -70,7 +73,19 @@ const authedFetcher = ([url, token]: [string, string]) =>
 function parseAmount(value: number | string | undefined | null): number {
   if (value === undefined || value === null) return 0;
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-  const normalized = value.replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
+  const trimmed = value.trim();
+  if (!trimmed) return 0;
+  const hasComma = trimmed.includes(",");
+  const hasDot = trimmed.includes(".");
+  let normalized = trimmed;
+  if (hasComma && hasDot) {
+    normalized = trimmed.replace(/\./g, "").replace(",", ".");
+  } else if (hasComma) {
+    normalized = trimmed.replace(",", ".");
+  } else if (hasDot && trimmed.split(".").length > 2) {
+    normalized = trimmed.replace(/\./g, "");
+  }
+  normalized = normalized.replace(/[^\d.-]/g, "");
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 }
@@ -133,7 +148,7 @@ function getNextDrawLabel() {
 
 function estimatePrize(bolao: Bolao) {
   const ticket = parseAmount(bolao.ticketPrice);
-  const betsCount = bolao.bets?.length ?? 0;
+  const betsCount = bolao._count?.bets ?? bolao.bets?.length ?? 0;
   const commissionPercent =
     parseAmount(bolao.commissionPercent) ||
     parseAmount(bolao.commission) ||
@@ -145,39 +160,45 @@ function estimatePrize(bolao: Bolao) {
     parseAmount(bolao.guaranteedPrize) ||
     parseAmount(bolao.premiacaoGarantida);
 
-  const totalPrizeRaw =
-    parseAmount(bolao.totalPrize) +
-    parseAmount(bolao.premiacaoTotal) +
-    parseAmount(bolao.prizeTotal) +
-    parseAmount(bolao.totalPrizeValue) +
-    parseAmount(bolao.estimatedTotalPrize) +
-    parseAmount(bolao.estimatedPrize) +
-    parseAmount(bolao.estimatedPool) +
-    parseAmount(bolao.prizePool) +
-    parseAmount(bolao.prizePoolValue) +
-    parseAmount(bolao.prizePoolList);
+  const poolCandidates = [
+    parseAmount(bolao.totalPrize),
+    parseAmount(bolao.premiacaoTotal),
+    parseAmount(bolao.prizeTotal),
+    parseAmount(bolao.totalPrizeValue),
+    parseAmount(bolao.estimatedTotalPrize),
+    parseAmount(bolao.estimatedPrize),
+    parseAmount(bolao.estimatedPool),
+    parseAmount(bolao.prizePool),
+    parseAmount(bolao.prizePoolValue),
+    parseAmount(bolao.prizePoolList),
+  ];
 
-  const senaTotal =
-    parseAmount(bolao.sena) +
-    parseAmount(bolao.senaAcumulada) +
-    parseAmount(bolao.senaAcumuladaValor) +
-    parseAmount(bolao.senaAccumulated) +
-    parseAmount(bolao.senaAccumulatedValue) +
-    parseAmount(bolao.senaReserved) +
-    parseAmount(bolao.senaReservedAmount) +
-    parseAmount(bolao.senaPot) +
-    parseAmount(bolao.senaPotValue) +
-    parseAmount(bolao.senaPotAmount) +
-    parseAmount(bolao.senaPotApplied) +
-    parseAmount(bolao.senaApplied) +
-    parseAmount(bolao.senaCurrentPot) +
-    parseAmount(bolao.senaPotCurrent) +
-    parseAmount(bolao.senaPotRollover) +
-    parseAmount(bolao.senaPotTotal) +
-    parseAmount(bolao.senaPotAccumulated) +
-    parseAmount(bolao.senaAcumuladaTotal);
+  const senaCandidates = [
+    parseAmount(bolao.sena),
+    parseAmount(bolao.senaAcumulada),
+    parseAmount(bolao.senaAcumuladaValor),
+    parseAmount(bolao.senaAccumulated),
+    parseAmount(bolao.senaAccumulatedValue),
+    parseAmount(bolao.senaReserved),
+    parseAmount(bolao.senaReservedAmount),
+    parseAmount(bolao.senaPot),
+    parseAmount(bolao.senaPotValue),
+    parseAmount(bolao.senaPotAmount),
+    parseAmount(bolao.senaPotReserved),
+    parseAmount(bolao.senaPotApplied),
+    parseAmount(bolao.senaApplied),
+    parseAmount(bolao.senaCurrentPot),
+    parseAmount(bolao.senaPotCurrent),
+    parseAmount(bolao.senaPotRollover),
+    parseAmount(bolao.senaPotTotal),
+    parseAmount(bolao.senaPotAccumulated),
+    parseAmount(bolao.senaAcumuladaTotal),
+  ];
 
-  const basePool = Math.max(garantido, netPool, totalPrizeRaw);
+  const computedPool = Math.max(garantido, netPool);
+  const poolFallback = Math.max(0, ...poolCandidates);
+  const basePool = computedPool > 0 ? computedPool : poolFallback;
+  const senaTotal = Math.max(0, ...senaCandidates);
   const totalEstimado = basePool + senaTotal;
 
   const premiosPrevistos =
@@ -254,6 +275,10 @@ export function DashboardBoloes() {
           const buttonClass = hasStarted
             ? "bg-megga-yellow text-megga-navy hover:opacity-90"
             : "bg-[#2fdb7b] text-[#0b1218] animate-shake-strong btn-shake-xy hover:opacity-95 scale-100 hover:scale-105 transition-transform";
+          const bodyClass = hasStarted
+            ? "space-y-2 px-4 pb-4 pt-1.5 md:space-y-3 md:px-5 md:pb-6 md:pt-4"
+            : "space-y-2 px-4 pb-2 pt-1.5 md:space-y-3 md:px-5 md:pb-3 md:pt-4";
+          const buttonWrapperClass = hasStarted ? "pb-1" : "pb-0";
 
           return (
             <article
@@ -271,7 +296,7 @@ export function DashboardBoloes() {
                 <span className="rounded-full bg-white/10 px-3 py-1 text-white/75">{statusLabel}</span>
               </div>
 
-              <div className="space-y-2 px-4 pb-4 pt-1.5 md:space-y-3 md:px-5 md:pb-6 md:pt-4">
+              <div className={bodyClass}>
                 <header className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0 self-center">
                     <h3 className="text-xl font-semibold leading-tight text-white">{bolao.name}</h3>
@@ -362,7 +387,7 @@ export function DashboardBoloes() {
                   </div>
                 )}
 
-                <div className="pb-1">
+                <div className={buttonWrapperClass}>
                   <Link
                     href={`/boloes/${bolao.id}`}
                     className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow transition md:rounded-2xl md:shadow-lg ${buttonClass}`}

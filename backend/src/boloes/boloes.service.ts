@@ -17,6 +17,7 @@ export class BoloesService {
       include: {
         prizes: true,
         transparency: true,
+        _count: { select: { bets: true } },
         ...(userId && {
           bets: {
             where: { userId },
