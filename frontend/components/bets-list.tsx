@@ -57,7 +57,7 @@ export function BetsList({ bets, winningNumbers = [] }: { bets: Bet[]; winningNu
                 <span>{new Date(bet.createdAt).toLocaleDateString('pt-BR')}</span>
               </div>
             </div>
-            <div className="col-span-2 grid grid-cols-5 gap-1 md:col-span-1 md:col-start-2 md:flex md:flex-wrap md:gap-1">
+            <div className="col-start-1 col-span-2 w-fit justify-self-start grid grid-cols-5 gap-1 md:col-span-1 md:col-start-2 md:flex md:flex-wrap md:gap-1">
               {bet.numbers?.map((number, idx) => {
                 const value = Number(number);
                 const isHit = winningSet.size > 0 && Number.isFinite(value) && winningSet.has(value);

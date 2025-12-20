@@ -287,17 +287,17 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         <div className="pointer-events-none absolute inset-0 z-0 opacity-70" style={statusConfig.patternStyle} aria-hidden />
         <div className="relative z-10">
           <div
-            className={`flex flex-wrap items-center gap-3 px-3 py-2.5 text-[11px] uppercase tracking-[0.24em] text-white/70 md:px-4 md:py-3 ${statusConfig.headerClass}`}
+            className={`flex items-center justify-between gap-2 px-3 py-2.5 text-[11px] uppercase tracking-[0.24em] text-white/70 md:px-4 md:py-3 ${statusConfig.headerClass}`}
           >
             <span className="inline-flex items-center gap-2 font-semibold">
               <span className={`h-2.5 w-2.5 rounded-full shadow ${statusConfig.dotClass}`} aria-hidden />{" "}
               {statusConfig.label}
             </span>
-            <div className="ml-auto flex w-full flex-wrap items-center justify-end gap-2 text-right md:w-auto">
+            <div className="flex flex-col items-end gap-1 text-right">
+              <span className="rounded-full bg-white/10 px-3 py-1">Bolao #{bolao.id.slice(0, 6)}</span>
               {isParticipant && (
                 <span className="rounded-full bg-[#1ea7a4]/15 px-3 py-1 text-[#1ea7a4]">Participando</span>
               )}
-              <span className="rounded-full bg-white/10 px-3 py-1">Bolao #{bolao.id.slice(0, 6)}</span>
             </div>
           </div>
           <div className="space-y-5 px-3 pb-5 pt-5 md:px-4 md:pb-6 md:pt-6">
@@ -387,18 +387,15 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                 )}
               </div>
             </header>
-            <nav className="grid grid-cols-4 gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
+            <nav className="grid grid-cols-3 gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
               <a href="#apostar" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
                 Apostar
               </a>
-              <a href="#sorteios" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
-                Sorteios
-              </a>
               <a href="#premiacoes" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
-                Premiacao
+                Premiacoes
               </a>
-              <a href="#apostadores" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
-                Apostadores
+              <a href="#minhas-apostas" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
+                Apostas
               </a>
             </nav>
           </div>
@@ -672,7 +669,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
       </section>
 
       {(isParticipant || myBets.length > 0) && (
-        <section className={sectionCardClass}>
+        <section id="minhas-apostas" className={sectionCardClass}>
           <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("minhasApostas")}>
             <div>
               <h2 className="text-lg font-semibold">Minhas apostas</h2>
