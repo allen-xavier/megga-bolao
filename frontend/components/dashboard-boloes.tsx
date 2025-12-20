@@ -180,7 +180,11 @@ export function DashboardBoloes() {
             parseAmount((bolao as any)?.prizeTotal) +
             parseAmount((bolao as any)?.totalPrizeValue) +
             parseAmount((bolao as any)?.estimatedTotalPrize) +
-            parseAmount((bolao as any)?.estimatedPrize);
+            parseAmount((bolao as any)?.estimatedPrize) +
+            parseAmount((bolao as any)?.displayTotal) +
+            parseAmount((bolao as any)?.prizePool) +
+            parseAmount((bolao as any)?.prizePoolValue) +
+            parseAmount((bolao as any)?.estimatedPool);
           const totalEstimado = totalPrizeRaw > 0 ? totalPrizeRaw : garantido + sena;
 
           const premiosPrevistos =
@@ -209,7 +213,7 @@ export function DashboardBoloes() {
                 <span className="rounded-full bg-white/10 px-3 py-1 text-white/75">{statusLabel}</span>
               </div>
 
-              <div className="space-y-2 px-4 pb-5 pt-3 md:space-y-3 md:px-5 md:pb-6 md:pt-5">
+              <div className="space-y-2 px-4 pb-5 pt-1.5 md:space-y-3 md:px-5 md:pb-6 md:pt-4">
                 <header className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0 self-center">
                     <h3 className="text-xl font-semibold leading-tight text-white">{bolao.name}</h3>
@@ -227,13 +231,13 @@ export function DashboardBoloes() {
 
                 {!hasStarted && (
                   <div className="space-y-3">
-                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-2 text-white shadow-inner">
+                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-1.5 text-white shadow-inner">
                       <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/50">
                         <span>Valor estimado até o momento</span>
                         <svg
                           viewBox="0 0 64 32"
                           aria-hidden
-                          className="h-12 w-16 -translate-y-2 text-red-400 animate-trend-up"
+                          className="h-12 w-16 -translate-y-3 text-red-400 animate-trend-up"
                         >
                           <defs>
                             <linearGradient id="rise" x1="0%" y1="100%" x2="0%" y2="0%">
@@ -254,7 +258,7 @@ export function DashboardBoloes() {
                           <circle cx="60" cy="8" r="3.2" fill="currentColor" className="animate-trend-up" />
                         </svg>
                       </div>
-                      <p className="mt-1 text-center text-3xl font-bold text-[#3fdc7c] animate-pulse">
+                      <p className="mt-0.5 text-center text-3xl font-bold text-[#3fdc7c] animate-[pulse_0.9s_ease-in-out_infinite]">
                         {formatCurrency(totalEstimado)}
                       </p>
                     </div>
