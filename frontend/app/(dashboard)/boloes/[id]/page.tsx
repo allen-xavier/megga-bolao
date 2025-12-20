@@ -177,7 +177,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <div className="rounded-3xl border border-white/5 bg-[#111218] p-6 text-white shadow-lg">
         Carregando bolao...
       </div>
     );
@@ -189,6 +189,52 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
 
   const startsAt = new Date(bolao.startsAt);
   const isClosed = Boolean(bolao.closedAt);
+  const nowTs = Date.now();
+  const hasStarted = startsAt.getTime() <= nowTs;
+  const statusConfig = isClosed
+    ? {
+        label: "Encerrado",
+        cardClass: "border-[#ff4d4f]/25 bg-gradient-to-br from-[#1c0b10] via-[#141520] to-[#0e1118]",
+        headerClass: "bg-[#2a0f12]",
+        pillClass: "bg-[#ff4d4f]/15 text-[#ff4d4f]",
+        dotClass: "bg-[#ff4d4f]",
+        accentClass: "text-[#ff4d4f]",
+        panelBorder: "border-[#ff4d4f]/25",
+        patternStyle: {
+          backgroundImage:
+            "radial-gradient(circle at 85% 0%, rgba(255, 77, 79, 0.2), transparent 55%), radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.05), transparent 50%)",
+        },
+      }
+    : hasStarted
+      ? {
+          label: "Em andamento",
+          cardClass: "border-[#f7b500]/20 bg-gradient-to-br from-[#151824] via-[#121726] to-[#0e1118]",
+          headerClass: "bg-[#2a1d0b]",
+          pillClass: "bg-[#f7b500]/15 text-[#f7b500]",
+          dotClass: "bg-[#f7b500]",
+          accentClass: "text-[#f7b500]",
+          panelBorder: "border-[#f7b500]/25",
+          patternStyle: {
+            backgroundImage:
+              "radial-gradient(circle at 85% 0%, rgba(247, 181, 0, 0.18), transparent 55%), radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.06), transparent 50%)",
+          },
+        }
+      : {
+          label: "Acumulando",
+          cardClass: "border-[#3fdc7c]/25 bg-gradient-to-br from-[#0f2219] via-[#111622] to-[#0d1017]",
+          headerClass: "bg-[#12231b]",
+          pillClass: "bg-[#3fdc7c]/15 text-[#3fdc7c]",
+          dotClass: "bg-[#3fdc7c]",
+          accentClass: "text-[#3fdc7c]",
+          panelBorder: "border-[#3fdc7c]/25",
+          patternStyle: {
+            backgroundImage:
+              "radial-gradient(circle at 15% 0%, rgba(63, 220, 124, 0.2), transparent 55%), repeating-linear-gradient(135deg, rgba(63, 220, 124, 0.08) 0, rgba(63, 220, 124, 0.08) 1px, transparent 1px, transparent 10px)",
+          },
+        };
+  const summaryPanelClass = "rounded-2xl border border-white/10 bg-[#141823] px-5 py-4 text-right shadow";
+  const summaryHighlightClass = `rounded-2xl border ${statusConfig.panelBorder} bg-[#0f141f]/80 px-5 py-4 text-right shadow`;
+  const sectionCardClass = "space-y-2 rounded-3xl border border-white/5 bg-[#111218] p-6 text-white shadow-lg";
   const latestResult = bolao.bolaoResults?.[0] ?? null;
   const prizeResults = latestResult?.prizes ?? [];
   const livePrizes = bolao.livePrizes ?? [];
@@ -221,6 +267,10 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const totalPct = prizes.reduce((acc: number, p: any) => acc + Number(p.percentage ?? 0), 0);
   const variablePool = Math.max(prizePool - totalFixed, 0);
   const displayTotal = prizePool + senaPotApplied;
+  const showSenaApplied = !isClosed && senaPotApplied > 0;
+  const showSenaRolled = !isClosed && senaPotApplied === 0 && (senaPotRolled > 0 || senaPotGlobal > 0);
+  const showTrend = !isClosed && !hasStarted;
+  const cotaMobileClass = showSenaApplied ? "" : "col-start-2";
 
   const toggle = (key: string) => setOpenSection((prev) => ({ ...prev, [key]: !prev[key] }));
 
@@ -228,82 +278,125 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     <div className="space-y-6">
       {error && <div className="rounded-2xl bg-red-900/40 p-3 text-sm text-red-100">{error}</div>}
 
-      <section className="overflow-hidden rounded-3xl bg-megga-navy/80 text-white shadow-lg ring-1 ring-white/5">
-        <div className="flex items-center justify-between bg-megga-purple/80 px-6 py-4 text-[11px] uppercase tracking-[0.24em] text-white/70">
-          <span className="inline-flex items-center gap-2 font-semibold">
-            <span className={`h-2.5 w-2.5 rounded-full shadow ${isClosed ? "bg-white/60" : "bg-megga-lime"}`} aria-hidden />{" "}
-            {isClosed ? "Encerrado" : "Em andamento"}
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            {isParticipant && <span className="rounded-full bg-megga-lime/30 px-3 py-1 text-white">Participando</span>}
-            <span className="rounded-full bg-white/10 px-3 py-1">Bolao #{bolao.id.slice(0, 6)}</span>
-          </div>
-        </div>
-        <div className="space-y-6 px-6 pb-8 pt-8">
-          <header className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold leading-tight">{bolao.name}</h1>
-              <p className="mt-1 text-sm text-white/60">
-                Inicio{" "}
-                {startsAt.toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                  timeZone: "America/Sao_Paulo",
-                })}{" "}
-                as{" "}
-                {startsAt.toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: "America/Sao_Paulo",
-                })}
-              </p>
-              <p className="text-xs uppercase tracking-[0.24em] text-white/40">Dias oficiais: terca, quinta e sabado</p>
+      <section className={`relative overflow-hidden rounded-3xl border text-white shadow-lg ${statusConfig.cardClass}`}>
+        <div className="pointer-events-none absolute inset-0 z-0 opacity-70" style={statusConfig.patternStyle} aria-hidden />
+        <div className="relative z-10">
+          <div
+            className={`flex items-center justify-between px-6 py-4 text-[11px] uppercase tracking-[0.24em] text-white/70 ${statusConfig.headerClass}`}
+          >
+            <span className="inline-flex items-center gap-2 font-semibold">
+              <span className={`h-2.5 w-2.5 rounded-full shadow ${statusConfig.dotClass}`} aria-hidden />{" "}
+              {statusConfig.label}
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              {isParticipant && (
+                <span className="rounded-full bg-[#1ea7a4]/15 px-3 py-1 text-[#1ea7a4]">Participando</span>
+              )}
+              <span className="rounded-full bg-white/10 px-3 py-1">Bolao #{bolao.id.slice(0, 6)}</span>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <div className="rounded-2xl bg-gradient-to-br from-megga-magenta via-megga-purple to-megga-teal px-5 py-4 text-right shadow">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Valor da cota</p>
-                <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(ticketPrice)}</p>
+          </div>
+          <div className="space-y-6 px-6 pb-8 pt-8">
+            <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-2xl font-semibold leading-tight">{bolao.name}</h1>
+                  {showTrend && (
+                    <div className="inline-flex items-center rounded-full border border-[#ff4d4f]/35 bg-[#ff4d4f]/10 px-2.5 py-1">
+                      <svg viewBox="0 0 64 32" aria-hidden className="h-6 w-10 text-[#ff4d4f]">
+                        <defs>
+                          <linearGradient id="trend-up" x1="0%" y1="100%" x2="0%" y2="0%">
+                            <stop offset="0%" stopColor="currentColor" stopOpacity="0.15" />
+                            <stop offset="100%" stopColor="currentColor" stopOpacity="0.35" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M4 26 L16 16 L26 19 L36 11 L48 17 L60 8 V30 H4 Z" fill="url(#trend-up)" opacity="0.4" />
+                        <polyline
+                          points="4,26 16,16 26,19 36,11 48,17 60,8"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="trend-line-base"
+                        />
+                        <polyline
+                          points="4,26 16,16 26,19 36,11 48,17 60,8"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="trend-line-draw"
+                        />
+                        <circle cx="4" cy="26" r="3.2" fill="currentColor" className="trend-dot-move" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-white/60">
+                  Inicio{" "}
+                  {startsAt.toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                    timeZone: "America/Sao_Paulo",
+                  })}{" "}
+                  as{" "}
+                  {startsAt.toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: "America/Sao_Paulo",
+                  })}
+                </p>
+                <p className="text-xs uppercase tracking-[0.24em] text-white/40">Dias oficiais: terca, quinta e sabado</p>
               </div>
-              <div className="rounded-2xl bg-megga-lime/20 px-5 py-4 text-right shadow ring-1 ring-megga-lime/40">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-megga-lime/80">Premiacao total</p>
-                <p className="mt-2 text-2xl font-semibold text-megga-lime">R$ {formatCurrency(displayTotal)}</p>
-                {senaPotApplied > 0 && (
-                  <p className="text-[11px] text-white/70">
-                    (Base R$ {formatCurrency(prizePool)} + Sena acumulada R$ {formatCurrency(senaPotApplied)})
-                  </p>
+              <div className="grid w-full grid-cols-2 gap-3 md:flex md:w-auto md:flex-wrap md:justify-end">
+                {showSenaApplied && (
+                  <div className={`${summaryPanelClass} order-1 text-left md:order-3 md:text-right`}>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Sena acumulada</p>
+                    <p className="mt-2 text-2xl font-semibold text-[#f7b500]">R$ {formatCurrency(senaPotApplied)}</p>
+                  </div>
+                )}
+                <div
+                  className={`${summaryPanelClass} order-1 ${cotaMobileClass} justify-self-end md:order-1 md:justify-self-auto`}
+                >
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Valor da cota</p>
+                  <p className="mt-2 text-2xl font-semibold text-[#f7b500]">R$ {formatCurrency(ticketPrice)}</p>
+                </div>
+                <div className={`${summaryHighlightClass} order-2 col-span-2 md:order-2 md:col-auto`}>
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/60">Premiacao total</p>
+                  <p className="mt-2 text-3xl font-semibold text-[#3fdc7c] md:text-2xl">R$ {formatCurrency(displayTotal)}</p>
+                  {senaPotApplied > 0 && (
+                    <p className="text-[11px] text-white/70">
+                      (Base R$ {formatCurrency(prizePool)} + Sena acumulada R$ {formatCurrency(senaPotApplied)})
+                    </p>
+                  )}
+                </div>
+                {showSenaRolled && (
+                  <div className={`${summaryPanelClass} order-3 col-span-2 md:order-4 md:col-auto`}>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Sena acumulou!</p>
+                    <p className="mt-2 text-sm font-semibold text-[#f7b500]">
+                      Proximo bolao futuro recebe R$ {formatCurrency(senaPotRolled > 0 ? senaPotRolled : senaPotGlobal)}
+                    </p>
+                  </div>
                 )}
               </div>
-              {!isClosed && senaPotApplied > 0 && (
-                <div className="rounded-2xl bg-white/10 px-5 py-4 text-right shadow ring-1 ring-megga-purple/40">
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Sena acumulada</p>
-                  <p className="mt-2 text-2xl font-semibold text-megga-yellow">R$ {formatCurrency(senaPotApplied)}</p>
-                </div>
-              )}
-              {!isClosed && senaPotApplied === 0 && (senaPotRolled > 0 || senaPotGlobal > 0) && (
-                <div className="rounded-2xl bg-white/10 px-5 py-4 text-right shadow ring-1 ring-megga-purple/40">
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/70">Sena acumulou!</p>
-                  <p className="mt-2 text-sm font-semibold text-megga-yellow">
-                    Proximo bolao futuro recebe R$ {formatCurrency(senaPotRolled > 0 ? senaPotRolled : senaPotGlobal)}
-                  </p>
-                </div>
-              )}
-            </div>
-          </header>
-          <nav className="grid grid-cols-4 gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
-            <a href="#apostar" className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70 hover:bg-megga-purple/30">
-              Apostar
-            </a>
-            <a href="#sorteios" className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70 hover:bg-megga-purple/30">
-              Sorteios
-            </a>
-            <a href="#premiacoes" className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70 hover:bg-megga-purple/30">
-              Premiacao
-            </a>
-            <a href="#apostadores" className="rounded-2xl bg-white/5 px-3 py-2 text-center text-white/70 hover:bg-megga-purple/30">
-              Apostadores
-            </a>
-          </nav>
+            </header>
+            <nav className="grid grid-cols-4 gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
+              <a href="#apostar" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
+                Apostar
+              </a>
+              <a href="#sorteios" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
+                Sorteios
+              </a>
+              <a href="#premiacoes" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
+                Premiacao
+              </a>
+              <a href="#apostadores" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
+                Apostadores
+              </a>
+            </nav>
+          </div>
         </div>
       </section>
 
@@ -313,7 +406,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
 
       <section
         id="premiacoes"
-        className="space-y-2 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5"
+        className={sectionCardClass}
       >
         <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("premiacoes")}>
           <div>
@@ -330,7 +423,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                   <p className="font-medium text-white">{prizeInfo[prize.type]?.title ?? prize.type}</p>
                   <p className="text-xs text-white/60">{prizeInfo[prize.type]?.description ?? "Premiacao prevista"}</p>
                 </div>
-                <span className="text-sm font-semibold text-megga-yellow">
+                <span className="text-sm font-semibold text-[#f7b500]">
                   {(() => {
                     const fixed = Number(prize.fixedValue ?? 0);
                     const pct = Number(prize.percentage ?? 0);
@@ -378,7 +471,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
       </section>
 
       {!isClosed && livePrizes.length > 0 && (
-        <section className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <section className={sectionCardClass}>
           <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("live")}>
             <div>
               <h2 className="text-lg font-semibold">Premiacoes ja atingidas</h2>
@@ -397,7 +490,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                     </div>
                     <div className="text-right">
                       <p className="text-xs uppercase tracking-[0.24em] text-white/50">Total distribuido</p>
-                      <p className="text-lg font-semibold text-megga-yellow">R$ {formatCurrency(Number(prize.totalValue ?? 0))}</p>
+                      <p className="text-lg font-semibold text-[#f7b500]">R$ {formatCurrency(Number(prize.totalValue ?? 0))}</p>
                     </div>
                   </div>
                   {prize.winners?.length ? (
@@ -415,7 +508,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                               </p>
                             )}
                           </div>
-                          <span className="text-sm font-semibold text-megga-lime">
+                          <span className="text-sm font-semibold text-[#3fdc7c]">
                             R$ {formatCurrency(Number(winner.amount ?? 0))}
                           </span>
                         </li>
@@ -432,7 +525,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
       )}
 
       {isClosed && prizeResults.length > 0 && (
-        <section className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <section className={sectionCardClass}>
           <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("resultados")}>
             <div>
               <h2 className="text-lg font-semibold">Resultados e ganhadores</h2>
@@ -462,7 +555,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                     </div>
                     <div className="text-right">
                       <p className="text-xs uppercase tracking-[0.24em] text-white/50">Total distribuido</p>
-                      <p className="text-lg font-semibold text-megga-yellow">
+                      <p className="text-lg font-semibold text-[#f7b500]">
                         R$ {formatCurrency(Number(prize.totalValue ?? 0))}
                       </p>
                     </div>
@@ -483,7 +576,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                               </p>
                             )}
                           </div>
-                          <span className="text-sm font-semibold text-megga-lime">
+                          <span className="text-sm font-semibold text-[#3fdc7c]">
                             R$ {formatCurrency(Number(winner.amount ?? 0))}
                           </span>
                         </li>
@@ -499,7 +592,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         </section>
       )}
 
-      <section id="sorteios" className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <section id="sorteios" className={sectionCardClass}>
         <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("sorteios")}>
           <div>
             <h2 className="text-lg font-semibold">Sorteios</h2>
@@ -530,7 +623,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                         {draw.numbers?.map((num: number) => (
                           <span
                             key={num}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-megga-magenta/25 text-xs font-semibold text-megga-yellow"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#1a1f2c] text-xs font-semibold text-[#f7b500]"
                           >
                             {num.toString().padStart(2, "0")}
                           </span>
@@ -547,7 +640,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
 
       <section
         id="apostadores"
-        className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5"
+        className={sectionCardClass}
       >
         <header
           className="flex cursor-pointer flex-wrap items-center justify-between gap-4"
@@ -574,7 +667,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
       </section>
 
       {(isParticipant || myBets.length > 0) && (
-        <section className="space-y-2 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <section className={sectionCardClass}>
           <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("minhasApostas")}>
             <div>
               <h2 className="text-lg font-semibold">Minhas apostas</h2>

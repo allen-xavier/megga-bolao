@@ -113,13 +113,13 @@ export function PlaceBetForm({ bolaoId, ticketPrice }: PlaceBetFormProps) {
   }
 
   return (
-    <section className="space-y-5 rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+    <section className="space-y-5 rounded-3xl border border-white/5 bg-[#111218] p-6 text-white shadow-lg">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">Faça sua aposta</h2>
           <p className="text-sm text-white/60">Selecione 10 números ou deixe que o sistema escolha por você.</p>
         </div>
-        <div className="rounded-2xl bg-gradient-to-br from-megga-magenta via-megga-purple to-megga-teal px-4 py-3 text-right shadow">
+        <div className="rounded-2xl border border-white/10 bg-[#141823] px-4 py-3 text-right shadow">
           <p className="text-[10px] uppercase tracking-[0.24em] text-white/70">Valor da cota</p>
           <p className="mt-1 text-xl font-semibold text-megga-yellow">R$ {formattedTicketPrice}</p>
         </div>
@@ -136,7 +136,7 @@ export function PlaceBetForm({ bolaoId, ticketPrice }: PlaceBetFormProps) {
             <button
               type="button"
               onClick={handleSurpresinha}
-              className="inline-flex items-center gap-2 rounded-full bg-megga-purple/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] transition hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-full bg-[#f7b500] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#0f1117] transition hover:brightness-110"
             >
               Surpresinha
             </button>
@@ -150,7 +150,7 @@ export function PlaceBetForm({ bolaoId, ticketPrice }: PlaceBetFormProps) {
           </div>
         </div>
 
-        <div className="rounded-3xl bg-megga-surface/60 p-4">
+        <div className="rounded-3xl border border-white/5 bg-[#0f141f]/80 p-4">
           <div className="grid grid-cols-6 gap-2 sm:grid-cols-10">
             {ALL_NUMBERS.map((number) => {
               const isSelected = selectedNumbers.includes(number);
@@ -163,8 +163,8 @@ export function PlaceBetForm({ bolaoId, ticketPrice }: PlaceBetFormProps) {
                   onClick={() => toggleNumber(number)}
                   className={`flex h-10 items-center justify-center rounded-full border text-sm font-semibold transition ${
                     isSelected
-                      ? 'border-megga-lime bg-megga-lime/20 text-megga-lime'
-                      : 'border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:text-white'
+                      ? 'border-[#3fdc7c] bg-[#3fdc7c]/15 text-[#3fdc7c]'
+                      : 'border-white/10 bg-[#141823] text-white/70 hover:border-white/40 hover:text-white'
                   } ${isSurprise ? 'cursor-not-allowed opacity-60' : ''}`}
                 >
                   {number.toString().padStart(2, '0')}
@@ -178,7 +178,7 @@ export function PlaceBetForm({ bolaoId, ticketPrice }: PlaceBetFormProps) {
               {(isSurprise ? selectedNumbers : selectedNumbers).map((number) => (
                 <span
                   key={`selected-${number}`}
-                  className="inline-flex h-7 min-w-[2.25rem] items-center justify-center rounded-full bg-white/10 px-2 text-[11px] font-semibold text-megga-yellow"
+                  className="inline-flex h-7 min-w-[2.25rem] items-center justify-center rounded-full bg-[#1a1f2c] px-2 text-[11px] font-semibold text-[#f7b500]"
                 >
                   {number.toString().padStart(2, '0')}
                 </span>
@@ -190,13 +190,13 @@ export function PlaceBetForm({ bolaoId, ticketPrice }: PlaceBetFormProps) {
           </div>
         </div>
 
-        {error && <p className="text-sm text-megga-rose">{error}</p>}
-        {successMessage && <p className="text-sm text-megga-lime">{successMessage}</p>}
+        {error && <p className="text-sm text-[#ff4d4f]">{error}</p>}
+        {successMessage && <p className="text-sm text-[#3fdc7c]">{successMessage}</p>}
 
         <button
           type="submit"
           disabled={!canSubmit}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-3 text-sm font-semibold text-white shadow transition enabled:hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f7b500] px-4 py-3 text-sm font-semibold text-[#0f1117] shadow transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? 'Registrando aposta...' : 'Confirmar aposta'}
         </button>
