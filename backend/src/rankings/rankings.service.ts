@@ -151,6 +151,12 @@ export class RankingsService {
     }
 
     return Array.from(scoreboard.values()).sort((a, b) => {
+      if (b.totalPrizeValue !== a.totalPrizeValue) {
+        return b.totalPrizeValue - a.totalPrizeValue;
+      }
+      if (b.totalPrizesWon !== a.totalPrizesWon) {
+        return b.totalPrizesWon - a.totalPrizesWon;
+      }
       if (b.bestBetHits !== a.bestBetHits) {
         return b.bestBetHits - a.bestBetHits;
       }
