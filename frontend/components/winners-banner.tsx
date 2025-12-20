@@ -69,7 +69,8 @@ export function WinnersBanner() {
 
   return (
     <div className="relative w-full max-w-[96vw] overflow-hidden rounded-2xl py-3 -mt-4 md:mt-0 md:max-w-none md:rounded-3xl md:bg-[#0f1014] md:px-4 md:py-4 md:ring-1 md:ring-white/10 md:shadow-[0_0_24px_rgba(0,0,0,0.45)]">
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-white/70">
+      <span className="light-sweep light-sweep-fast" aria-hidden />
+      <div className="relative z-10 mb-3 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-white/70">
         <span
           className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#f7b500]/30 bg-[#f7b500]/15 text-[#f7b500] shadow-[0_0_8px_rgba(247,181,0,0.35)]"
           aria-hidden
@@ -90,7 +91,7 @@ export function WinnersBanner() {
       </div>
       <div
         ref={containerRef}
-        className="flex w-full max-w-[96vw] gap-3 overflow-x-auto pb-1 text-white scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/20 md:max-w-full"
+        className="relative z-10 flex w-full max-w-[96vw] gap-3 overflow-x-auto pb-1 text-white scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/20 md:max-w-full"
       >
         {data.map((w) => (
           <div

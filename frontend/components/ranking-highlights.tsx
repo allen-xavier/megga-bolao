@@ -42,7 +42,9 @@ export function RankingHighlights() {
   const entries = (data?.entries ?? []).slice(0, 5);
 
   return (
-    <section className="rounded-3xl bg-[#0f1117] p-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
+    <section className="relative overflow-hidden rounded-3xl bg-[#0f1117] p-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
+      <span className="light-sweep light-sweep-fast" aria-hidden />
+      <div className="relative z-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Top apostadores</h2>
@@ -84,7 +86,7 @@ export function RankingHighlights() {
           {entries.map((entry, index) => (
             <li
               key={entry.userId}
-              className="grid grid-cols-[auto,1fr,auto] items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80"
+              className="grid grid-cols-[auto,1fr] items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7b500] text-base font-semibold text-[#0f1117]">
                 #{index + 1}
@@ -96,9 +98,6 @@ export function RankingHighlights() {
                   Premiações: {entry.totalPrizesWon} · Recebido: {formatCurrency(entry.totalPrizeValue)}
                 </p>
               </div>
-              <span className="rounded-full bg-[#1a1c25] px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-[#1ea7a4]">
-                {drawDate ? "Atual" : "Prévia"}
-              </span>
             </li>
           ))}
           {entries.length === 0 && (
@@ -107,6 +106,7 @@ export function RankingHighlights() {
             </li>
           )}
         </ul>
+      </div>
       </div>
     </section>
   );

@@ -163,6 +163,10 @@ body {
   animation: light-sweep 4.2s ease-in-out infinite;
 }
 
+.light-sweep-fast {
+  animation-duration: 3.2s;
+}
+
 @keyframes light-sweep {
   0% {
     transform: translateX(-70%);
