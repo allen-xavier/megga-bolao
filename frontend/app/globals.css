@@ -130,3 +130,34 @@ body {
     opacity: 0;
   }
 }
+
+.light-sweep {
+  position: absolute;
+  inset: -40% -60%;
+  pointer-events: none;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 36%,
+    rgba(255, 255, 255, 0.28) 46%,
+    rgba(255, 255, 255, 0.06) 56%,
+    transparent 70%
+  );
+  opacity: 0.85;
+  transform: translateX(-60%);
+  animation: light-sweep 4.2s ease-in-out infinite;
+}
+
+@keyframes light-sweep {
+  0% {
+    transform: translateX(-70%);
+    opacity: 0.1;
+  }
+  45% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(70%);
+    opacity: 0.1;
+  }
+}
