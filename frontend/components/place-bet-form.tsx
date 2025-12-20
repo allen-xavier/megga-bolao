@@ -105,7 +105,7 @@ export function PlaceBetForm({ bolaoId, actionClassName }: PlaceBetFormProps) {
   }
 
   return (
-    <section className="space-y-4 rounded-3xl border border-white/5 bg-[#111218] p-4 text-white shadow-lg">
+    <section className="space-y-4 rounded-3xl border border-white/5 bg-[#111218] p-3 text-white shadow-lg md:p-4">
       <header className="flex flex-wrap items-start gap-3">
         <div>
           <h2 className="text-lg font-semibold">Faça sua aposta</h2>
@@ -138,7 +138,7 @@ export function PlaceBetForm({ bolaoId, actionClassName }: PlaceBetFormProps) {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/5 bg-[#0f141f]/80 p-3">
+        <div className="rounded-3xl border border-white/5 bg-[#0f141f]/80 p-2 md:p-3">
           <div className="grid grid-cols-6 gap-2 sm:grid-cols-10">
             {ALL_NUMBERS.map((number) => {
               const isSelected = selectedNumbers.includes(number);

@@ -177,7 +177,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-white/5 bg-[#111218] p-4 text-white shadow-lg">
+      <div className="rounded-3xl border border-white/5 bg-[#111218] p-3 text-white shadow-lg md:p-4">
         Carregando bolao...
       </div>
     );
@@ -232,9 +232,9 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
               "radial-gradient(circle at 15% 0%, rgba(63, 220, 124, 0.2), transparent 55%), repeating-linear-gradient(135deg, rgba(63, 220, 124, 0.08) 0, rgba(63, 220, 124, 0.08) 1px, transparent 1px, transparent 10px)",
           },
         };
-  const summaryPanelClass = "rounded-2xl border border-white/10 bg-[#141823] px-4 py-3 text-right shadow";
-  const summaryHighlightClass = `rounded-2xl border ${statusConfig.panelBorder} bg-[#0f141f]/80 px-4 py-3 text-right shadow`;
-  const sectionCardClass = "space-y-2 rounded-3xl border border-white/5 bg-[#111218] p-4 text-white shadow-lg";
+  const summaryPanelClass = "rounded-2xl border border-white/10 bg-[#141823] px-3 py-3 text-right shadow md:px-4";
+  const summaryHighlightClass = `rounded-2xl border ${statusConfig.panelBorder} bg-[#0f141f]/80 px-3 py-3 text-right shadow md:px-4`;
+  const sectionCardClass = "space-y-2 rounded-3xl border border-white/5 bg-[#111218] p-3 text-white shadow-lg md:p-4";
   const latestResult = bolao.bolaoResults?.[0] ?? null;
   const prizeResults = latestResult?.prizes ?? [];
   const livePrizes = bolao.livePrizes ?? [];
@@ -287,20 +287,20 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         <div className="pointer-events-none absolute inset-0 z-0 opacity-70" style={statusConfig.patternStyle} aria-hidden />
         <div className="relative z-10">
           <div
-            className={`flex items-center justify-between px-4 py-3 text-[11px] uppercase tracking-[0.24em] text-white/70 ${statusConfig.headerClass}`}
+            className={`flex flex-wrap items-center gap-3 px-3 py-2.5 text-[11px] uppercase tracking-[0.24em] text-white/70 md:px-4 md:py-3 ${statusConfig.headerClass}`}
           >
             <span className="inline-flex items-center gap-2 font-semibold">
               <span className={`h-2.5 w-2.5 rounded-full shadow ${statusConfig.dotClass}`} aria-hidden />{" "}
               {statusConfig.label}
             </span>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="ml-auto flex w-full flex-wrap items-center justify-end gap-2 text-right md:w-auto">
               {isParticipant && (
                 <span className="rounded-full bg-[#1ea7a4]/15 px-3 py-1 text-[#1ea7a4]">Participando</span>
               )}
               <span className="rounded-full bg-white/10 px-3 py-1">Bolao #{bolao.id.slice(0, 6)}</span>
             </div>
           </div>
-          <div className="space-y-5 px-4 pb-6 pt-6">
+          <div className="space-y-5 px-3 pb-5 pt-5 md:px-4 md:pb-6 md:pt-6">
             <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-3">
@@ -423,7 +423,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         {openSection.premiacoes && (
           <ul className="space-y-3">
             {bolao.prizes?.map((prize: any) => (
-              <li key={prize.id} className="flex items-center justify-between rounded-2xl bg-white/5 px-3 py-3 text-sm">
+              <li key={prize.id} className="flex items-center justify-between rounded-2xl bg-white/5 px-3 py-3 text-sm md:px-4">
                 <div>
                   <p className="font-medium text-white">{prizeInfo[prize.type]?.title ?? prize.type}</p>
                   <p className="text-xs text-white/60">{prizeInfo[prize.type]?.description ?? "Premiacao prevista"}</p>
@@ -467,7 +467,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
               </li>
             ))}
             {(!bolao.prizes || bolao.prizes.length === 0) && (
-              <li className="rounded-2xl bg-white/5 px-3 py-3 text-sm text-white/60">
+              <li className="rounded-2xl bg-white/5 px-3 py-3 text-sm text-white/60 md:px-4">
                 Nenhuma premiacao configurada para este bolao.
               </li>
             )}
@@ -487,7 +487,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
           {openSection.live && (
             <div className="space-y-3">
               {livePrizes.map((prize: any) => (
-                <div key={prize.prizeType} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div key={prize.prizeType} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3 md:p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
@@ -503,7 +503,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                       {prize.winners.map((winner: any) => (
                         <li
                           key={`${prize.prizeType}-${winner.bet?.id ?? winner.user?.id}`}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2"
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2 md:px-4"
                         >
                           <div>
                             <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
@@ -549,7 +549,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
           {openSection.resultados && (
             <div className="space-y-3">
               {prizeResults.map((prize: any) => (
-                <div key={prize.id} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3">
+                <div key={prize.id} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3 md:p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
@@ -570,7 +570,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                       {prize.winners.map((winner: any) => (
                         <li
                           key={winner.id}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2"
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2 md:px-4"
                         >
                           <div>
                             <p className="font-medium">{winner.user?.fullName ?? "Apostador"}</p>
@@ -608,11 +608,11 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         {openSection.sorteios && (
           <>
             {drawsAsc.length === 0 ? (
-              <p className="rounded-2xl bg-white/5 px-3 py-3 text-sm text-white/70">Nenhum sorteio registrado ainda.</p>
+              <p className="rounded-2xl bg-white/5 px-3 py-3 text-sm text-white/70 md:px-4">Nenhum sorteio registrado ainda.</p>
             ) : (
               <div ref={drawsRef} className="max-h-72 space-y-3 overflow-y-auto pr-1">
                 {visibleDrawsList.map((draw: any) => (
-                  <div key={draw.id} className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3">
+                  <div key={draw.id} className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 md:px-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="space-y-1">
                         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Data</p>
