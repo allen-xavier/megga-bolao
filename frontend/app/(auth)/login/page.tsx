@@ -12,9 +12,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      router.replace("/inicio");
       const fallback = setTimeout(() => {
-        window.location.href = "/dashboard";
+        window.location.href = "/inicio";
       }, 800);
       return () => clearTimeout(fallback);
     }

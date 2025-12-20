@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
   {
-    label: 'Bolões',
-    href: '/dashboard',
+    label: 'Inicio',
+    href: '/inicio',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
         <path d="M4 7h16v10H4z" fill="currentColor" opacity="0.2" />
@@ -68,7 +68,7 @@ export function BottomNav() {
     <nav className="fixed inset-x-0 bottom-0 z-40 w-full border-t border-white/10 bg-[#0f1117]/98 px-4 py-3 text-white shadow-[0_-6px_18px_rgba(0,0,0,0.45)] backdrop-blur md:hidden">
       <ul className="grid grid-cols-4 gap-2 text-center text-[11px] font-medium">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');
+          const isActive = pathname === item.href || (item.href === '/inicio' && pathname === '/');
           return (
             <li key={item.href}>
               <Link

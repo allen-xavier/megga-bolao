@@ -52,10 +52,10 @@ export default function HomePage() {
             no ranking e gerencie sua carteira.
           </p>
           <Link
-            href="/dashboard"
+            href="/inicio"
             className="mt-4 inline-flex items-center justify-center rounded-full bg-[#f7b500] px-4 py-2 text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
           >
-            Ir para o dashboard
+            Ir para o inicio
           </Link>
         </div>
         <div className="rounded-3xl border border-white/5 bg-[#0f1117] p-6 text-white shadow-lg ring-1 ring-white/5">

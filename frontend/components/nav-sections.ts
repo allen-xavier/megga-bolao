@@ -13,8 +13,8 @@ export const sections: DrawerSection[] = [
     title: "Bolões",
     items: [
       {
-        label: "Início",
-        href: "/dashboard",
+        label: "Inicio",
+        href: "/inicio",
         description: "Resumo com bolões em andamento e futuros.",
       },
       {

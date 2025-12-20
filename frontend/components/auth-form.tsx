@@ -24,7 +24,7 @@ export function AuthForm() {
       if (!result || result.error) {
         throw new Error(result?.error ?? 'Credenciais invalidas');
       }
-      await router.replace('/dashboard');
+      await router.replace('/inicio');
       router.refresh();
     } catch (error: any) {
       setMessage(error?.message ?? 'Erro ao autenticar.');

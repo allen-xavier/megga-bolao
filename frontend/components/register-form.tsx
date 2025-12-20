@@ -72,7 +72,7 @@ export function RegisterForm() {
       if (result?.error) {
         throw new Error(result.error);
       }
-      await router.replace('/dashboard');
+      await router.replace('/inicio');
       router.refresh();
     } catch (err: any) {
       setMessage(err?.response?.data?.message ?? err?.message ?? 'Erro ao cadastrar.');
