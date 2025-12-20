@@ -20,18 +20,38 @@ export class BoloesService {
         _count: { select: { bets: true } },
         ...(userId && {
           bets: {
-            where: { userId },
-            select: { id: true, userId: true },
+            select: { id: true, userId: true, numbers: true },
+          },
+          draws: {
+            select: { drawnAt: true, numbers: true },
           },
         }),
       },
       orderBy: { startsAt: "asc" },
     });
     if (!userId) return boloes;
+    const bolaoIds = boloes.map((bolao) => bolao.id);
+    const prizeWins = bolaoIds.length
+      ? await this.prisma.prizeResultWinner.findMany({
+          where: {
+            userId,
+            prizeResult: { bolaoResult: { bolaoId: { in: bolaoIds } } },
+          },
+          select: {
+            prizeResult: { select: { bolaoResult: { select: { bolaoId: true } } } },
+          },
+        })
+      : [];
+    const wonBolaoIds = new Set(prizeWins.map((win) => win.prizeResult.bolaoResult.bolaoId));
     return boloes.map((bolao: any) => {
-      const myBets = bolao.bets ?? [];
+      const myBets = (bolao.bets ?? [])
+        .filter((bet: any) => bet.userId === userId)
+        .map((bet: any) => ({ id: bet.id, userId: bet.userId }));
       const isParticipant = myBets.length > 0;
-      return { ...bolao, myBets, isParticipant };
+      const hasLivePrize = this.userHasLivePrize(bolao, userId);
+      const hasPrize = wonBolaoIds.has(bolao.id) || hasLivePrize;
+      const { bets: _bets, draws: _draws, ...rest } = bolao;
+      return { ...rest, bets: myBets, myBets, isParticipant, hasPrize };
     });
   }
 
@@ -178,6 +198,37 @@ export class BoloesService {
     const netPool = totalCollected * (1 - commissionPercent / 100);
     const guaranteedPrize = Number(bolao.guaranteedPrize ?? 0);
     return Math.max(guaranteedPrize, netPool);
+  }
+
+  private userHasLivePrize(bolao: any, userId: string) {
+    if (!userId || bolao.closedAt) return false;
+    const drawsAsc = [...(bolao.draws ?? [])].sort(
+      (a, b) => new Date(a.drawnAt).getTime() - new Date(b.drawnAt).getTime(),
+    );
+    if (drawsAsc.length === 0) return false;
+
+    const firstDrawNumbers: number[] = Array.isArray(drawsAsc[0]?.numbers)
+      ? drawsAsc[0].numbers.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n))
+      : [];
+    if (firstDrawNumbers.length === 0) return false;
+
+    const bets = bolao.bets ?? [];
+    if (bets.length === 0) return false;
+
+    const hitsByBet = bets.map((bet: any) => {
+      const numbers: number[] = Array.isArray(bet.numbers)
+        ? bet.numbers.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n))
+        : [];
+      const firstHits = numbers.filter((n) => firstDrawNumbers.includes(n)).length;
+      return { userId: bet.userId, firstHits };
+    });
+
+    const maxFirst = Math.max(0, ...hitsByBet.map((item: { firstHits: number }) => item.firstHits));
+    if (maxFirst === 0) return false;
+
+    const userHits = hitsByBet.filter((item: any) => item.userId === userId);
+    if (userHits.some((item: any) => item.firstHits === 6)) return true;
+    return userHits.some((item: any) => item.firstHits === maxFirst);
   }
 
   private computeLivePrizes(bolao: any) {

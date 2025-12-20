@@ -5,6 +5,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import useSWR from "swr";
 import { api } from "@/lib/api";
@@ -42,6 +43,7 @@ interface Bolao {
   totalPrize?: number | string;
   totalPrizeValue?: number | string;
   _count?: BetCount;
+  hasPrize?: boolean;
   // Variantes de sena acumulada
   sena?: number | string;
   senaAcumulada?: number | string;
@@ -117,9 +119,13 @@ function formatStartsAt(date: Date) {
   });
 }
 
+function getSaoPauloDate(date: Date) {
+  return new Date(date.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+}
+
 function getStartLabel(startsAt: Date) {
-  const nowSp = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-  const startSp = new Date(startsAt.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const nowSp = getSaoPauloDate(new Date());
+  const startSp = getSaoPauloDate(startsAt);
 
   const startMidnight = new Date(startSp);
   startMidnight.setHours(0, 0, 0, 0);
@@ -130,6 +136,29 @@ function getStartLabel(startsAt: Date) {
   if (diffDays === 0) return "HOJE";
   if (diffDays === 1) return "AMANHÃ";
   return formatStartsAt(startSp);
+}
+
+function formatCountdown(msRemaining: number) {
+  const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(2, "0")}s`;
+}
+
+function getStartDisplay(startsAt: Date, now: Date) {
+  const nowSp = getSaoPauloDate(now);
+  const startSp = getSaoPauloDate(startsAt);
+  const diffMs = startSp.getTime() - nowSp.getTime();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+
+  if (diffMs > 0 && diffMs <= oneDayMs) {
+    return { label: formatCountdown(diffMs), isCountdown: true };
+  }
+
+  return { label: getStartLabel(startsAt), isCountdown: false };
 }
 
 function getNextDrawLabel() {
@@ -214,6 +243,14 @@ export function DashboardBoloes() {
   const { data: session } = useSession();
   const token = (session?.user as any)?.accessToken;
   const userId = getUserId(session);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const { data, isLoading } = useSWR<Bolao[]>(
     token ? ["/boloes", token] : "/boloes",
@@ -244,29 +281,32 @@ export function DashboardBoloes() {
     );
   }
 
-  const now = Date.now();
-  const futuros = data.filter((b) => new Date(b.startsAt).getTime() > now);
+  const nowTimestamp = now;
+  const nowDate = new Date(nowTimestamp);
+  const futuros = data.filter((b) => new Date(b.startsAt).getTime() > nowTimestamp);
   const andamento = data.filter((b) => {
     const start = new Date(b.startsAt).getTime();
     const closed = b.closedAt ? new Date(b.closedAt).getTime() : null;
-    return start <= now && (!closed || closed > now);
+    return start <= nowTimestamp && (!closed || closed > nowTimestamp);
   });
 
   const cards = [...futuros, ...andamento];
 
   return (
     <section className="space-y-4 md:space-y-5">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4">
         {cards.map((bolao) => {
           const startsAt = new Date(bolao.startsAt);
-          const hasStarted = startsAt.getTime() <= now;
-          const startLabel = getStartLabel(startsAt);
+          const hasStarted = startsAt.getTime() <= nowTimestamp;
+          const { label: startLabel, isCountdown: startIsCountdown } = getStartDisplay(startsAt, nowDate);
 
           const statusLabel = hasStarted ? "Em andamento" : "Acumulando";
+          const hasPrize = Boolean(bolao.hasPrize);
           const inferredParticipant =
             bolao.isParticipant ||
             bolao.myBets?.some?.((b) => b.userId === userId) ||
-            bolao.bets?.some?.((b) => b.userId === userId);
+            bolao.bets?.some?.((b) => b.userId === userId) ||
+            hasPrize;
           const participationLabel = inferredParticipant ? "Participando" : statusLabel;
           const nextDrawLabel = getNextDrawLabel();
 
@@ -279,24 +319,57 @@ export function DashboardBoloes() {
             ? "space-y-2 px-4 pb-4 pt-1.5 md:space-y-3 md:px-5 md:pb-6 md:pt-4"
             : "space-y-2 px-4 pb-2 pt-1.5 md:space-y-3 md:px-5 md:pb-3 md:pt-4";
           const buttonWrapperClass = hasStarted ? "pb-1" : "pb-0";
+          const cardClass = hasStarted
+            ? "border-[#f7b500]/20 bg-gradient-to-br from-[#151824] via-[#121726] to-[#0e1118]"
+            : "border-[#3fdc7c]/25 bg-gradient-to-br from-[#0f2219] via-[#111622] to-[#0d1017]";
+          const headerClass = hasStarted ? "bg-[#2a1d0b]" : "bg-[#12231b]";
+          const statusPillClass = hasStarted ? "bg-[#f7b500]/15 text-[#f7b500]" : "bg-[#3fdc7c]/15 text-[#3fdc7c]";
+          const patternStyle = hasStarted
+            ? {
+                backgroundImage:
+                  "radial-gradient(circle at 85% 0%, rgba(247, 181, 0, 0.18), transparent 55%), radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.06), transparent 50%)",
+              }
+            : {
+                backgroundImage:
+                  "radial-gradient(circle at 15% 0%, rgba(63, 220, 124, 0.2), transparent 55%), repeating-linear-gradient(135deg, rgba(63, 220, 124, 0.08) 0, rgba(63, 220, 124, 0.08) 1px, transparent 1px, transparent 10px)",
+              };
+          const accumPanelClass = "border-white/5 bg-[#0c111b]/70";
+          const progressPanelClass = "border-[#f7b500]/20 bg-[#0f141f]/70";
 
           return (
             <article
               key={bolao.id}
-              className="overflow-hidden rounded-xl border border-white/5 bg-megga-surface text-white shadow md:rounded-2xl md:shadow-lg"
+              className={`relative overflow-hidden rounded-xl border text-white shadow md:rounded-2xl md:shadow-lg ${cardClass}`}
             >
-              <div className="flex items-center justify-between bg-[#151824] px-4 py-2.5 text-[10px] uppercase tracking-[0.16em] md:px-5 md:py-3 md:text-[11px] md:tracking-[0.18em]">
-                <span className="inline-flex items-center gap-2 font-semibold text-[#3fdc7c]">
-                  <span
-                    className="h-2.5 w-2.5 rounded-full bg-[#3fdc7c] shadow-[0_0_8px_rgba(63,220,124,0.65)]"
-                    aria-hidden
-                  />
-                  {participationLabel}
-                </span>
-                <span className="rounded-full bg-white/10 px-3 py-1 text-white/75">{statusLabel}</span>
-              </div>
+              <div className="pointer-events-none absolute inset-0 z-0 opacity-70" style={patternStyle} aria-hidden />
+              <div className="relative z-10">
+                <div className={`flex items-center justify-between px-4 py-2.5 text-[10px] uppercase tracking-[0.16em] md:px-5 md:py-3 md:text-[11px] md:tracking-[0.18em] ${headerClass}`}>
+                  <span className="inline-flex flex-wrap items-center gap-2 font-semibold text-[#3fdc7c]">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full bg-[#3fdc7c] shadow-[0_0_8px_rgba(63,220,124,0.65)]"
+                      aria-hidden
+                    />
+                    {participationLabel}
+                    {hasPrize && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#ff4d4f]/35 bg-[#ff4d4f]/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#ff4d4f] animate-shake-strong btn-shake-xy">
+                        <svg viewBox="0 0 24 24" className="h-3 w-3" aria-hidden>
+                          <path
+                            d="M3 7h18v4H3zM5 11h14v9H5zM12 7v13M9 7c-1.1 0-2-.9-2-2s.9-2 2-2c2 0 3 2 3 4M15 7c1.1 0 2-.9 2-2s-.9-2-2-2c-2 0-3 2-3 4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Ganhou
+                      </span>
+                    )}
+                  </span>
+                  <span className={`rounded-full px-3 py-1 ${statusPillClass}`}>{statusLabel}</span>
+                </div>
 
-              <div className={bodyClass}>
+                <div className={bodyClass}>
                 <header className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0 self-center">
                     <h3 className="text-xl font-semibold leading-tight text-white">{bolao.name}</h3>
@@ -314,7 +387,7 @@ export function DashboardBoloes() {
 
                 {!hasStarted && (
                   <div className="space-y-3">
-                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-1 text-white shadow-inner">
+                    <div className={`rounded-2xl border px-4 py-1 text-white shadow-inner ${accumPanelClass}`}>
                       <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/50">
                         <span>Valor estimado até o momento</span>
                         <svg
@@ -361,17 +434,15 @@ export function DashboardBoloes() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white">
+                      <div className={`rounded-2xl border px-4 py-3 text-white ${accumPanelClass}`}>
                         <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Inicia em</span>
                         <span
-                          className={`mt-1 block text-base font-semibold ${
-                            startLabel === "HOJE" || startLabel === "AMANHÃ" ? "animate-pulse text-megga-yellow" : "text-white"
-                          }`}
+                          className={`mt-1 block text-base font-semibold text-megga-yellow ${startIsCountdown ? "animate-pulse" : ""}`}
                         >
                           {startLabel}
                         </span>
                       </div>
-                      <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-white">
+                      <div className={`rounded-2xl border px-4 py-3 text-white ${accumPanelClass}`}>
                         <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Prêmios previstos</span>
                         <span className="mt-1 block text-base font-semibold text-white">
                           {premiosPrevistos > 0 ? `${premiosPrevistos} prêmio${premiosPrevistos > 1 ? "s" : ""}` : "Em configuração"}
@@ -382,27 +453,39 @@ export function DashboardBoloes() {
                 )}
 
                 {hasStarted && (
-                  <div className="grid grid-cols-2 gap-3 text-xs uppercase tracking-wide text-white/65">
-                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
-                      <span className="block text-[10px] text-white/40">Próximo sorteio</span>
-                      <span className="mt-1 block text-base font-semibold text-white">{nextDrawLabel}</span>
+                  <div className="space-y-3">
+                    <div className={`rounded-2xl border px-4 py-1 text-white shadow-inner ${progressPanelClass}`}>
+                      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/50">
+                        <span>Valor da premiação</span>
+                      </div>
+                      <p className="mt-0.5 text-center text-3xl font-bold text-megga-yellow">
+                        {formatCurrency(totalEstimado)}
+                      </p>
                     </div>
-                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
-                      <span className="block text-[10px] text-white/40">Prêmios configurados</span>
-                      <span className="mt-1 block text-base font-semibold text-white">
-                        {premiosPrevistos > 0 ? `${premiosPrevistos} prêmio${premiosPrevistos > 1 ? "s" : ""}` : "Em configuração"}
-                      </span>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs uppercase tracking-wide text-white/65">
+                      <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
+                        <span className="block text-[10px] text-white/40">Próximo sorteio</span>
+                        <span className="mt-1 block text-base font-semibold text-white">{nextDrawLabel}</span>
+                      </div>
+                      <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
+                        <span className="block text-[10px] text-white/40">Prêmios configurados</span>
+                        <span className="mt-1 block text-base font-semibold text-white">
+                          {premiosPrevistos > 0 ? `${premiosPrevistos} prêmio${premiosPrevistos > 1 ? "s" : ""}` : "Em configuração"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                <div className={buttonWrapperClass}>
-                  <Link
-                    href={`/boloes/${bolao.id}`}
-                    className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow transition md:rounded-2xl md:shadow-lg ${buttonClass}`}
-                  >
-                    {hasStarted ? "Acompanhar agora" : "Aposte Agora!"}
-                  </Link>
+                  <div className={buttonWrapperClass}>
+                    <Link
+                      href={`/boloes/${bolao.id}`}
+                      className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold shadow transition md:rounded-2xl md:shadow-lg ${buttonClass}`}
+                    >
+                      {hasStarted ? "Acompanhar agora" : "Aposte Agora!"}
+                    </Link>
+                  </div>
                 </div>
               </div>
             </article>
