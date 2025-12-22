@@ -388,13 +388,52 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
               </div>
             </header>
             <nav className="grid grid-cols-3 gap-2 text-[11px] uppercase tracking-[0.24em] text-white/60">
-              <a href="#apostar" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
+              <a
+                href="#apostar"
+                className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10"
+                onClick={() =>
+                  setOpenSection({
+                    premiacoes: false,
+                    live: false,
+                    resultados: false,
+                    sorteios: false,
+                    apostadores: false,
+                    minhasApostas: false,
+                  })
+                }
+              >
                 Apostar
               </a>
-              <a href="#premiacoes" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
+              <a
+                href="#premiacoes"
+                className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10"
+                onClick={() =>
+                  setOpenSection({
+                    premiacoes: true,
+                    live: false,
+                    resultados: false,
+                    sorteios: false,
+                    apostadores: false,
+                    minhasApostas: false,
+                  })
+                }
+              >
                 Premiacoes
               </a>
-              <a href="#minhas-apostas" className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10">
+              <a
+                href="#minhas-apostas"
+                className="rounded-2xl border border-white/5 bg-[#12141d] px-3 py-2 text-center text-white/70 hover:bg-white/10"
+                onClick={() =>
+                  setOpenSection({
+                    premiacoes: false,
+                    live: false,
+                    resultados: false,
+                    sorteios: false,
+                    apostadores: false,
+                    minhasApostas: true,
+                  })
+                }
+              >
                 Apostas
               </a>
             </nav>
