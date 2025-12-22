@@ -240,7 +240,7 @@ export default function CreatebolãoClient() {
         <button
           type="button"
           onClick={handleSave}
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95 disabled:opacity-60"
           disabled={saving}
         >
           {saving ? "Salvando" : "Salvar"}

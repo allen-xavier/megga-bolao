@@ -123,7 +123,7 @@ export default function AdminUsuariosPage() {
             <button
               type="button"
               onClick={() => setQuery("")}
-              className="rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95"
+              className="rounded-2xl bg-megga-yellow px-4 py-3 text-sm font-semibold text-megga-navy transition hover:opacity-95"
             >
               Limpar filtros
             </button>
@@ -136,7 +136,7 @@ export default function AdminUsuariosPage() {
         {status !== "authenticated" && (
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
+            className="inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
           >
             Ir para login
           </Link>
@@ -146,7 +146,7 @@ export default function AdminUsuariosPage() {
             <p>Sessao expirada ou sem permissao. Faca login novamente.</p>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
+              className="inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
             >
               Ir para login
             </Link>

@@ -129,7 +129,7 @@ export function ProfileForm({ user }: { user: UserProfile }) {
       </div>
       <button
         type="submit"
-        className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-5 py-2 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center justify-center gap-2 rounded-full bg-megga-yellow px-5 py-2 text-sm font-semibold text-megga-navy transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
         disabled={loading}
       >
         {loading ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CheckCircleIcon className="h-5 w-5" />}

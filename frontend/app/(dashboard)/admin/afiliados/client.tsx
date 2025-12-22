@@ -133,7 +133,7 @@ export default function AdminAfiliadosClient() {
           <button
             type="button"
             onClick={save}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95"
+            className="flex-1 rounded-2xl bg-megga-yellow py-3 text-sm font-semibold text-megga-navy transition hover:opacity-95"
             disabled={saving}
           >
             {saving ? 'Salvando...' : 'Salvar configurações'}

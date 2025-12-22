@@ -67,7 +67,7 @@ export default function SuitPayConfigPage() {
         <p className="text-sm text-white/80">Faca login como administrador para acessar as configuracoes da SuitPay.</p>
         <Link
           href="/login"
-          className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
         >
           Ir para login
         </Link>
@@ -150,7 +150,7 @@ export default function SuitPayConfigPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal px-6 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-50"
+            className="rounded-2xl bg-megga-yellow px-6 py-3 text-sm font-semibold text-megga-navy transition hover:opacity-95 disabled:opacity-50"
           >
             {saving ? "Salvando..." : "Salvar configuracao"}
           </button>

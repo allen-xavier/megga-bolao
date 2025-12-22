@@ -66,7 +66,7 @@ export default function AfiliadosPage() {
         <p className="text-sm text-white/80">Faca login para ver seu programa de indicacoes.</p>
         <Link
           href="/login"
-          className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
         >
           Ir para login
         </Link>
@@ -102,7 +102,7 @@ export default function AfiliadosPage() {
             <button
               type="button"
               onClick={copy}
-              className="mt-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-95"
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
             >
               {copied ? "Copiado!" : "Copiar link"}
             </button>

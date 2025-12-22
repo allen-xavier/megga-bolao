@@ -93,7 +93,7 @@ export default function AdminPoliciesPage() {
             type="button"
             onClick={() => setCurrentKey(option.key)}
             className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-              option.key === currentKey ? 'bg-gradient-to-r from-megga-magenta to-megga-teal text-white' : 'bg-white/5 text-white/80'
+              option.key === currentKey ? 'bg-megga-yellow text-megga-navy' : 'bg-white/5 text-white/80'
             }`}
           >
             {option.label}

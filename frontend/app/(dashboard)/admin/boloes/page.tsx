@@ -747,12 +747,13 @@ function AdminBoloesPageContent() {
     const isClosedList = title === 'Encerrados';
     const isProgressList = title === 'Em andamento';
     const isFutureList = title === 'Futuros';
+    const countLabel = !isAdmin && isClosedList ? 'ÚLTIMOS 5 BOLÕES' : `${list.length} registros`;
 
     return (
       <section className="space-y-4 md:space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{title}</h2>
-          <span className="text-xs uppercase tracking-[0.3em] text-white/50">{list.length} registros</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-white/50">{countLabel}</span>
         </div>
         {list.length === 0 ? (
           <p className="rounded-2xl bg-[#111218] p-4 text-sm text-white/70 ring-1 ring-white/5">Nenhum bolao encontrado.</p>

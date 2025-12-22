@@ -72,7 +72,7 @@ export default function TicketsPage() {
               </button>
               <button
                 type="button"
-                className="flex-1 rounded-2xl bg-gradient-to-r from-megga-magenta to-megga-teal py-3 text-sm font-semibold text-white transition hover:opacity-95"
+                className="flex-1 rounded-2xl bg-megga-yellow py-3 text-sm font-semibold text-megga-navy transition hover:opacity-95"
               >
                 Baixar ticket
               </button>

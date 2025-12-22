@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSession } from "next-auth/react";
-import { notFound } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
+import { notFound, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { BetsList } from "@/components/bets-list";
 import { PlaceBetForm } from "@/components/place-bet-form";
@@ -30,7 +30,8 @@ function formatCurrency(value: number) {
 }
 
 export default function BolaoPage({ params }: { params: { id: string } }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const token = session?.user?.accessToken;
   const sessionUserId =
     ((session?.user as any)?.id ||
@@ -43,6 +44,8 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const [bolao, setBolao] = useState<Bolao | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState(false);
+  const [notFoundState, setNotFoundState] = useState(false);
   const [visibleDraws, setVisibleDraws] = useState(7);
   const [visibleBets, setVisibleBets] = useState(15);
   const drawsRef = useRef<HTMLDivElement | null>(null);
@@ -74,12 +77,25 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const fetchBolao = async () => {
     try {
       setError(null);
+      setUnauthorized(false);
+      setNotFoundState(false);
       const response = await api.get(`/boloes/${params.id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       setBolao(response.data);
     } catch (err: any) {
-      if (err?.response?.status === 404) {
+      const statusCode = err?.response?.status;
+      if (statusCode === 401 || statusCode === 403) {
+        setUnauthorized(true);
+        setError("Sessao expirada. Faca login novamente.");
+        setBolao(null);
+      } else if (statusCode === 404) {
+        if (status !== "authenticated") {
+          setUnauthorized(true);
+          setError("Sessao expirada. Faca login novamente.");
+        } else {
+          setNotFoundState(true);
+        }
         setBolao(null);
       } else {
         setError("Falha ao carregar bolao.");
@@ -90,9 +106,20 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   };
 
   useEffect(() => {
+    if (status === "loading") return;
+    if (status === "unauthenticated" || !token) {
+      router.replace("/login");
+      return;
+    }
     fetchBolao();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.id, token]);
+  }, [params.id, token, status, router]);
+
+  useEffect(() => {
+    if (!unauthorized) return;
+    signOut({ callbackUrl: "/login" });
+    router.replace("/login");
+  }, [unauthorized, router]);
 
   useEffect(() => {
     setVisibleDraws(7);
@@ -184,7 +211,24 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   }
 
   if (!bolao) {
-    notFound();
+    if (unauthorized) {
+      return (
+        <div className="rounded-3xl border border-white/5 bg-[#111218] p-3 text-white shadow-lg md:p-4">
+          Sessao expirada. Redirecionando para o login...
+        </div>
+      );
+    }
+    if (error) {
+      return (
+        <div className="rounded-3xl border border-white/5 bg-[#111218] p-3 text-white shadow-lg md:p-4">
+          <p className="text-sm text-red-100">{error}</p>
+        </div>
+      );
+    }
+    if (notFoundState) {
+      notFound();
+    }
+    return null;
   }
 
   const startsAt = new Date(bolao.startsAt);
@@ -287,7 +331,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         <div className="pointer-events-none absolute inset-0 z-0 opacity-70" style={statusConfig.patternStyle} aria-hidden />
         <div className="relative z-10">
           <div
-            className={`flex items-center justify-between gap-2 px-3 py-2.5 text-[11px] uppercase tracking-[0.24em] text-white/70 md:px-4 md:py-3 ${statusConfig.headerClass}`}
+            className={`flex items-start justify-between gap-2 px-3 py-2.5 text-[11px] uppercase tracking-[0.24em] text-white/70 md:px-4 md:py-3 ${statusConfig.headerClass}`}
           >
             <span className="inline-flex items-center gap-2 font-semibold">
               <span className={`h-2.5 w-2.5 rounded-full shadow ${statusConfig.dotClass}`} aria-hidden />{" "}

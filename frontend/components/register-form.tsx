@@ -190,7 +190,7 @@ export function RegisterForm() {
         </div>
         <button
           type="submit"
-          className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-megga-magenta to-megga-teal px-4 py-2 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center rounded-full bg-megga-yellow px-4 py-2 text-sm font-semibold text-megga-navy transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={loading}
         >
           {loading ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : 'Criar conta'}

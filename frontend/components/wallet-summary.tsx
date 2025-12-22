@@ -61,9 +61,6 @@ export function WalletSummary() {
     <section className="rounded-3xl border border-white/5 bg-[#0f1117] p-6 text-white shadow-lg">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">Minha carteira</h2>
-        <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-white/70">
-          SuitPay conectado
-        </span>
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-[#151824] px-5 py-4 shadow">
