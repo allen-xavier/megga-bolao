@@ -127,14 +127,16 @@ export function ProfileForm({ user }: { user: UserProfile }) {
           />
         </label>
       </div>
-      <button
-        type="submit"
-        className="inline-flex items-center justify-center gap-2 rounded-full bg-megga-yellow px-5 py-2 text-sm font-semibold text-megga-navy transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={loading}
-      >
-        {loading ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CheckCircleIcon className="h-5 w-5" />}
-        Salvar alterações
-      </button>
+      <div className="flex justify-center">
+        <button
+          type="submit"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-megga-yellow px-5 py-2 text-sm font-semibold text-megga-navy transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={loading}
+        >
+          {loading ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <CheckCircleIcon className="h-5 w-5" />}
+          Salvar alteracoes
+        </button>
+      </div>
     </form>
   );
 }
