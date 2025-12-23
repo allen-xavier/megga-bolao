@@ -41,6 +41,9 @@ export class PaymentsController {
     @CurrentUser() user: UserProfile,
     @Query('status') status?: string,
     @Query('userId') userId?: string,
+    @Query('search') search?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
   ) {
     if (user.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Apenas administradores podem visualizar saques');
@@ -50,9 +53,22 @@ export class PaymentsController {
       throw new BadRequestException('Status invalido');
     }
     const filterUserId = userId?.trim();
+    const fromDate = from ? new Date(from) : undefined;
+    const toDate = to ? new Date(to) : undefined;
+    const validFrom = fromDate && !Number.isNaN(fromDate.getTime()) ? fromDate : undefined;
+    const validTo = toDate && !Number.isNaN(toDate.getTime()) ? toDate : undefined;
+    if (validFrom) {
+      validFrom.setHours(0, 0, 0, 0);
+    }
+    if (validTo) {
+      validTo.setHours(23, 59, 59, 999);
+    }
     return this.paymentsService.listWithdraws(
       normalizedStatus as PaymentStatus | undefined,
       filterUserId && filterUserId.length > 0 ? filterUserId : undefined,
+      search,
+      validFrom,
+      validTo,
     );
   }
 

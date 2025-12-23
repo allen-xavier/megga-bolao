@@ -15,7 +15,7 @@ const quickLinks = [
   },
   {
     title: 'Aprovar Saques',
-    href: '/admin/suitpay',
+    href: '/admin/saques',
     highlight: 'SuitPay',
     description: 'Libere pagamentos acima do limite automático e acompanhe webhooks.',
   },

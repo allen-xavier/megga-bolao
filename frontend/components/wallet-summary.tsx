@@ -58,6 +58,7 @@ export function WalletSummary() {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawMessage, setWithdrawMessage] = useState<string | null>(null);
   const [withdrawUseTotal, setWithdrawUseTotal] = useState(false);
+  const [withdrawSuccess, setWithdrawSuccess] = useState(false);
 
   const userPixKey = (session?.user as any)?.pixKey ?? "";
   const userCpf = (session?.user as any)?.cpf ?? "";
@@ -141,6 +142,7 @@ export function WalletSummary() {
   const openWithdraw = () => {
     setWithdrawMessage(null);
     setWithdrawUseTotal(false);
+    setWithdrawSuccess(false);
     setWithdrawAmount(canWithdraw ? String(MIN_WITHDRAW) : "");
     setWithdrawOpen(true);
   };
@@ -148,6 +150,7 @@ export function WalletSummary() {
     setWithdrawOpen(false);
     setWithdrawMessage(null);
     setWithdrawUseTotal(false);
+    setWithdrawSuccess(false);
   };
   const confirmWithdraw = async () => {
     if (confirmDisabled || !token) return;
@@ -159,7 +162,7 @@ export function WalletSummary() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       await mutate();
-      setWithdrawMessage("Solicitacao enviada. Valor em processamento.");
+      setWithdrawSuccess(true);
     } catch (err: any) {
       setWithdrawMessage(err?.response?.data?.message ?? "Falha ao solicitar saque.");
     }
@@ -189,7 +192,7 @@ export function WalletSummary() {
             <span className="text-[11px] uppercase tracking-[0.3em] text-white/60">Saldo disponivel</span>
             <p className="mt-3 text-3xl font-semibold text-[#f7b500]">R$ {balance}</p>
             {lockedValue > 0 && (
-              <p className="mt-2 text-xs text-red-400">Bloqueado: R$ {locked}</p>
+              <p className="mt-2 text-xs text-red-400">Bloqueado por saque: R$ {locked}</p>
             )}
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 md:px-5 md:py-4">
@@ -320,90 +323,106 @@ export function WalletSummary() {
       {withdrawOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3 py-6">
           <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0f1117] p-4 text-white shadow-xl">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold">Solicitar saque</h3>
-              <button
-                type="button"
-                onClick={closeWithdraw}
-                className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/70"
-              >
-                Fechar
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-white/60">Saldo disponivel para saque: R$ {balance}.</p>
-            <p className="mt-1 text-xs text-white/60">Saque minimo: R$ {minWithdrawLabel}.</p>
+            {withdrawSuccess ? (
+              <div className="space-y-4 text-center">
+                <h3 className="text-lg font-semibold">Pedido confirmado</h3>
+                <p className="text-sm text-white/70">Pedido confirmado com sucesso.</p>
+                <button
+                  type="button"
+                  onClick={closeWithdraw}
+                  className="w-full rounded-2xl bg-megga-yellow px-4 py-2 text-sm font-semibold text-megga-navy transition hover:opacity-95"
+                >
+                  Ok
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-semibold">Solicitar saque</h3>
+                  <button
+                    type="button"
+                    onClick={closeWithdraw}
+                    className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/70"
+                  >
+                    Fechar
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-white/60">Saldo disponivel para saque: R$ {balance}.</p>
+                <p className="mt-1 text-xs text-white/60">Saque minimo: R$ {minWithdrawLabel}.</p>
 
-            <div className="mt-4 flex items-center justify-between gap-3 text-sm text-white/70">
-              <span>Valor do saque</span>
-              <label className="flex items-center gap-2 text-xs text-white/60">
+                <div className="mt-4 flex items-center justify-between gap-3 text-sm text-white/70">
+                  <span>Valor do saque</span>
+                  <label className="flex items-center gap-2 text-xs text-white/60">
+                    <input
+                      type="checkbox"
+                      checked={withdrawUseTotal}
+                      onChange={(event) => {
+                        const checked = event.target.checked;
+                        setWithdrawUseTotal(checked);
+                        if (checked) {
+                          setWithdrawAmount(balanceValue.toFixed(2));
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-white/20 bg-white/10 text-megga-yellow focus:ring-megga-yellow"
+                    />
+                    Saldo total
+                  </label>
+                </div>
                 <input
-                  type="checkbox"
-                  checked={withdrawUseTotal}
+                  type="number"
+                  min={MIN_WITHDRAW}
+                  max={balanceValue}
+                  step="0.01"
+                  value={withdrawAmount}
                   onChange={(event) => {
-                    const checked = event.target.checked;
-                    setWithdrawUseTotal(checked);
-                    if (checked) {
-                      setWithdrawAmount(balanceValue.toFixed(2));
-                    }
+                    setWithdrawAmount(event.target.value);
+                    if (withdrawUseTotal) setWithdrawUseTotal(false);
                   }}
-                  className="h-4 w-4 rounded border-white/20 bg-white/10 text-megga-yellow focus:ring-megga-yellow"
+                  disabled={withdrawUseTotal}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                  placeholder={`Minimo R$ ${minWithdrawLabel}`}
                 />
-                Saldo total
-              </label>
-            </div>
-            <input
-              type="number"
-              min={MIN_WITHDRAW}
-              max={balanceValue}
-              step="0.01"
-              value={withdrawAmount}
-              onChange={(event) => {
-                setWithdrawAmount(event.target.value);
-                if (withdrawUseTotal) setWithdrawUseTotal(false);
-              }}
-              disabled={withdrawUseTotal}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-              placeholder={`Minimo R$ ${minWithdrawLabel}`}
-            />
 
-            <div className="mt-3 rounded-2xl border border-white/10 bg-[#151824] p-3 text-sm">
-              <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Chave PIX cadastrada</p>
-              <p className="mt-1 font-semibold text-white">{userPixKey || "Nao cadastrada"}</p>
-              <p className="mt-2 text-xs text-white/60">
-                O PIX deve pertencer ao CPF {formattedCpf || "cadastrado"}.
-              </p>
-            </div>
+                <div className="mt-3 rounded-2xl border border-white/10 bg-[#151824] p-3 text-sm">
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Chave PIX cadastrada</p>
+                  <p className="mt-1 font-semibold text-white">{userPixKey || "Nao cadastrada"}</p>
+                  <p className="mt-2 text-xs text-white/60">
+                    O PIX deve pertencer ao CPF {formattedCpf || "cadastrado"}.
+                  </p>
+                </div>
 
-            {!pixKeyAvailable && (
-              <p className="mt-2 text-xs text-[#f7b500]">Cadastre sua chave PIX no perfil para solicitar o saque.</p>
+                {!pixKeyAvailable && (
+                  <p className="mt-2 text-xs text-[#f7b500]">Cadastre sua chave PIX no perfil para solicitar o saque.</p>
+                )}
+                {!withdrawValid && withdrawAmount && (
+                  <p className="mt-2 text-xs text-white/60">
+                    Informe um valor entre R$ {minWithdrawLabel} e R$ {balance}.
+                  </p>
+                )}
+
+                {withdrawMessage && (
+                  <p className="mt-3 rounded-2xl bg-white/10 px-3 py-2 text-xs text-megga-lime">{withdrawMessage}</p>
+                )}
+
+                <div className="mt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={closeWithdraw}
+                    className="flex-1 rounded-2xl border border-white/10 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmWithdraw}
+                    disabled={confirmDisabled}
+                    className="flex-1 rounded-2xl bg-megga-yellow px-4 py-2 text-sm font-semibold text-megga-navy transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Confirmar saque
+                  </button>
+                </div>
+              </>
             )}
-            {!withdrawValid && withdrawAmount && (
-              <p className="mt-2 text-xs text-white/60">
-                Informe um valor entre R$ {minWithdrawLabel} e R$ {balance}.
-              </p>
-            )}
-
-            {withdrawMessage && (
-              <p className="mt-3 rounded-2xl bg-white/10 px-3 py-2 text-xs text-megga-lime">{withdrawMessage}</p>
-            )}
-
-            <div className="mt-4 flex gap-3">
-              <button
-                type="button"
-                onClick={closeWithdraw}
-                className="flex-1 rounded-2xl border border-white/10 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={confirmWithdraw}
-                disabled={confirmDisabled}
-                className="flex-1 rounded-2xl bg-megga-yellow px-4 py-2 text-sm font-semibold text-megga-navy transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Confirmar saque
-              </button>
-            </div>
           </div>
         </div>
       )}

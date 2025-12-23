@@ -59,7 +59,7 @@ export const sections: DrawerSection[] = [
       },
       {
         label: "Aprovar saques",
-        href: "/admin/suitpay",
+        href: "/admin/saques",
         description: "Avalie e libere solicitações.",
         adminOnly: true,
       },

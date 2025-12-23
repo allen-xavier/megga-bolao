@@ -202,7 +202,7 @@ export default function AdminUsuariosPage() {
                     Editar perfil
                   </Link>
                   <Link
-                    href={`/admin/suitpay?userId=${user.id}`}
+                    href={`/admin/saques?userId=${user.id}`}
                     className="rounded-2xl bg-[#1ea7a4] py-3 text-center font-semibold text-[#0f1117] transition hover:brightness-110"
                   >
                     Liberar saque

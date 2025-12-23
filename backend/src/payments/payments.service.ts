@@ -93,13 +93,40 @@ export class PaymentsService {
     });
   }
 
-  async listWithdraws(status?: PaymentStatus, userId?: string) {
+  async listWithdraws(
+    status?: PaymentStatus,
+    userId?: string,
+    search?: string,
+    from?: Date,
+    to?: Date,
+  ) {
     const where: Prisma.PaymentWhereInput = { type: PaymentType.WITHDRAW };
     if (status) {
       where.status = status;
     }
     if (userId) {
       where.userId = userId;
+    }
+    if (from || to) {
+      where.createdAt = {};
+      if (from) {
+        where.createdAt.gte = from;
+      }
+      if (to) {
+        where.createdAt.lte = to;
+      }
+    }
+    const trimmed = search?.trim();
+    if (trimmed) {
+      const digits = trimmed.replace(/\D/g, "");
+      const or: Prisma.PaymentWhereInput[] = [
+        { user: { fullName: { contains: trimmed, mode: "insensitive" } } },
+        { user: { pixKey: { contains: trimmed, mode: "insensitive" } } },
+      ];
+      if (digits) {
+        or.push({ user: { cpf: { contains: digits } } });
+      }
+      where.OR = or;
     }
     return this.prisma.payment.findMany({
       where,
