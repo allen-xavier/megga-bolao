@@ -39,6 +39,7 @@ type Bolao = {
   minimumQuotas: number;
   ticketPrice: number | string;
   closedAt?: string | null;
+  transparency?: { id: string } | null;
   prizes: Prize[];
   _count?: BetCount;
   isParticipant?: boolean;
@@ -322,6 +323,7 @@ function AdminBoloesPageContent() {
   const renderClosedCard = (bolao: Bolao) => {
     const statusLabel = 'Encerrado';
     const hasPrize = Boolean(bolao.hasPrize);
+    const hasTransparency = Boolean(bolao.transparency);
     const inferredParticipant =
       bolao.isParticipant ||
       bolao.myBets?.some?.((b) => b.userId === userId) ||
@@ -404,13 +406,24 @@ function AdminBoloesPageContent() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link
                 href={`/boloes/${bolao.id}`}
                 className="flex-1 rounded-2xl bg-[#ff4d4f] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
               >
                 Visualizar bolao
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!hasTransparency) return;
+                  window.open(`/api/boloes/${bolao.id}/transparency`, "_blank", "noopener");
+                }}
+                disabled={!hasTransparency}
+                className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Baixar transparencia
+              </button>
               {isAdmin && (
                 <Link
                   href={`/admin/boloes/criar?id=${bolao.id}`}
@@ -578,6 +591,7 @@ function AdminBoloesPageContent() {
   const renderProgressCard = (bolao: Bolao) => {
     const statusLabel = 'Em andamento';
     const hasPrize = Boolean(bolao.hasPrize);
+    const hasTransparency = Boolean(bolao.transparency);
     const inferredParticipant =
       bolao.isParticipant ||
       bolao.myBets?.some?.((b) => b.userId === userId) ||
@@ -659,13 +673,24 @@ function AdminBoloesPageContent() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link
                 href={`/boloes/${bolao.id}`}
                 className="flex-1 rounded-xl bg-megga-yellow px-4 py-3 text-center text-sm font-semibold text-megga-navy transition hover:opacity-90 md:rounded-2xl"
               >
                 Acompanhar agora
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!hasTransparency) return;
+                  window.open(`/api/boloes/${bolao.id}/transparency`, "_blank", "noopener");
+                }}
+                disabled={!hasTransparency}
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:rounded-2xl"
+              >
+                Baixar transparencia
+              </button>
               {isAdmin && (
                 <Link
                   href={`/admin/boloes/criar?id=${bolao.id}`}
@@ -681,67 +706,87 @@ function AdminBoloesPageContent() {
     );
   };
 
-  const renderDefaultCard = (bolao: Bolao) => (
-    <article key={bolao.id} className="rounded-3xl bg-[#111218] p-5 text-white shadow-lg ring-1 ring-white/5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-white/40">#{bolao.id}</p>
-          <h3 className="mt-1 text-lg font-semibold">{bolao.name}</h3>
-          <p className="text-xs text-white/60">
-            Inicio: {formatSaoPaulo(bolao.startsAt)} - Cota: {formatCurrency(parseAmount(bolao.ticketPrice))} - Minimo: {bolao.minimumQuotas} cotas
-          </p>
-          {(bolao.isParticipant ||
-            bolao.myBets?.some?.((b) => b.userId === userId) ||
-            bolao.bets?.some?.((b) => b.userId === userId)) && (
-            <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#1ea7a4]/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#1ea7a4]">
-              Participando
-            </span>
+  const renderDefaultCard = (bolao: Bolao) => {
+    const hasTransparency = Boolean(bolao.transparency);
+    const startsAt = new Date(bolao.startsAt);
+    const hasStarted = !Number.isNaN(startsAt.getTime()) && startsAt.getTime() <= Date.now();
+    const canShowTransparency = hasStarted || Boolean(bolao.closedAt);
+
+    return (
+      <article key={bolao.id} className="rounded-3xl bg-[#111218] p-5 text-white shadow-lg ring-1 ring-white/5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/40">#{bolao.id}</p>
+            <h3 className="mt-1 text-lg font-semibold">{bolao.name}</h3>
+            <p className="text-xs text-white/60">
+              Inicio: {formatSaoPaulo(bolao.startsAt)} - Cota: {formatCurrency(parseAmount(bolao.ticketPrice))} - Minimo: {bolao.minimumQuotas} cotas
+            </p>
+            {(bolao.isParticipant ||
+              bolao.myBets?.some?.((b) => b.userId === userId) ||
+              bolao.bets?.some?.((b) => b.userId === userId)) && (
+              <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#1ea7a4]/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#1ea7a4]">
+                Participando
+              </span>
+            )}
+          </div>
+          <StatusBadge
+            label={
+              bolao.closedAt
+                ? 'Encerrado'
+                : new Date(bolao.startsAt).getTime() > Date.now()
+                  ? 'Futuro'
+                  : 'Em andamento'
+            }
+          />
+        </div>
+        <div className="mt-4 grid gap-3 text-sm text-white/70 md:grid-cols-3">
+          <div className="rounded-2xl bg-white/5 px-4 py-3">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premiacao garantida</p>
+            <p className="mt-2 text-base font-semibold text-[#f7b500]">
+              {formatCurrency(parseAmount(bolao.guaranteedPrize))}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white/5 px-4 py-3">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Comissao</p>
+            <p className="mt-2 text-base font-semibold text-white">{Number(bolao.commissionPercent ?? 0).toFixed(2)}%</p>
+          </div>
+          <div className="rounded-2xl bg-white/5 px-4 py-3">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premios configurados</p>
+            <p className="mt-2 text-base font-semibold text-white">{bolao.prizes?.length ?? 0} premiacoes</p>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href={`/boloes/${bolao.id}`}
+            className="flex-1 rounded-2xl bg-[#f7b500] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
+          >
+            Visualizar bolao
+          </Link>
+          {canShowTransparency && (
+            <button
+              type="button"
+              onClick={() => {
+                if (!hasTransparency) return;
+                window.open(`/api/boloes/${bolao.id}/transparency`, "_blank", "noopener");
+              }}
+              disabled={!hasTransparency}
+              className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Baixar transparencia
+            </button>
+          )}
+          {isAdmin && (
+            <Link
+              href={`/admin/boloes/criar?id=${bolao.id}`}
+              className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
+            >
+              Editar / pausar
+            </Link>
           )}
         </div>
-        <StatusBadge
-          label={
-            bolao.closedAt
-              ? 'Encerrado'
-              : new Date(bolao.startsAt).getTime() > Date.now()
-                ? 'Futuro'
-                : 'Em andamento'
-          }
-        />
-      </div>
-      <div className="mt-4 grid gap-3 text-sm text-white/70 md:grid-cols-3">
-        <div className="rounded-2xl bg-white/5 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premiacao garantida</p>
-          <p className="mt-2 text-base font-semibold text-[#f7b500]">
-            {formatCurrency(parseAmount(bolao.guaranteedPrize))}
-          </p>
-        </div>
-        <div className="rounded-2xl bg-white/5 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Comissao</p>
-          <p className="mt-2 text-base font-semibold text-white">{Number(bolao.commissionPercent ?? 0).toFixed(2)}%</p>
-        </div>
-        <div className="rounded-2xl bg-white/5 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premios configurados</p>
-          <p className="mt-2 text-base font-semibold text-white">{bolao.prizes?.length ?? 0} premiacoes</p>
-        </div>
-      </div>
-      <div className="mt-4 flex gap-3">
-        <Link
-          href={`/boloes/${bolao.id}`}
-          className="flex-1 rounded-2xl bg-[#f7b500] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
-        >
-          Visualizar bolao
-        </Link>
-        {isAdmin && (
-          <Link
-            href={`/admin/boloes/criar?id=${bolao.id}`}
-            className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
-          >
-            Editar / pausar
-          </Link>
-        )}
-      </div>
-    </article>
-  );
+      </article>
+    );
+  };
 
   const renderList = (title: string, list: Bolao[]) => {
     const isClosedList = title === 'Encerrados';

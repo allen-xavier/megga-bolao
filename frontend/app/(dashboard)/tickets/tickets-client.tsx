@@ -40,6 +40,37 @@ const statusStyles: Record<string, string> = {
   "Nao premiado": "bg-red-500/10 text-red-200 border-red-500/30",
 };
 
+const statusCardStyles: Record<string, { cardClass: string; patternStyle: { backgroundImage: string } }> = {
+  "Em andamento": {
+    cardClass: "border-[#f7b500]/20 bg-gradient-to-br from-[#151824] via-[#121726] to-[#0e1118]",
+    patternStyle: {
+      backgroundImage:
+        "radial-gradient(circle at 85% 0%, rgba(247, 181, 0, 0.18), transparent 55%), radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.06), transparent 50%)",
+    },
+  },
+  Aguardando: {
+    cardClass: "border-[#3fdc7c]/25 bg-gradient-to-br from-[#0f2219] via-[#111622] to-[#0d1017]",
+    patternStyle: {
+      backgroundImage:
+        "radial-gradient(circle at 15% 0%, rgba(63, 220, 124, 0.2), transparent 55%), repeating-linear-gradient(135deg, rgba(63, 220, 124, 0.08) 0, rgba(63, 220, 124, 0.08) 1px, transparent 1px, transparent 10px)",
+    },
+  },
+  "Nao premiado": {
+    cardClass: "border-[#ff4d4f]/25 bg-gradient-to-br from-[#1c0b10] via-[#141520] to-[#0e1118]",
+    patternStyle: {
+      backgroundImage:
+        "radial-gradient(circle at 85% 0%, rgba(255, 77, 79, 0.2), transparent 55%), radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.05), transparent 50%)",
+    },
+  },
+  Premiado: {
+    cardClass: "border-[#3fdc7c]/30 bg-gradient-to-br from-[#0f2418] via-[#111a22] to-[#0d1017]",
+    patternStyle: {
+      backgroundImage:
+        "radial-gradient(circle at 20% 0%, rgba(63, 220, 124, 0.25), transparent 55%), radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.06), transparent 50%)",
+    },
+  },
+};
+
 const formatCurrency = (value: number) =>
   value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -65,7 +96,7 @@ function getTicketStatus(ticket: Ticket) {
 function StatusPill({ status }: { status: string }) {
   const colors = statusStyles[status] ?? "bg-white/10 text-white/70 border-white/15";
   return (
-    <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] ${colors}`}>
+    <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] shrink-0 ${colors}`}>
       <span className="h-2 w-2 rounded-full bg-current" aria-hidden />
       {status}
     </span>
@@ -96,6 +127,7 @@ export default function TicketsClient() {
   );
 
   const tickets = data ?? [];
+  const now = Date.now();
   const totalPrize = useMemo(
     () => tickets.reduce((acc, ticket) => acc + ticket.prizeWinners.reduce((sum, win) => sum + Number(win.amount ?? 0), 0), 0),
     [tickets],
@@ -213,7 +245,12 @@ export default function TicketsClient() {
             const statusLabel = getTicketStatus(ticket);
             const prizeAmount = ticket.prizeWinners.reduce((acc, winner) => acc + Number(winner.amount ?? 0), 0);
             const numbers = formatNumbers(ticket.numbers ?? []);
+            const startsAt = new Date(ticket.bolao.startsAt);
+            const hasStarted = !Number.isNaN(startsAt.getTime()) && startsAt.getTime() <= now;
+            const isClosed = Boolean(ticket.bolao?.closedAt);
+            const canShowTransparency = hasStarted || isClosed;
             const hasTransparency = Boolean(ticket.bolao?.transparency);
+            const cardVisual = statusCardStyles[statusLabel] ?? statusCardStyles.Aguardando;
             const prizeText = prizeAmount > 0
               ? `R$ ${formatCurrency(prizeAmount)}`
               : statusLabel === "Nao premiado"
@@ -221,66 +258,74 @@ export default function TicketsClient() {
                 : "Aguardando";
 
             return (
-              <article key={ticket.id} className="rounded-3xl bg-megga-navy/80 px-2 py-4 shadow-lg ring-1 ring-white/5 md:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Ticket #{ticket.id.slice(0, 8)}</p>
-                    <h2 className="mt-1 text-lg font-semibold text-white">{ticket.bolao?.name ?? "Bolao"}</h2>
-                    <p className="mt-1 text-xs text-white/60">Criado em: {formatDate(ticket.createdAt)}</p>
+              <article
+                key={ticket.id}
+                className={`relative overflow-hidden rounded-3xl border text-white shadow-lg ring-1 ring-white/5 ${cardVisual.cardClass}`}
+              >
+                <div className="pointer-events-none absolute inset-0 z-0 opacity-70" style={cardVisual.patternStyle} aria-hidden />
+                <div className="relative z-10 px-2 py-4 md:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Ticket #{ticket.id.slice(0, 8)}</p>
+                      <h2 className="mt-1 text-lg font-semibold text-white">{ticket.bolao?.name ?? "Bolao"}</h2>
+                      <p className="mt-1 text-xs text-white/60">Criado em: {formatDate(ticket.createdAt)}</p>
+                    </div>
+                    <StatusPill status={statusLabel} />
                   </div>
-                  <StatusPill status={statusLabel} />
-                </div>
 
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">
-                    <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Numeros apostados</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {numbers.map((num) => (
-                        <span
-                          key={`${ticket.id}-${num}`}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#1a1f2c] text-xs font-semibold text-[#f7b500]"
-                        >
-                          {num}
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <div className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">
+                      <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Numeros apostados</p>
+                      <div className="mt-3 grid grid-cols-10 gap-1">
+                        {numbers.map((num) => (
+                          <span
+                            key={`${ticket.id}-${num}`}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#1a1f2c] text-[10px] font-semibold text-[#f7b500] sm:h-8 sm:w-8 sm:text-xs"
+                          >
+                            {num}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2 rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">
+                      <div className="flex items-center justify-between">
+                        <span className="uppercase tracking-[0.3em] text-white/40">Premiacao</span>
+                        <span className={`text-base font-semibold ${prizeAmount > 0 ? "text-megga-lime" : "text-megga-yellow"}`}>
+                          {prizeText}
                         </span>
-                      ))}
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-white/60">
+                        <span>Cota</span>
+                        <span>R$ {formatCurrency(Number(ticket.bolao?.ticketPrice ?? 0))}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-white/60">
+                        <span>Tipo</span>
+                        <span>{ticket.isSurprise ? "Surpresinha" : "Manual"}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2 rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">
-                    <div className="flex items-center justify-between">
-                      <span className="uppercase tracking-[0.3em] text-white/40">Premiacao</span>
-                      <span className={`text-base font-semibold ${prizeAmount > 0 ? "text-megga-lime" : "text-megga-yellow"}`}>
-                        {prizeText}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-white/60">
-                      <span>Cota</span>
-                      <span>R$ {formatCurrency(Number(ticket.bolao?.ticketPrice ?? 0))}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-white/60">
-                      <span>Tipo</span>
-                      <span>{ticket.isSurprise ? "Surpresinha" : "Manual"}</span>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Link
-                    href={`/boloes/${ticket.bolao?.id}`}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-megga-yellow hover:text-white"
-                  >
-                    Ver bolao
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!hasTransparency) return;
-                      window.open(`/api/boloes/${ticket.bolao?.id}/transparency`, "_blank", "noopener");
-                    }}
-                    disabled={!hasTransparency}
-                    className="rounded-2xl border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Baixar transparencia
-                  </button>
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+                    <Link
+                      href={`/boloes/${ticket.bolao?.id}`}
+                      className={`inline-flex w-full items-center justify-center rounded-2xl bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95 sm:w-auto ${canShowTransparency ? "" : "col-span-2"}`}
+                    >
+                      Ver bolao
+                    </Link>
+                    {canShowTransparency && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!hasTransparency) return;
+                          window.open(`/api/boloes/${ticket.bolao?.id}/transparency`, "_blank", "noopener");
+                        }}
+                        disabled={!hasTransparency}
+                        className="w-full rounded-2xl border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                      >
+                        Baixar transparencia
+                      </button>
+                    )}
+                  </div>
                 </div>
               </article>
             );

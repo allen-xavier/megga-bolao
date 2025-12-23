@@ -287,6 +287,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
   const senaPotGlobal = Number(bolao.senaPotGlobal ?? 0);
   const ticketPrice = Number(bolao.ticketPrice ?? 0);
   const hasTransparency = Boolean(bolao.transparency);
+  const canShowTransparency = isClosed || hasStarted;
   const draws = bolao.draws ?? [];
   const drawsAsc = [...draws].sort((a: any, b: any) => new Date(a.drawnAt).getTime() - new Date(b.drawnAt).getTime());
   const drawsList = [...drawsAsc].reverse();
@@ -732,7 +733,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
           onClick={() => toggle("apostadores")}
         >
           <h2 className="text-lg font-semibold text-white">Lista de apostadores</h2>
-          <TransparencyDownload bolaoId={bolao.id} hasFile={hasTransparency} />
+          {canShowTransparency && <TransparencyDownload bolaoId={bolao.id} hasFile={hasTransparency} />}
           <span className="text-xl">{openSection.apostadores ? "▼" : "▶"}</span>
         </header>
         {openSection.apostadores && (

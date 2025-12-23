@@ -19,6 +19,7 @@ interface Bolao {
   name: string;
   startsAt: string;
   closedAt?: string | null;
+  transparency?: { id: string } | null;
   ticketPrice: string | number;
   minimumQuotas: number;
   prizeCount?: number;
@@ -318,7 +319,9 @@ export function DashboardBoloes() {
           const bodyClass = hasStarted
             ? "space-y-2 px-4 pb-4 pt-1.5 md:space-y-3 md:px-5 md:pb-6 md:pt-4"
             : "space-y-2 px-4 pb-2 pt-1.5 md:space-y-3 md:px-5 md:pb-3 md:pt-4";
-          const buttonWrapperClass = hasStarted ? "pb-1" : "pb-0";
+          const canShowTransparency = hasStarted || Boolean(bolao.closedAt);
+          const hasTransparency = Boolean(bolao.transparency);
+          const buttonWrapperClass = canShowTransparency ? "space-y-2 pb-1" : "pb-0";
           const cardClass = hasStarted
             ? "border-[#f7b500]/20 bg-gradient-to-br from-[#151824] via-[#121726] to-[#0e1118]"
             : "border-[#3fdc7c]/25 bg-gradient-to-br from-[#0f2219] via-[#111622] to-[#0d1017]";
@@ -485,6 +488,19 @@ export function DashboardBoloes() {
                     >
                       {hasStarted ? "Acompanhar agora" : "Aposte Agora!"}
                     </Link>
+                    {canShowTransparency && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!hasTransparency) return;
+                          window.open(`/api/boloes/${bolao.id}/transparency`, "_blank", "noopener");
+                        }}
+                        disabled={!hasTransparency}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:rounded-2xl"
+                      >
+                        Baixar transparencia
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

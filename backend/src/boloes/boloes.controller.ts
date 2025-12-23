@@ -68,6 +68,16 @@ export class BoloesController {
 
   @Get(":id/transparency")
   async downloadTransparency(@Param("id") id: string, @Res() res: Response) {
+    const bolao = await this.boloesService.getSchedule(id);
+    if (!bolao) {
+      throw new NotFoundException("Bolao nao encontrado");
+    }
+    const startsAt = new Date(bolao.startsAt);
+    const hasStarted = !Number.isNaN(startsAt.getTime()) && startsAt.getTime() <= Date.now();
+    const isClosed = Boolean(bolao.closedAt);
+    if (!hasStarted && !isClosed) {
+      throw new NotFoundException("Arquivo de transparencia so fica disponivel quando o bolao inicia");
+    }
     const file = await this.transparencyService.getFileForBolao(id);
     if (!file) {
       throw new NotFoundException("Arquivo de transparencia nao disponivel");

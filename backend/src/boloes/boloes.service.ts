@@ -112,6 +112,13 @@ export class BoloesService {
     };
   }
 
+  async getSchedule(id: string) {
+    return this.prisma.bolao.findUnique({
+      where: { id },
+      select: { startsAt: true, closedAt: true },
+    });
+  }
+
   async create(dto: CreateBolaoDto, adminId: string) {
     this.ensurePrizeDistribution(dto);
     const bolao = await this.prisma.bolao.create({

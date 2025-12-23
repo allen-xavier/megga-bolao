@@ -174,16 +174,24 @@ export function WalletSummary() {
       <section className="rounded-3xl border border-white/5 bg-[#0f1117] px-3 py-4 text-white shadow-lg md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Minha carteira</h2>
-          <button
-            type="button"
-            onClick={openWithdraw}
-            disabled={!canWithdraw}
-            className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
-              canWithdraw ? "bg-megga-yellow text-megga-navy hover:opacity-95" : "bg-white/10 text-white/40"
-            }`}
-          >
-            Solicitar saque
-          </button>
+          <div className="flex flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={openWithdraw}
+              disabled={!canWithdraw}
+              className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                canWithdraw ? "bg-megga-yellow text-megga-navy hover:opacity-95" : "bg-white/10 text-white/40"
+              }`}
+            >
+              Solicitar saque
+            </button>
+            <button
+              type="button"
+              className="rounded-full bg-[#3fdc7c] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#0f1117] transition hover:opacity-95"
+            >
+              Depositar
+            </button>
+          </div>
         </div>
         {!canWithdraw && (
           <p className="mt-2 text-xs text-white/60">Saque minimo: R$ {minWithdrawLabel}.</p>
