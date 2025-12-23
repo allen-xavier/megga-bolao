@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import 'react-quill/dist/quill.snow.css';
 
@@ -19,11 +20,13 @@ const fetcher = ([url, token]: [string, string]) =>
   api.get(url, { headers: { Authorization: `Bearer ${token}` } }).then((res) => res.data);
 
 export default function AdminPoliciesPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
+  const role = session?.user?.role;
+  const isAdmin = role === 'ADMIN' || role === 'SUPERVISOR';
 
   const [currentKey, setCurrentKey] = useState('termos');
-  const { data, mutate, isLoading } = useSWR(token ? [`/admin/policies/${currentKey}`, token] : null, fetcher, {
+  const { data, mutate, isLoading } = useSWR(token && isAdmin ? [`/admin/policies/${currentKey}`, token] : null, fetcher, {
     revalidateOnFocus: false,
   });
 
@@ -75,6 +78,27 @@ export default function AdminPoliciesPage() {
       setSaving(false);
     }
   };
+
+  if (status !== 'authenticated') {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-white/80">Faca login como administrador para acessar esta pagina.</p>
+        <Link
+          href="/login"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
+        >
+          Ir para login
+        </Link>
+      </div>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

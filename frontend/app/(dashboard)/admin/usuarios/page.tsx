@@ -45,13 +45,15 @@ function StatusPill({ status }: { status: string }) {
 export default function AdminUsuariosPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
+  const role = session?.user?.role;
+  const isAdmin = role === "ADMIN" || role === "SUPERVISOR";
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "verificado" | "pendente">("todos");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data: users, isLoading, error, mutate } = useSWR<User[]>(
-    token ? ["/users", token] as const : null,
+    token && isAdmin ? ["/users", token] as const : null,
     ([url, t]: [string, string]) => fetcher(url, t),
     { revalidateOnFocus: false },
   );
@@ -92,6 +94,27 @@ export default function AdminUsuariosPage() {
     }
   }
 
+  if (status !== "authenticated") {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-white/80">Faca login como administrador para acessar esta pagina.</p>
+        <Link
+          href="/login"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
+        >
+          Ir para login
+        </Link>
+      </div>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <header className="space-y-2">
@@ -130,17 +153,6 @@ export default function AdminUsuariosPage() {
           </div>
         </div>
 
-        {status !== "authenticated" && (
-          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-yellow">Faca login como administrador.</p>
-        )}
-        {status !== "authenticated" && (
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
-          >
-            Ir para login
-          </Link>
-        )}
         {error?.response?.status === 401 && (
           <div className="space-y-2 rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-yellow">
             <p>Sessao expirada ou sem permissao. Faca login novamente.</p>

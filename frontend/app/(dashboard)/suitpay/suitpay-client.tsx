@@ -20,8 +20,10 @@ const fetcher = <T,>(url: string, token?: string) =>
 export default function SuitPayConfigPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
+  const role = session?.user?.role;
+  const isAdmin = role === "ADMIN" || role === "SUPERVISOR";
   const { data, error, mutate } = useSWR<SuitpayConfig, any, [string, string] | null>(
-    token ? ["/admin/suitpay/config", token] as [string, string] : null,
+    token && isAdmin ? ["/admin/suitpay/config", token] as [string, string] : null,
     ([url, t]) => fetcher<SuitpayConfig>(url, t),
     { revalidateOnFocus: false },
   );
@@ -64,7 +66,7 @@ export default function SuitPayConfigPage() {
     }
   };
 
-  if (!token || status !== "authenticated") {
+  if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
         <p className="text-sm text-white/80">Faca login como administrador para acessar as configuracoes da SuitPay.</p>
@@ -74,6 +76,13 @@ export default function SuitPayConfigPage() {
         >
           Ir para login
         </Link>
+      </div>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
       </div>
     );
   }

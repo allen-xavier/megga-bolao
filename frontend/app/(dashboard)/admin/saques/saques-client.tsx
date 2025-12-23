@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type UIEvent } from "react";
 import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -34,6 +35,8 @@ type WithdrawPayment = {
 const fetcher = <T,>(url: string, token?: string) =>
   api.get<T>(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined).then((r) => r.data);
 
+const HISTORY_PAGE_SIZE = 20;
+
 const statusStyles = (status: WithdrawStatus) => {
   if (status === "COMPLETED") return "bg-megga-lime/15 text-megga-lime border-megga-lime/30";
   if (status === "FAILED") return "bg-red-500/15 text-red-200 border-red-500/30";
@@ -45,6 +48,8 @@ const statusStyles = (status: WithdrawStatus) => {
 export default function SaquesClient() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
+  const role = session?.user?.role;
+  const isAdmin = role === "ADMIN" || role === "SUPERVISOR";
   const searchParams = useSearchParams();
   const userIdParam = searchParams.get("userId") ?? "";
 
@@ -69,13 +74,16 @@ export default function SaquesClient() {
     isLoading: approvalsLoading,
     mutate: mutateApprovals,
   } = useSWR<WithdrawPayment[], any, [string, string] | null>(
-    token ? [approvalsUrl, token] as [string, string] : null,
+    token && isAdmin ? [approvalsUrl, token] as [string, string] : null,
     ([url, t]) => fetcher<WithdrawPayment[]>(url, t),
     { revalidateOnFocus: false },
   );
 
-  const historyUrl = useMemo(() => {
+  const getHistoryKey = (pageIndex: number, previousPageData: WithdrawPayment[] | null) => {
+    if (previousPageData && previousPageData.length < HISTORY_PAGE_SIZE) return null;
     const params = new URLSearchParams();
+    params.set("page", String(pageIndex + 1));
+    params.set("perPage", String(HISTORY_PAGE_SIZE));
     if (historySearch.trim()) {
       params.set("search", historySearch.trim());
     }
@@ -88,20 +96,43 @@ export default function SaquesClient() {
     if (userIdParam) {
       params.set("userId", userIdParam);
     }
-    const query = params.toString();
-    return `/payments/admin/withdraws${query ? `?${query}` : ""}`;
-  }, [historySearch, historyFrom, historyTo, userIdParam]);
+    return `/payments/admin/withdraws?${params.toString()}`;
+  };
+
+  const historyKeyLoader = (index: number, previous: WithdrawPayment[] | null) => {
+    if (!token || !isAdmin) return null;
+    const key = getHistoryKey(index, previous ?? null);
+    if (!key) return null;
+    return [key, token] as const;
+  };
 
   const {
-    data: history,
+    data: historyPages,
     error: historyError,
     isLoading: historyLoading,
+    size,
+    setSize,
     mutate: mutateHistory,
-  } = useSWR<WithdrawPayment[], any, [string, string] | null>(
-    token ? [historyUrl, token] as [string, string] : null,
-    ([url, t]) => fetcher<WithdrawPayment[]>(url, t),
+  } = useSWRInfinite<WithdrawPayment[], any>(
+    historyKeyLoader,
+    ([url, t]: readonly [string, string]) => fetcher<WithdrawPayment[]>(url, t),
     { revalidateOnFocus: false },
   );
+
+  const historyItems = useMemo(
+    () =>
+      historyPages
+        ? historyPages.filter((page): page is WithdrawPayment[] => Boolean(page)).flat()
+        : [],
+    [historyPages],
+  );
+  const historyLastPage = historyPages ? historyPages[historyPages.length - 1] : undefined;
+  const historyReachedEnd = historyPages ? (historyLastPage ? historyLastPage.length < HISTORY_PAGE_SIZE : false) : false;
+  const historyLoadingMore = Boolean(historyPages && historyPages[historyPages.length - 1] === undefined);
+
+  useEffect(() => {
+    setSize(1);
+  }, [historySearch, historyFrom, historyTo, userIdParam, setSize]);
 
   const formatCurrency = (value: string) => {
     const amount = Number(value ?? 0);
@@ -121,6 +152,15 @@ export default function SaquesClient() {
   const refreshAll = () => {
     mutateApprovals();
     mutateHistory();
+  };
+
+  const handleHistoryScroll = (event: UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    if (historyLoading || historyLoadingMore || historyReachedEnd) return;
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 24;
+    if (nearBottom) {
+      setSize((current) => current + 1);
+    }
   };
 
   const handleComplete = async (paymentId: string) => {
@@ -163,7 +203,7 @@ export default function SaquesClient() {
     }
   };
 
-  if (!token || status !== "authenticated") {
+  if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
         <p className="text-sm text-white/80">Faca login como administrador para acessar as aprovacoes de saque.</p>
@@ -173,6 +213,13 @@ export default function SaquesClient() {
         >
           Ir para login
         </Link>
+      </div>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
       </div>
     );
   }
@@ -349,47 +396,54 @@ export default function SaquesClient() {
           </p>
         )}
 
-        <ul className="space-y-3">
-          {(history ?? []).map((payment) => (
-            <li key={payment.id} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-base font-semibold text-white">{payment.user?.fullName ?? "Usuario"}</p>
-                  <p className="text-xs text-white/60">CPF: {payment.user?.cpf ?? "--"} | PIX: {payment.user?.pixKey ?? "--"}</p>
+        <div className="max-h-[70vh] overflow-y-auto pr-2 md:max-h-[720px]" onScroll={handleHistoryScroll}>
+          <ul className="space-y-3">
+            {historyItems.map((payment) => (
+              <li key={payment.id} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-base font-semibold text-white">{payment.user?.fullName ?? "Usuario"}</p>
+                    <p className="text-xs text-white/60">CPF: {payment.user?.cpf ?? "--"} | PIX: {payment.user?.pixKey ?? "--"}</p>
+                  </div>
+                  <div className="text-right">
+                    <span
+                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] ${statusStyles(payment.status)}`}
+                    >
+                      <span className="h-2 w-2 rounded-full bg-current" aria-hidden />
+                      {payment.status}
+                    </span>
+                    <p className="mt-2 text-lg font-semibold text-megga-yellow">R$ {formatCurrency(payment.amount)}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] ${statusStyles(payment.status)}`}
-                  >
-                    <span className="h-2 w-2 rounded-full bg-current" aria-hidden />
-                    {payment.status}
-                  </span>
-                  <p className="mt-2 text-lg font-semibold text-megga-yellow">R$ {formatCurrency(payment.amount)}</p>
-                </div>
-              </div>
 
-              <div className="mt-3 grid gap-2 text-xs text-white/60 md:grid-cols-2">
-                <p>
-                  <span className="text-white/40">Solicitado em:</span> {formatDate(payment.createdAt)}
-                </p>
-                <p>
-                  <span className="text-white/40">Processado em:</span> {formatDate(payment.processedAt)}
-                </p>
-                <p>
-                  <span className="text-white/40">Nota:</span> {payment.metadata?.note ?? "--"}
-                </p>
-                <p>
-                  <span className="text-white/40">Motivo:</span> {payment.metadata?.reason ?? "--"}
-                </p>
-              </div>
-            </li>
-          ))}
-          {!historyLoading && (history?.length ?? 0) === 0 && (
-            <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
-              Nenhum saque encontrado para este filtro.
-            </li>
-          )}
-        </ul>
+                <div className="mt-3 grid gap-2 text-xs text-white/60 md:grid-cols-2">
+                  <p>
+                    <span className="text-white/40">Solicitado em:</span> {formatDate(payment.createdAt)}
+                  </p>
+                  <p>
+                    <span className="text-white/40">Processado em:</span> {formatDate(payment.processedAt)}
+                  </p>
+                  <p>
+                    <span className="text-white/40">Nota:</span> {payment.metadata?.note ?? "--"}
+                  </p>
+                  <p>
+                    <span className="text-white/40">Motivo:</span> {payment.metadata?.reason ?? "--"}
+                  </p>
+                </div>
+              </li>
+            ))}
+            {historyLoadingMore && (
+              <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
+                Carregando mais saques...
+              </li>
+            )}
+            {!historyLoading && historyItems.length === 0 && (
+              <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
+                Nenhum saque encontrado para este filtro.
+              </li>
+            )}
+          </ul>
+        </div>
       </section>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 
 const formatInputDate = (date: Date) => {
@@ -30,8 +31,10 @@ const toIsoFromInput = (value: string) => {
 };
 
 export default function AdminSorteiosClient() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
+  const role = session?.user?.role;
+  const isAdmin = role === 'ADMIN' || role === 'SUPERVISOR';
 
   const [selectedNumbers, setSelectedNumbers] = useState<Set<number>>(new Set());
   const [drawDate, setDrawDate] = useState(() => formatInputDate(new Date()));
@@ -55,7 +58,7 @@ export default function AdminSorteiosClient() {
   const formattedNumbers = useMemo(() => Array.from(selectedNumbers).sort((a, b) => a - b), [selectedNumbers]);
 
   const { data: draws, isLoading, mutate } = useSWR(
-    ['/draws', token, from, to],
+    token && isAdmin ? ['/draws', token, from, to] : null,
     async () => {
       const params: Record<string, string> = {};
       if (from) params.from = from;
@@ -126,6 +129,28 @@ export default function AdminSorteiosClient() {
       setLoading(false);
     }
   };
+
+
+  if (status !== 'authenticated') {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-white/80">Faca login como administrador para acessar esta pagina.</p>
+        <Link
+          href="/login"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
+        >
+          Ir para login
+        </Link>
+      </div>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

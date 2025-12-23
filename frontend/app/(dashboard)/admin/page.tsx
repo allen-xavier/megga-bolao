@@ -40,14 +40,16 @@ function formatDate(value: string | null | undefined) {
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
+  const role = session?.user?.role;
+  const isAdmin = role === "ADMIN" || role === "SUPERVISOR";
 
   const { data: boloes, error: boloesError } = useSWR<Bolao[]>(
-    token ? ["/boloes", token] as const : null,
+    token && isAdmin ? ["/boloes", token] as const : null,
     ([url, t]: [string, string]) => fetcher(url, t),
     { revalidateOnFocus: false },
   );
   const { data: statsData, error: statsError } = useSWR<AdminStats>(
-    token ? ["/admin/stats", token] as const : null,
+    token && isAdmin ? ["/admin/stats", token] as const : null,
     ([url, t]: [string, string]) => fetcher(url, t),
     { revalidateOnFocus: false },
   );
@@ -68,7 +70,7 @@ export default function AdminDashboardPage() {
       .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
       .slice(0, 3) ?? [];
 
-  if (!token || status !== "authenticated") {
+  if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
         <p className="text-sm text-white/80">Faca login como administrador para acessar o painel.</p>
@@ -78,6 +80,13 @@ export default function AdminDashboardPage() {
         >
           Ir para login
         </Link>
+      </div>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
       </div>
     );
   }

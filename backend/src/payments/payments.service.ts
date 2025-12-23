@@ -99,6 +99,8 @@ export class PaymentsService {
     search?: string,
     from?: Date,
     to?: Date,
+    page?: number,
+    perPage?: number,
   ) {
     const where: Prisma.PaymentWhereInput = { type: PaymentType.WITHDRAW };
     if (status) {
@@ -128,9 +130,14 @@ export class PaymentsService {
       }
       where.OR = or;
     }
+    const shouldPaginate = Boolean(perPage && perPage > 0);
+    const safePage = Math.max(1, page ?? 1);
+    const safePerPage = shouldPaginate ? Math.max(1, perPage ?? 1) : undefined;
     return this.prisma.payment.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      skip: shouldPaginate ? (safePage - 1) * (safePerPage ?? 0) : undefined,
+      take: safePerPage,
       include: {
         user: {
           select: {

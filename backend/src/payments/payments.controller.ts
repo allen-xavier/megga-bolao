@@ -44,6 +44,8 @@ export class PaymentsController {
     @Query('search') search?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('page') page?: string,
+    @Query('perPage') perPage?: string,
   ) {
     if (user.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Apenas administradores podem visualizar saques');
@@ -63,12 +65,18 @@ export class PaymentsController {
     if (validTo) {
       validTo.setHours(23, 59, 59, 999);
     }
+    const pageNumber = page ? Number(page) : undefined;
+    const perPageNumber = perPage ? Number(perPage) : undefined;
+    const safePage = pageNumber && pageNumber > 0 ? pageNumber : undefined;
+    const safePerPage = perPageNumber && perPageNumber > 0 ? perPageNumber : undefined;
     return this.paymentsService.listWithdraws(
       normalizedStatus as PaymentStatus | undefined,
       filterUserId && filterUserId.length > 0 ? filterUserId : undefined,
       search,
       validFrom,
       validTo,
+      safePage,
+      safePerPage,
     );
   }
 

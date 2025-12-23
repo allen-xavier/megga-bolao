@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 
@@ -70,6 +71,8 @@ const toNumber = (value: string | number) => {
 
 export default function CreatebolãoClient() {
   const { data: session, status } = useSession();
+  const role = session?.user?.role;
+  const isAdmin = role === "ADMIN" || role === "SUPERVISOR";
   const searchParams = useSearchParams();
   const router = useRouter();
   const bolãoId = searchParams.get("id");
@@ -229,6 +232,28 @@ export default function CreatebolãoClient() {
       setDeleting(false);
     }
   };
+
+
+  if (status !== "authenticated") {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-white/80">Faca login como administrador para acessar esta pagina.</p>
+        <Link
+          href="/login"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
+        >
+          Ir para login
+        </Link>
+      </div>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
