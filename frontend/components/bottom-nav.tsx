@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
   {
-    label: 'Inicio',
+    label: 'In\u00edcio',
     href: '/inicio',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
@@ -33,29 +33,67 @@ const navItems = [
     ),
   },
   {
-    label: 'SuitPay',
-    href: '/suitpay',
+    label: 'Carteira',
+    href: '/carteira',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
         <path
-          d="M4.5 7A2.5 2.5 0 0 1 7 4.5h10A2.5 2.5 0 0 1 19.5 7v10A2.5 2.5 0 0 1 17 19.5H7A2.5 2.5 0 0 1 4.5 17z"
+          d="M4 7h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path d="M9 9.5h6V12a3 3 0 0 1-3 3H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="9" cy="9" r="1" fill="currentColor" />
+        <path
+          d="M4 7V6a2 2 0 0 1 2-2h10"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="17" cy="12.5" r="1.2" fill="currentColor" />
       </svg>
     ),
   },
   {
-    label: 'Mais',
-    href: '/mais',
+    label: 'Afiliados',
+    href: '/afiliados',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">
-        <path d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M8 12a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 8 12z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M16.5 12a3 3 0 1 0-3-3A3 3 0 0 0 16.5 12z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M3.5 19a4.5 4.5 0 0 1 9 0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M13.5 19a3.5 3.5 0 0 1 7 0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     ),
   },
