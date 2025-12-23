@@ -56,6 +56,7 @@ export function WalletSummary() {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawMessage, setWithdrawMessage] = useState<string | null>(null);
+  const [withdrawUseTotal, setWithdrawUseTotal] = useState(false);
 
   const userPixKey = (session?.user as any)?.pixKey ?? "";
   const userCpf = (session?.user as any)?.cpf ?? "";
@@ -138,12 +139,14 @@ export function WalletSummary() {
 
   const openWithdraw = () => {
     setWithdrawMessage(null);
+    setWithdrawUseTotal(false);
     setWithdrawAmount(canWithdraw ? String(MIN_WITHDRAW) : "");
     setWithdrawOpen(true);
   };
   const closeWithdraw = () => {
     setWithdrawOpen(false);
     setWithdrawMessage(null);
+    setWithdrawUseTotal(false);
   };
   const confirmWithdraw = () => {
     if (confirmDisabled) return;
@@ -188,52 +191,56 @@ export function WalletSummary() {
             </span>
           </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">
-              Periodo
-              <select
-                value={filterMode}
-                onChange={(event) => setFilterMode(event.target.value as "last30" | "month")}
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none"
-              >
-                <option value="last30" className="bg-[#0f1117]">
-                  Ultimos 30 dias
-                </option>
-                <option value="month" className="bg-[#0f1117]">
-                  Mes e ano
-                </option>
-              </select>
-            </label>
-            <label className={`text-[11px] uppercase tracking-[0.3em] text-white/50 ${filterMode !== "month" ? "opacity-50" : ""}`}>
-              Mes
-              <select
-                value={filterMonth}
-                onChange={(event) => setFilterMonth(Number(event.target.value))}
-                disabled={filterMode !== "month"}
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none disabled:cursor-not-allowed"
-              >
-                {MONTHS.map((month, index) => (
-                  <option key={month} value={index} className="bg-[#0f1117]">
-                    {month}
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="space-y-3">
+              <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+                Periodo
+                <select
+                  value={filterMode}
+                  onChange={(event) => setFilterMode(event.target.value as "last30" | "month")}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none"
+                >
+                  <option value="last30" className="bg-[#0f1117]">
+                    Ultimos 30 dias
                   </option>
-                ))}
-              </select>
-            </label>
-            <label className={`text-[11px] uppercase tracking-[0.3em] text-white/50 ${filterMode !== "month" ? "opacity-50" : ""}`}>
-              Ano
-              <select
-                value={filterYear}
-                onChange={(event) => setFilterYear(Number(event.target.value))}
-                disabled={filterMode !== "month"}
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none disabled:cursor-not-allowed"
-              >
-                {availableYears.map((year) => (
-                  <option key={year} value={year} className="bg-[#0f1117]">
-                    {year}
+                  <option value="month" className="bg-[#0f1117]">
+                    Mes e ano
                   </option>
-                ))}
-              </select>
-            </label>
+                </select>
+              </label>
+              {filterMode === "month" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+                    Mes
+                    <select
+                      value={filterMonth}
+                      onChange={(event) => setFilterMonth(Number(event.target.value))}
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none"
+                    >
+                      {MONTHS.map((month, index) => (
+                        <option key={month} value={index} className="bg-[#0f1117]">
+                          {month}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+                    Ano
+                    <select
+                      value={filterYear}
+                      onChange={(event) => setFilterYear(Number(event.target.value))}
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none"
+                    >
+                      {availableYears.map((year) => (
+                        <option key={year} value={year} className="bg-[#0f1117]">
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
+            </div>
             <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">
               Tipo
               <select
@@ -308,22 +315,41 @@ export function WalletSummary() {
                 Fechar
               </button>
             </div>
-            <p className="mt-2 text-xs text-white/60">Saque minimo: R$ {minWithdrawLabel}.</p>
-            <p className="mt-1 text-xs text-white/60">Saldo disponivel: R$ {balance}.</p>
+            <p className="mt-2 text-xs text-white/60">Saldo disponivel para saque: R$ {balance}.</p>
+            <p className="mt-1 text-xs text-white/60">Saque minimo: R$ {minWithdrawLabel}.</p>
 
-            <label className="mt-4 block text-sm text-white/70">
-              Valor do saque
-              <input
-                type="number"
-                min={MIN_WITHDRAW}
-                max={balanceValue}
-                step="0.01"
-                value={withdrawAmount}
-                onChange={(event) => setWithdrawAmount(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none"
-                placeholder={`Minimo R$ ${minWithdrawLabel}`}
-              />
-            </label>
+            <div className="mt-4 flex items-center justify-between gap-3 text-sm text-white/70">
+              <span>Valor do saque</span>
+              <label className="flex items-center gap-2 text-xs text-white/60">
+                <input
+                  type="checkbox"
+                  checked={withdrawUseTotal}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    setWithdrawUseTotal(checked);
+                    if (checked) {
+                      setWithdrawAmount(balanceValue.toFixed(2));
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-white/20 bg-white/10 text-megga-yellow focus:ring-megga-yellow"
+                />
+                Saldo total
+              </label>
+            </div>
+            <input
+              type="number"
+              min={MIN_WITHDRAW}
+              max={balanceValue}
+              step="0.01"
+              value={withdrawAmount}
+              onChange={(event) => {
+                setWithdrawAmount(event.target.value);
+                if (withdrawUseTotal) setWithdrawUseTotal(false);
+              }}
+              disabled={withdrawUseTotal}
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+              placeholder={`Minimo R$ ${minWithdrawLabel}`}
+            />
 
             <div className="mt-3 rounded-2xl border border-white/10 bg-[#151824] p-3 text-sm">
               <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Chave PIX cadastrada</p>

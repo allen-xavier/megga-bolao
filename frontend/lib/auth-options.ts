@@ -58,8 +58,9 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
+        token.id = (user as any).id;
         token.accessToken = (user as any).accessToken;
         token.refreshToken = (user as any).refreshToken;
         token.role = (user as any).role;
@@ -73,11 +74,27 @@ export const authOptions: NextAuthOptions = {
         token.pixKey = (user as any).pixKey;
         token.email = (user as any).email;
       }
+      if (trigger === "update" && session) {
+        const updateData = (session as any).user ?? session;
+        token.fullName = updateData.fullName ?? token.fullName;
+        token.phone = updateData.phone ?? token.phone;
+        token.cpf = updateData.cpf ?? token.cpf;
+        token.cep = updateData.cep ?? token.cep;
+        token.address = updateData.address ?? token.address;
+        token.city = updateData.city ?? token.city;
+        token.state = updateData.state ?? token.state;
+        token.pixKey = updateData.pixKey ?? token.pixKey;
+        token.email = updateData.email ?? token.email;
+      }
+      if (!token.id && token.sub) {
+        token.id = token.sub;
+      }
       return token;
     },
     async session({ session, token }) {
       session.user = {
         ...(session.user || {}),
+        id: (token as any).id ?? (token.sub as string | undefined),
         accessToken: token.accessToken as string | undefined,
         refreshToken: token.refreshToken as string | undefined,
         role: token.role as string | undefined,

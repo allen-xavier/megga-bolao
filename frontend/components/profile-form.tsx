@@ -19,19 +19,48 @@ export interface UserProfile {
 }
 
 export function ProfileForm({ user }: { user: UserProfile }) {
-  const [form, setForm] = useState<UserProfile>(user);
+  const [form, setForm] = useState<UserProfile>({
+    id: user.id,
+    fullName: user.fullName ?? (user as any).name ?? "",
+    phone: user.phone ?? "",
+    cpf: user.cpf ?? "",
+    cep: user.cep ?? "",
+    address: user.address ?? "",
+    city: user.city ?? "",
+    state: user.state ?? "",
+    pixKey: user.pixKey ?? "",
+    email: user.email ?? "",
+  });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const token = session?.user?.accessToken;
+  const userId = user.id ?? (session?.user as any)?.id ?? (session?.user as any)?.sub;
 
   const updateProfile = async () => {
     try {
       setLoading(true);
       setMessage(null);
-      await api.patch(`/users/${user.id}`, form, {
+      if (!userId) {
+        setMessage("Nao foi possivel identificar o usuario.");
+        setLoading(false);
+        return;
+      }
+      const payload = {
+        fullName: form.fullName,
+        phone: form.phone,
+        cpf: form.cpf,
+        cep: form.cep,
+        address: form.address,
+        city: form.city,
+        state: form.state,
+        pixKey: form.pixKey,
+        email: form.email ? form.email : undefined,
+      };
+      await api.patch(`/users/${userId}`, payload, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
+      await updateSession?.(payload);
       setMessage('Dados atualizados com sucesso!');
     } catch (error: any) {
       setMessage(error?.response?.data?.message ?? 'Não foi possível atualizar o perfil.');
