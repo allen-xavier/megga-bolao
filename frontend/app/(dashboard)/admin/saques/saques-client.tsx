@@ -205,7 +205,7 @@ export default function SaquesClient() {
 
   if (status !== "authenticated") {
     return (
-      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
         <p className="text-sm text-white/80">Faca login como administrador para acessar as aprovacoes de saque.</p>
         <Link
           href="/login"
@@ -218,7 +218,7 @@ export default function SaquesClient() {
   }
   if (!isAdmin) {
     return (
-      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
         <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
       </div>
     );
@@ -232,7 +232,7 @@ export default function SaquesClient() {
         <p className="text-sm text-white/70">Gerencie pedidos pendentes e acompanhe o historico completo de saques.</p>
       </header>
 
-      <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-6 shadow-lg ring-1 ring-white/5">
+      <section className="space-y-4 rounded-3xl bg-megga-navy/80 px-2 py-5 shadow-lg ring-1 ring-white/5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/50">Pedidos em aberto</p>
@@ -249,7 +249,7 @@ export default function SaquesClient() {
         </div>
 
         {userIdParam && (
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/70">
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-xs text-white/70 md:px-4">
             <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Filtro</p>
             <p className="mt-2 text-sm">Usuario filtrado: {userIdParam}</p>
             <Link href="/admin/saques" className="mt-2 inline-flex text-xs text-megga-yellow hover:underline">
@@ -258,12 +258,12 @@ export default function SaquesClient() {
           </div>
         )}
 
-        {actionMessage && <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm text-megga-lime">{actionMessage}</p>}
+        {actionMessage && <p className="rounded-2xl bg-white/10 px-2 py-3 text-sm text-megga-lime md:px-4">{actionMessage}</p>}
         {approvalsLoading && (
-          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Carregando saques...</p>
+          <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Carregando saques...</p>
         )}
         {approvalsError && (
-          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-rose">
+          <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-megga-rose md:px-4">
             Erro ao carregar saques: {approvalsError?.message ?? "falha desconhecida"}
           </p>
         )}
@@ -272,7 +272,7 @@ export default function SaquesClient() {
           {(approvals ?? []).map((payment) => {
             const disableActions = actionId === payment.id;
             return (
-              <li key={payment.id} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+              <li key={payment.id} className="rounded-2xl border border-white/10 bg-white/5 px-2 py-4 text-sm text-white/80 md:p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-base font-semibold text-white">{payment.user?.fullName ?? "Usuario"}</p>
@@ -320,14 +320,14 @@ export default function SaquesClient() {
             );
           })}
           {!approvalsLoading && (approvals?.length ?? 0) === 0 && (
-            <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
+            <li className="rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-sm text-white/60 md:px-4">
               Nenhum saque aguardando aprovacao.
             </li>
           )}
         </ul>
       </section>
 
-      <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-6 shadow-lg ring-1 ring-white/5">
+      <section className="space-y-4 rounded-3xl bg-megga-navy/80 px-2 py-5 shadow-lg ring-1 ring-white/5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/50">Extrato</p>
@@ -343,32 +343,32 @@ export default function SaquesClient() {
           </button>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
-          <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+        <div className="grid w-full min-w-0 gap-3 md:grid-cols-3">
+          <label className="flex w-full min-w-0 flex-col overflow-hidden text-[11px] uppercase tracking-[0.3em] text-white/50">
             Usuario (nome, CPF ou PIX)
             <input
               type="text"
               value={historySearch}
               onChange={(event) => setHistorySearch(event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm text-white focus:border-megga-yellow focus:outline-none"
+              className="mt-2 w-full min-w-0 max-w-full rounded-2xl border border-white/10 bg-transparent px-3 py-3 text-sm text-white focus:border-megga-yellow focus:outline-none box-border"
             />
           </label>
-          <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+          <label className="flex w-full min-w-0 flex-col overflow-hidden text-[11px] uppercase tracking-[0.3em] text-white/50">
             De
             <input
               type="date"
               value={historyFrom}
               onChange={(event) => setHistoryFrom(event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm text-white focus:border-megga-yellow focus:outline-none"
+              className="mt-2 w-full min-w-0 max-w-full rounded-2xl border border-white/10 bg-transparent px-3 py-3 text-sm text-white focus:border-megga-yellow focus:outline-none box-border"
             />
           </label>
-          <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">
+          <label className="flex w-full min-w-0 flex-col overflow-hidden text-[11px] uppercase tracking-[0.3em] text-white/50">
             Ate
             <input
               type="date"
               value={historyTo}
               onChange={(event) => setHistoryTo(event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm text-white focus:border-megga-yellow focus:outline-none"
+              className="mt-2 w-full min-w-0 max-w-full rounded-2xl border border-white/10 bg-transparent px-3 py-3 text-sm text-white focus:border-megga-yellow focus:outline-none box-border"
             />
           </label>
         </div>
@@ -388,10 +388,10 @@ export default function SaquesClient() {
         </div>
 
         {historyLoading && (
-          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Carregando historico...</p>
+          <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Carregando historico...</p>
         )}
         {historyError && (
-          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-rose">
+          <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-megga-rose md:px-4">
             Erro ao carregar historico: {historyError?.message ?? "falha desconhecida"}
           </p>
         )}
@@ -399,7 +399,7 @@ export default function SaquesClient() {
         <div className="max-h-[70vh] overflow-y-auto pr-2 md:max-h-[720px]" onScroll={handleHistoryScroll}>
           <ul className="space-y-3">
             {historyItems.map((payment) => (
-              <li key={payment.id} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+              <li key={payment.id} className="rounded-2xl border border-white/10 bg-white/5 px-2 py-4 text-sm text-white/80 md:p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-base font-semibold text-white">{payment.user?.fullName ?? "Usuario"}</p>
@@ -433,12 +433,12 @@ export default function SaquesClient() {
               </li>
             ))}
             {historyLoadingMore && (
-              <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
+              <li className="rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-sm text-white/60 md:px-4">
                 Carregando mais saques...
               </li>
             )}
             {!historyLoading && historyItems.length === 0 && (
-              <li className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60">
+              <li className="rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-sm text-white/60 md:px-4">
                 Nenhum saque encontrado para este filtro.
               </li>
             )}

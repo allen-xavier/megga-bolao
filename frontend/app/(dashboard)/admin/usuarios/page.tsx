@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import useSWR from "swr";
+import { useEffect, useMemo, useRef, useState } from "react";
+import useSWRInfinite from "swr/infinite";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { api } from "@/lib/api";
@@ -21,11 +21,10 @@ type User = {
 
 const fetcher = (url: string, token?: string) =>
   api
-    .get(url, {
-      params: { page: 1, perPage: 100 },
-      ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
-    })
+    .get(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
     .then((response) => response.data);
+
+const USERS_PAGE_SIZE = 50;
 
 function statusLabel(user: User) {
   return user.acceptedTerms ? "Verificado" : "Pendente";
@@ -49,14 +48,49 @@ export default function AdminUsuariosPage() {
   const isAdmin = role === "ADMIN" || role === "SUPERVISOR";
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "verificado" | "pendente">("todos");
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const { data: users, isLoading, error, mutate } = useSWR<User[]>(
-    token && isAdmin ? ["/users", token] as const : null,
-    ([url, t]: [string, string]) => fetcher(url, t),
+  const getUsersKey = (pageIndex: number, previous: User[] | null) => {
+    if (!token || !isAdmin) return null;
+    if (previous && previous.length < USERS_PAGE_SIZE) return null;
+    const params = new URLSearchParams();
+    params.set("page", String(pageIndex + 1));
+    params.set("perPage", String(USERS_PAGE_SIZE));
+    return [`/users?${params.toString()}`, token] as const;
+  };
+
+  const {
+    data: userPages,
+    isLoading,
+    error,
+    setSize,
+    isValidating,
+    mutate,
+  } = useSWRInfinite<User[], any>(
+    getUsersKey,
+    ([url, t]: readonly [string, string]) => fetcher(url, t),
     { revalidateOnFocus: false },
   );
+
+  const users = useMemo(() => (userPages ? userPages.flat() : []), [userPages]);
+  const reachedEnd = userPages ? (userPages[userPages.length - 1]?.length ?? 0) < USERS_PAGE_SIZE : false;
+  const loadingMore = isValidating && userPages && userPages.length > 0;
+
+  useEffect(() => {
+    if (!loadMoreRef.current || reachedEnd) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+        if (isLoading || loadingMore) return;
+        setSize((current) => current + 1);
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [isLoading, loadingMore, reachedEnd, setSize]);
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -85,7 +119,7 @@ export default function AdminUsuariosPage() {
     try {
       setDeletingId(id);
       await api.delete(`/users/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-      await mutate((prev) => (prev ? prev.filter((u) => u.id !== id) : prev), false);
+      await mutate((prev) => (prev ? prev.map((page) => page.filter((u) => u.id !== id)) : prev), false);
     } catch (err: any) {
       const message = err?.response?.data?.message ?? "N\u00e3o foi poss\u00edvel excluir o usu\u00e1rio.";
       alert(message);
@@ -96,7 +130,7 @@ export default function AdminUsuariosPage() {
 
   if (status !== "authenticated") {
     return (
-      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
         <p className="text-sm text-white/80">Faca login como administrador para acessar esta pagina.</p>
         <Link
           href="/login"
@@ -109,7 +143,7 @@ export default function AdminUsuariosPage() {
   }
   if (!isAdmin) {
     return (
-      <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
         <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
       </div>
     );
@@ -123,8 +157,8 @@ export default function AdminUsuariosPage() {
         <p className="text-sm text-white/70">Pesquisa por nome/CPF/telefone, filtro por status e links para perfil/saque.</p>
       </header>
 
-      <section className="space-y-3 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
-        <div className="rounded-2xl bg-white/5 p-4 text-sm text-white/80">
+      <section className="space-y-3 rounded-3xl bg-megga-navy/80 px-2 py-5 shadow-lg ring-1 ring-white/5 md:p-5">
+        <div className="rounded-2xl bg-white/5 px-2 py-4 text-sm text-white/80 md:p-4">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Filtro rapido</p>
           <div className="mt-3 grid gap-3 md:grid-cols-3">
             <input
@@ -154,7 +188,7 @@ export default function AdminUsuariosPage() {
         </div>
 
         {error?.response?.status === 401 && (
-          <div className="space-y-2 rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-yellow">
+          <div className="space-y-2 rounded-2xl bg-white/5 px-2 py-3 text-sm text-megga-yellow md:px-4">
             <p>Sessao expirada ou sem permissao. Faca login novamente.</p>
             <Link
               href="/login"
@@ -164,9 +198,9 @@ export default function AdminUsuariosPage() {
             </Link>
           </div>
         )}
-        {isLoading && <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Carregando usuarios...</p>}
+        {isLoading && <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Carregando usuarios...</p>}
         {error && (
-          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-rose">
+          <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-megga-rose md:px-4">
             Erro ao carregar usuarios: {error?.message ?? "falha desconhecida"}
           </p>
         )}
@@ -174,9 +208,8 @@ export default function AdminUsuariosPage() {
         <ul className="space-y-3 text-sm text-white/80">
           {filtered.map((user) => {
             const statusValue = statusLabel(user);
-            const isOpen = expanded === user.id;
             return (
-              <li key={user.id} className="rounded-2xl bg-white/5 p-4">
+              <li key={user.id} className="rounded-2xl bg-white/5 px-2 py-4 md:p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-white">{user.fullName}</p>
@@ -189,24 +222,21 @@ export default function AdminUsuariosPage() {
                   <span>Email: {user.email ?? "--"}</span>
                   <span>UF: {user.state ?? "--"}</span>
                 </div>
-                {isOpen && (
-                  <div className="mt-3 grid gap-2 text-xs text-white/70 md:grid-cols-2">
-                    <p><span className="text-white/50">Cidade:</span> {user.city ?? "--"}</p>
-                    <p><span className="text-white/50">PIX:</span> {user.pixKey ?? "--"}</p>
-                    <p>
-                      <span className="text-white/50">Criado em:</span>{" "}
-                      {user.createdAt ? new Date(user.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "--"}
-                    </p>
-                  </div>
-                )}
+                <div className="mt-3 grid gap-2 text-xs text-white/70 md:grid-cols-2">
+                  <p><span className="text-white/50">Cidade:</span> {user.city ?? "--"}</p>
+                  <p><span className="text-white/50">PIX:</span> {user.pixKey ?? "--"}</p>
+                  <p>
+                    <span className="text-white/50">Criado em:</span>{" "}
+                    {user.createdAt ? new Date(user.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "--"}
+                  </p>
+                </div>
                 <div className="mt-4 grid gap-3 text-sm sm:grid-cols-4">
-                  <button
-                    type="button"
-                    onClick={() => setExpanded(isOpen ? null : user.id)}
-                    className="rounded-2xl bg-[#f7b500] py-3 font-semibold text-[#0f1117] transition hover:brightness-110"
+                  <Link
+                    href={`/admin/usuarios/${user.id}`}
+                    className="rounded-2xl bg-[#f7b500] py-3 text-center font-semibold text-[#0f1117] transition hover:brightness-110"
                   >
-                    {isOpen ? "Fechar perfil" : "Ver perfil"}
-                  </button>
+                    Ver perfil
+                  </Link>
                   <Link
                     href={`/admin/usuarios/${user.id}/editar`}
                     className="rounded-2xl bg-[#1ea7a4] py-3 text-center font-semibold text-[#0f1117] transition hover:brightness-110"
@@ -215,7 +245,7 @@ export default function AdminUsuariosPage() {
                   </Link>
                   <Link
                     href={`/admin/saques?userId=${user.id}`}
-                    className="rounded-2xl bg-[#1ea7a4] py-3 text-center font-semibold text-[#0f1117] transition hover:brightness-110"
+                    className="rounded-2xl bg-megga-lime py-3 text-center font-semibold text-megga-navy transition hover:brightness-110"
                   >
                     Liberar saque
                   </Link>
@@ -232,7 +262,15 @@ export default function AdminUsuariosPage() {
             );
           })}
           {filtered.length === 0 && !isLoading && (
-            <li className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Nenhum usuario encontrado.</li>
+            <li className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Nenhum usuario encontrado.</li>
+          )}
+          {!reachedEnd && (
+            <li>
+              <div ref={loadMoreRef} className="h-4" />
+            </li>
+          )}
+          {loadingMore && (
+            <li className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Carregando mais usuarios...</li>
           )}
         </ul>
       </section>
