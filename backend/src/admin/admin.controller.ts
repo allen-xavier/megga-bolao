@@ -1,9 +1,9 @@
-import { Controller, Get, ForbiddenException, UseGuards, Param, NotFoundException } from "@nestjs/common";
+import { Controller, Get, ForbiddenException, UseGuards, Param, NotFoundException, Query } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../users/decorators/current-user.decorator";
 import { UserProfile, UserRole } from "../users/entities/user.entity";
-import { PaymentType } from "@prisma/client";
+import { PaymentType, Prisma } from "@prisma/client";
 
 @Controller("admin")
 @UseGuards(JwtAuthGuard)
@@ -126,5 +126,101 @@ export class AdminController {
       payments,
       commissions,
     };
+  }
+
+  @Get("tickets")
+  async listTickets(
+    @CurrentUser() user: UserProfile,
+    @Query("search") search?: string,
+    @Query("bolao") bolao?: string,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+    @Query("page") page?: string,
+    @Query("perPage") perPage?: string,
+  ) {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERVISOR) {
+      throw new ForbiddenException("Acesso restrito a administradores");
+    }
+
+    const and: Prisma.BetWhereInput[] = [];
+    const searchTerm = search?.trim();
+    if (searchTerm) {
+      const digits = searchTerm.replace(/\D/g, "");
+      const orUser: Prisma.BetWhereInput[] = [
+        { user: { fullName: { contains: searchTerm, mode: "insensitive" } } },
+      ];
+      if (digits) {
+        orUser.push({ user: { cpf: { contains: digits } } });
+        orUser.push({ user: { phone: { contains: digits } } });
+      }
+      and.push({ OR: orUser });
+    }
+
+    const bolaoTerm = bolao?.trim();
+    if (bolaoTerm) {
+      and.push({
+        OR: [
+          { bolao: { name: { contains: bolaoTerm, mode: "insensitive" } } },
+          { bolaoId: bolaoTerm },
+        ],
+      });
+    }
+
+    const fromDate = from ? new Date(from) : undefined;
+    const toDate = to ? new Date(to) : undefined;
+    const validFrom = fromDate && !Number.isNaN(fromDate.getTime()) ? fromDate : undefined;
+    const validTo = toDate && !Number.isNaN(toDate.getTime()) ? toDate : undefined;
+    if (validFrom || validTo) {
+      if (validFrom) validFrom.setHours(0, 0, 0, 0);
+      if (validTo) validTo.setHours(23, 59, 59, 999);
+      and.push({
+        createdAt: {
+          ...(validFrom ? { gte: validFrom } : {}),
+          ...(validTo ? { lte: validTo } : {}),
+        },
+      });
+    }
+
+    const pageNumber = page ? Number(page) : 1;
+    const perPageNumber = perPage ? Number(perPage) : 50;
+    const safePage = Number.isFinite(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+    const safePerPage = Number.isFinite(perPageNumber) && perPageNumber > 0 ? perPageNumber : 50;
+
+    const where: Prisma.BetWhereInput = and.length ? { AND: and } : {};
+
+    return this.prisma.bet.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (safePage - 1) * safePerPage,
+      take: safePerPage,
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            cpf: true,
+            phone: true,
+            email: true,
+          },
+        },
+        bolao: {
+          select: {
+            id: true,
+            name: true,
+            startsAt: true,
+            closedAt: true,
+            ticketPrice: true,
+            transparency: { select: { id: true } },
+          },
+        },
+        prizeWinners: {
+          select: {
+            amount: true,
+            hits: true,
+            prizeResult: { select: { prizeType: true } },
+          },
+        },
+      },
+    });
   }
 }

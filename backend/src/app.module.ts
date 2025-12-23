@@ -15,6 +15,7 @@ import { TransparencyModule } from './transparency/transparency.module';
 import { EventsModule } from './events/events.module';
 import { AdminModule } from './admin/admin.module';
 import { PoliciesModule } from './policies/policies.module';
+import { TicketsModule } from './tickets/tickets.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PoliciesModule } from './policies/policies.module';
     EventsModule,
     AdminModule,
     PoliciesModule,
+    TicketsModule,
   ],
 })
 export class AppModule {}
