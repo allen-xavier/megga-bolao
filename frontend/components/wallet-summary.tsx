@@ -188,6 +188,9 @@ export function WalletSummary() {
           <div className="rounded-2xl border border-white/10 bg-[#151824] px-3 py-3 shadow md:px-5 md:py-4">
             <span className="text-[11px] uppercase tracking-[0.3em] text-white/60">Saldo disponivel</span>
             <p className="mt-3 text-3xl font-semibold text-[#f7b500]">R$ {balance}</p>
+            {lockedValue > 0 && (
+              <p className="mt-2 text-xs text-red-400">Bloqueado: R$ {locked}</p>
+            )}
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 md:px-5 md:py-4">
             <span className="text-[11px] uppercase tracking-[0.3em] text-white/60">Em processamento</span>

@@ -39,22 +39,17 @@ export class PaymentsService {
     if (!wallet || Number(wallet.balance) < dto.amount) {
       throw new BadRequestException('Saldo insuficiente para saque');
     }
-    const requiresApproval = dto.amount > 150;
     const payment = await this.prisma.payment.create({
       data: {
         userId,
         amount: dto.amount,
         type: PaymentType.WITHDRAW,
         status: PaymentStatus.PROCESSING,
-        metadata: { note: dto.note, auto: !requiresApproval, requiresApproval },
+        metadata: { note: dto.note, auto: false, requiresApproval: true },
       },
     });
 
     await this.walletService.reserve(userId, dto.amount, 'Saque solicitado', payment.id);
-    if (!requiresApproval) {
-      return this.completeWithdraw(payment.id);
-    }
-
     return payment;
   }
 
