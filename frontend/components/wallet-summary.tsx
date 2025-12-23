@@ -20,6 +20,7 @@ interface Wallet {
   statements: WalletStatement[];
 }
 
+const EMPTY_STATEMENTS: WalletStatement[] = [];
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const MIN_WITHDRAW = 50;
 const LAST_30_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -35,7 +36,7 @@ export function WalletSummary() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
 
-  const { data, isLoading } = useSWR<Wallet>(
+  const { data, isLoading, mutate } = useSWR<Wallet>(
     token ? "/wallet/me" : null,
     () =>
       api
@@ -61,7 +62,7 @@ export function WalletSummary() {
   const userPixKey = (session?.user as any)?.pixKey ?? "";
   const userCpf = (session?.user as any)?.cpf ?? "";
 
-  const statements = data?.statements ?? [];
+  const statements = useMemo(() => data?.statements ?? EMPTY_STATEMENTS, [data?.statements]);
   const availableYears = useMemo(() => {
     const years = new Set<number>();
     statements.forEach((item) => {
@@ -148,9 +149,20 @@ export function WalletSummary() {
     setWithdrawMessage(null);
     setWithdrawUseTotal(false);
   };
-  const confirmWithdraw = () => {
-    if (confirmDisabled) return;
-    setWithdrawMessage("Solicitacao registrada. A operacao via PIX sera liberada em breve.");
+  const confirmWithdraw = async () => {
+    if (confirmDisabled || !token) return;
+    setWithdrawMessage(null);
+    try {
+      await api.post(
+        "/payments/withdraw",
+        { amount: withdrawValue },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      await mutate();
+      setWithdrawMessage("Solicitacao enviada. Valor em processamento.");
+    } catch (err: any) {
+      setWithdrawMessage(err?.response?.data?.message ?? "Falha ao solicitar saque.");
+    }
   };
 
   return (
