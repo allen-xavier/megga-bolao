@@ -29,6 +29,7 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/assets ./assets
 COPY --from=build /app/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN mkdir -p /app/storage
 # Remove possible Windows line endings to avoid "exec format error" in linux

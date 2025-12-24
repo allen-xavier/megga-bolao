@@ -184,11 +184,16 @@ export class TransparencyService {
 
     doc.pipe(stream);
 
+    const FONT_SCALE = 1.2;
+    const VALUE_SCALE = 1.6;
+    const scale = (value: number) => value * FONT_SCALE;
+    const scaleValue = (value: number) => value * VALUE_SCALE;
+
     const margin = doc.page.margins.left;
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
     const contentWidth = pageWidth - margin * 2;
-    const headerHeight = 56;
+    const headerHeight = scale(56);
 
     const logoPath = process.env.TRANSPARENCIA_LOGO_PATH ?? join(process.cwd(), 'assets', 'megga-logo.png');
     const mascotPath = process.env.TRANSPARENCIA_MASCOTE_PATH ?? join(process.cwd(), 'assets', 'mascote.png');
@@ -217,11 +222,35 @@ export class TransparencyService {
     const totalFixed = prizeList.reduce((acc: number, prize: any) => acc + toNumber(prize.fixedValue), 0);
     const totalPct = prizeList.reduce((acc: number, prize: any) => acc + toNumber(prize.percentage), 0);
     const variablePool = Math.max(prizePool - totalFixed, 0);
-    const prizeCards: PrizeCard[] = prizeList.map((prize: any) => {
-      const info = PRIZE_INFO[prize.type] ?? { title: prize.type ?? 'PREMIO', description: '' };
+    const rollFactor = 0.8;
+    const senaPotReserved = toNumber(bolao.senaPotReserved ?? 0);
+    const senaPotRolled = toNumber(bolao.senaPotRolled ?? 0);
+
+    const getPrizeValue = (prize: any) => {
       const percentage = toNumber(prize.percentage);
       const pctShare = totalPct > 0 ? percentage / totalPct : 0;
-      const value = toNumber(prize.fixedValue) + variablePool * pctShare;
+      return toNumber(prize.fixedValue) + variablePool * pctShare;
+    };
+
+    const senaPrize = prizeList.find((prize: any) => prize.type === 'SENA_PRIMEIRO');
+    const senaPrizeBase = senaPrize ? getPrizeValue(senaPrize) : 0;
+    let senaPrizeTotal = senaPrizeBase;
+    if (senaPrize) {
+      if (senaPotReserved > 0) {
+        senaPrizeTotal = senaPrizeBase + senaPotReserved;
+      } else if (senaPotRolled > 0 && rollFactor > 0) {
+        senaPrizeTotal = Math.max(senaPrizeBase, senaPotRolled / rollFactor);
+      }
+    }
+    const senaAdditional = Math.max(0, senaPrizeTotal - senaPrizeBase);
+    const prizePoolAdjusted = prizePool + senaAdditional;
+
+    const prizeCards: PrizeCard[] = prizeList.map((prize: any) => {
+      const info = PRIZE_INFO[prize.type] ?? { title: prize.type ?? 'PREMIO', description: '' };
+      let value = getPrizeValue(prize);
+      if (prize.type === 'SENA_PRIMEIRO' && senaPrizeTotal > 0) {
+        value = senaPrizeTotal;
+      }
       return {
         title: info.title,
         description: info.description,
@@ -249,101 +278,135 @@ export class TransparencyService {
       }
     };
 
+    const headerTitleSize = scale(20);
+    const headerMetaSize = scale(9);
+    const headerGap = scale(4);
+    const logoHeight = Math.round(headerHeight * 0.9);
+    const mascotSize = Math.round(headerHeight * 1.8);
+    const mascotPadding = scale(6);
+    const mascotX = margin + contentWidth - mascotSize - mascotPadding;
+    const mascotY = margin + scale(3);
+    const titleBlockHeight = headerTitleSize * 1.1 + headerMetaSize * 1.1 + headerGap;
+    const titleY = margin + (headerHeight - titleBlockHeight) / 2;
+    const metaY = titleY + headerTitleSize * 1.1 + headerGap;
+
+    const getImageSize = (buffer: Buffer | null, height: number) => {
+      if (!buffer) return null;
+      try {
+        const image = doc.openImage(buffer);
+        const ratio = height / image.height;
+        return { width: image.width * ratio, height };
+      } catch {
+        return null;
+      }
+    };
+
     const drawHeader = () => {
-      const mascotSize = 46;
-      const mascotOffset = mascotBuffer ? mascotSize + 12 : 0;
       doc.save();
       doc.rect(margin, margin, contentWidth, headerHeight).fill('#0b1220');
-      drawImage(logoBuffer, margin + 12, margin + 6, { width: 44, height: 44 });
-      drawImage(mascotBuffer, margin + contentWidth - mascotSize - 12, margin + (headerHeight - mascotSize) / 2, {
-        fit: [mascotSize, mascotSize],
-      });
-      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(20);
-      doc.text('MEGGA BOL\u00c3O', margin, margin + 16, { width: contentWidth, align: 'center' });
-      doc.font('Helvetica').fontSize(9).fillColor('#ffffff');
-      doc.text(`Gerado em ${formatDateTime(generatedAt)}`, margin + contentWidth - 220 - mascotOffset, margin + 20, {
-        width: 210,
-        align: 'right',
-      });
+      const logoY = margin + (headerHeight - logoHeight) / 2;
+      const logoX = margin + mascotPadding;
+      const logoDims = getImageSize(logoBuffer, logoHeight);
+      if (logoDims) {
+        const glow = scale(2);
+        doc.save();
+        doc.fillOpacity(0.35);
+        doc.roundedRect(logoX - glow, logoY - glow, logoDims.width + glow * 2, logoDims.height + glow * 2, scale(6)).fill('#ffffff');
+        doc.restore();
+      }
+      drawImage(logoBuffer, logoX, logoY, { height: logoHeight });
+      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(headerTitleSize);
+      doc.text('MEGGA BOL\u00c3O', margin, titleY, { width: contentWidth, align: 'center' });
+      doc.font('Helvetica').fontSize(headerMetaSize).fillColor('#ffffff');
+      doc.text(`Gerado em ${formatDateTime(generatedAt)}`, margin, metaY, { width: contentWidth, align: 'center' });
       doc.restore();
+    };
+
+    const drawMascot = () => {
+      drawImage(mascotBuffer, mascotX, mascotY, { fit: [mascotSize, mascotSize] });
     };
 
     drawHeader();
 
-    let y = margin + headerHeight + 12;
+    let y = margin + headerHeight + scale(12);
 
-    const infoHeight = 120;
+    const infoHeight = scale(120);
     doc.roundedRect(margin, y, contentWidth, infoHeight, 12).fill('#eef2f6');
-    doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(16);
-    doc.text(`${bolao.name}  #${bolaoCode}`, margin + 16, y + 14, { width: contentWidth - 32 });
-    doc.font('Helvetica-Oblique').fontSize(10).fillColor('#374151');
-    doc.text('V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!', margin + 16, y + 36, {
-      width: contentWidth - 32,
+    doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(scale(16));
+    doc.text(`${bolao.name}  #${bolaoCode}`, margin + scale(16), y + scale(14), { width: contentWidth - scale(32) });
+    doc.font('Helvetica-Oblique').fontSize(scale(10)).fillColor('#374151');
+    doc.text('V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!', margin + scale(16), y + scale(36), {
+      width: contentWidth - scale(32),
     });
 
-    const infoBoxY = y + 56;
-    const infoBoxHeight = 46;
-    const infoGap = 10;
-    const infoBoxWidth = (contentWidth - infoGap * 3) / 4;
+    const infoBoxY = y + scale(56);
+    const infoBoxHeight = scale(46);
+    const infoGap = scale(10);
+    const infoInset = scale(12);
+    const infoLabelSize = scale(8);
+    const infoValueSize = scale(11);
+    const infoValueLarge = scaleValue(11);
+    const infoBoxWidth = (contentWidth - infoInset * 2 - infoGap * 3) / 4;
     const infoLabels = [
       { label: 'In\u00edcio', value: startDate },
       { label: 'Valor da aposta', value: formatCurrency(ticketPrice) },
       { label: 'Total em pr\u00eamios', value: `${prizeCards.length} pr\u00eamio${prizeCards.length === 1 ? '' : 's'}` },
-      { label: 'Premia\u00e7\u00e3o total', value: formatCurrency(prizePool) },
+      { label: 'Premia\u00e7\u00e3o total', value: formatCurrency(prizePoolAdjusted) },
     ];
 
     infoLabels.forEach((item, index) => {
-      const boxX = margin + index * (infoBoxWidth + infoGap);
+      const boxX = margin + infoInset + index * (infoBoxWidth + infoGap);
       doc.roundedRect(boxX, infoBoxY, infoBoxWidth, infoBoxHeight, 10).fill('#ffffff');
-      doc.fillColor('#6b7280').font('Helvetica').fontSize(8);
-      doc.text(item.label, boxX + 10, infoBoxY + 8, { width: infoBoxWidth - 20 });
-      doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(11);
-      doc.text(item.value, boxX + 10, infoBoxY + 22, { width: infoBoxWidth - 20 });
+      doc.fillColor('#6b7280').font('Helvetica').fontSize(infoLabelSize);
+      doc.text(item.label, boxX + scale(10), infoBoxY + scale(8), { width: infoBoxWidth - scale(20) });
+      const valueSize = item.value.includes('R$') ? infoValueLarge : infoValueSize;
+      doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(valueSize);
+      doc.text(item.value, boxX + scale(10), infoBoxY + scale(22), { width: infoBoxWidth - scale(20) });
     });
 
-    y = y + infoHeight + 8;
-    doc.fillColor('#0f1117').font('Helvetica').fontSize(9);
+    y = y + infoHeight + scale(8);
+    doc.fillColor('#0f1117').font('Helvetica').fontSize(scale(9));
     doc.text(`Site: ${site}  |  Instagram: ${instagram}  |  WhatsApp: ${whatsapp}`, margin, y, {
       width: contentWidth,
       align: 'center',
     });
 
-    y += 20;
-    doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(13);
+    y += scale(20);
+    doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(scale(13));
     doc.text('Detalhes das premia\u00e7\u00f5es', margin, y);
-    y += 18;
+    y += scale(18);
 
     if (prizeCards.length === 0) {
-      doc.fillColor('#6b7280').font('Helvetica').fontSize(10);
+      doc.fillColor('#6b7280').font('Helvetica').fontSize(scale(10));
       doc.text('Nenhuma premia\u00e7\u00e3o configurada.', margin, y);
-      y += 18;
+      y += scale(18);
     } else {
       const columns = Math.min(4, prizeCards.length);
-      const cardGap = 10;
+      const cardGap = scale(10);
       const cardWidth = (contentWidth - cardGap * (columns - 1)) / columns;
-      const cardHeight = 72;
+      const cardHeight = scale(72);
       prizeCards.forEach((card, index) => {
         const row = Math.floor(index / columns);
         const col = index % columns;
         const cardX = margin + col * (cardWidth + cardGap);
         const cardY = y + row * (cardHeight + cardGap);
         doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 10).fill('#f8fafc');
-        doc.rect(cardX, cardY, cardWidth, 6).fill('#f7b500');
-        doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(10);
-        doc.text(card.title, cardX + 10, cardY + 12, { width: cardWidth - 20 });
-        doc.fillColor('#6b7280').font('Helvetica').fontSize(8);
-        doc.text(card.description, cardX + 10, cardY + 26, { width: cardWidth - 20 });
-        doc.fillColor('#111827').font('Helvetica-Bold').fontSize(12);
-        doc.text(formatCurrency(card.value), cardX + 10, cardY + 48, { width: cardWidth - 20 });
+        doc.rect(cardX, cardY, cardWidth, scale(6)).fill('#f7b500');
+        doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(scale(10));
+        doc.text(card.title, cardX + scale(10), cardY + scale(12), { width: cardWidth - scale(20) });
+        doc.fillColor('#6b7280').font('Helvetica').fontSize(scale(8));
+        doc.text(card.description, cardX + scale(10), cardY + scale(26), { width: cardWidth - scale(20) });
+        doc.fillColor('#111827').font('Helvetica-Bold').fontSize(scaleValue(12));
+        doc.text(formatCurrency(card.value), cardX + scale(10), cardY + scale(48), { width: cardWidth - scale(20) });
       });
 
       const rows = Math.ceil(prizeCards.length / columns);
-      y += rows * cardHeight + (rows - 1) * cardGap + 16;
+      y += rows * cardHeight + (rows - 1) * cardGap + scale(16);
     }
 
-    const tableTitleHeight = 24;
-    const tableHeaderHeight = 22;
-    const tableGap = 8;
+    const tableTitleHeight = scale(24);
+    const tableHeaderHeight = scale(22);
+    const tableGap = scale(8);
 
     const tableColumns = {
       bilhete: 90,
@@ -354,29 +417,30 @@ export class TransparencyService {
 
     const drawTableHeader = (startY: number) => {
       doc.rect(margin, startY, contentWidth, tableHeaderHeight).fill('#1b2a40');
-      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(9);
-      doc.text('BILHETE', margin + 8, startY + 6, { width: tableColumns.bilhete - 12 });
-      doc.text('APOSTADOR', margin + tableColumns.bilhete + 8, startY + 6, { width: tableColumns.apostador - 12 });
-      doc.text('CIDADE/UF', margin + tableColumns.bilhete + tableColumns.apostador + 8, startY + 6, {
-        width: tableColumns.cidade - 12,
+      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(scale(9));
+      doc.text('BILHETE', margin + scale(8), startY + scale(6), { width: tableColumns.bilhete - scale(12) });
+      doc.text('APOSTADOR', margin + tableColumns.bilhete + scale(8), startY + scale(6), { width: tableColumns.apostador - scale(12) });
+      doc.text('CIDADE/UF', margin + tableColumns.bilhete + tableColumns.apostador + scale(8), startY + scale(6), {
+        width: tableColumns.cidade - scale(12),
       });
-      doc.text('DEZENAS JOGADAS', margin + tableColumns.bilhete + tableColumns.apostador + tableColumns.cidade + 8, startY + 6, {
-        width: dezenasWidth - 12,
+      doc.text('DEZENAS JOGADAS', margin + tableColumns.bilhete + tableColumns.apostador + tableColumns.cidade + scale(8), startY + scale(6), {
+        width: dezenasWidth - scale(12),
       });
       doc.font('Helvetica');
     };
 
     const drawTableTitle = (startY: number) => {
       doc.rect(margin, startY, contentWidth, tableTitleHeight).fill('#6d2b2b');
-      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(12);
-      doc.text('TABELA DE CONFER\u00caNCIA (A-Z)', margin, startY + 6, { width: contentWidth, align: 'center' });
+      doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(scale(12));
+      doc.text('TABELA DE CONFER\u00caNCIA (A-Z)', margin, startY + scale(6), { width: contentWidth, align: 'center' });
       doc.font('Helvetica');
     };
 
     if (y + tableTitleHeight + tableHeaderHeight + tableGap > pageHeight - margin) {
+      drawMascot();
       doc.addPage();
       drawHeader();
-      y = margin + headerHeight + 12;
+      y = margin + headerHeight + scale(12);
     }
 
     drawTableTitle(y);
@@ -384,9 +448,9 @@ export class TransparencyService {
     drawTableHeader(y);
     y += tableHeaderHeight;
 
-    const baseRowHeight = 22;
-    const numberFontSize = 9;
-    const lineHeight = 12;
+    const baseRowHeight = scale(24);
+    const numberFontSize = scale(10);
+    const lineHeight = scale(13);
 
     bets.forEach((bet, index) => {
       const rawNumbers = Array.isArray(bet.numbers) ? bet.numbers : [];
@@ -396,12 +460,13 @@ export class TransparencyService {
         .sort((a, b) => a - b)
         .map((value) => value.toString().padStart(2, '0'));
       const lines = chunkNumbers(numbers, 10).map((line) => line.join(' '));
-      const rowHeight = Math.max(baseRowHeight, lines.length * lineHeight + 8);
+      const rowHeight = Math.max(baseRowHeight, lines.length * lineHeight + scale(8));
 
       if (y + rowHeight > pageHeight - margin) {
+        drawMascot();
         doc.addPage();
         drawHeader();
-        y = margin + headerHeight + 12;
+        y = margin + headerHeight + scale(12);
         drawTableTitle(y);
         y += tableTitleHeight + tableGap;
         drawTableHeader(y);
@@ -411,24 +476,26 @@ export class TransparencyService {
       const betId = typeof bet.id === 'string' ? bet.id : String(bet.id ?? '');
 
       doc.rect(margin, y, contentWidth, rowHeight).fill(index % 2 === 0 ? '#ffffff' : '#f3f4f6');
-      doc.fillColor('#111827').font('Helvetica').fontSize(9);
-      doc.text(betId.slice(0, 8).toUpperCase(), margin + 8, y + 6, { width: tableColumns.bilhete - 12 });
-      doc.text(abbreviateName(bet.user?.fullName), margin + tableColumns.bilhete + 8, y + 6, {
-        width: tableColumns.apostador - 12,
+      doc.fillColor('#111827').font('Helvetica').fontSize(scale(10));
+      doc.text(betId.slice(0, 8).toUpperCase(), margin + scale(8), y + scale(6), { width: tableColumns.bilhete - scale(12) });
+      doc.text(abbreviateName(bet.user?.fullName), margin + tableColumns.bilhete + scale(8), y + scale(6), {
+        width: tableColumns.apostador - scale(12),
       });
       const city = bet.user?.city ?? 'N/I';
       const state = bet.user?.state ?? 'N/I';
-      doc.text(`${city} - ${state}`, margin + tableColumns.bilhete + tableColumns.apostador + 8, y + 6, {
-        width: tableColumns.cidade - 12,
+      doc.text(`${city} - ${state}`, margin + tableColumns.bilhete + tableColumns.apostador + scale(8), y + scale(6), {
+        width: tableColumns.cidade - scale(12),
       });
       doc.fontSize(numberFontSize);
-      doc.text(lines.join('\n'), margin + tableColumns.bilhete + tableColumns.apostador + tableColumns.cidade + 8, y + 6, {
-        width: dezenasWidth - 12,
-        lineGap: 2,
+      doc.text(lines.join('\n'), margin + tableColumns.bilhete + tableColumns.apostador + tableColumns.cidade + scale(8), y + scale(6), {
+        width: dezenasWidth - scale(12),
+        lineGap: scale(2),
       });
 
       y += rowHeight;
     });
+
+    drawMascot();
 
     const output = new Promise<Buffer>((resolve, reject) => {
       const chunks: Buffer[] = [];

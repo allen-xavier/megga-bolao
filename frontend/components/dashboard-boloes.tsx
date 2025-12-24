@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import useSWR from "swr";
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { api } from "@/lib/api";
 
 type PrizeConfig = { type?: string; value?: number };
@@ -498,7 +499,8 @@ export function DashboardBoloes() {
                         disabled={!hasTransparency}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:rounded-2xl"
                       >
-                        Baixar transparência
+                        <span>Baixar transparência</span>
+                        <ArrowDownTrayIcon className="h-4 w-4" aria-hidden />
                       </button>
                     )}
                   </div>

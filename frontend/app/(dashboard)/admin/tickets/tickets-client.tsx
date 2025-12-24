@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { api } from "@/lib/api";
 
 type TicketPrize = {
@@ -354,9 +355,10 @@ export default function TicketsAdminClient() {
                           window.open(`/api/boloes/${ticket.bolao?.id}/transparency`, "_blank", "noopener");
                         }}
                         disabled={!hasTransparency}
-                        className="w-full rounded-2xl border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                       >
-                        Baixar transparência
+                        <span>Baixar transparência</span>
+                        <ArrowDownTrayIcon className="h-4 w-4" aria-hidden />
                       </button>
                     )}
                   </div>

@@ -17,7 +17,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <section className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
         <div>
           <h1 className="text-2xl font-semibold">Dados cadastrais</h1>
           <p className="text-sm text-white/60">
@@ -25,10 +25,10 @@ export default async function ProfilePage() {
           </p>
         </div>
       </section>
-      <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <section className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
         <ProfileForm user={user} />
       </section>
-      <section className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
+      <section className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
         <ProfileLogoutButton />
       </section>
     </div>

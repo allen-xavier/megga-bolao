@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 
 type Prize = {
@@ -420,9 +421,10 @@ function AdminBoloesPageContent() {
                   window.open(`/api/boloes/${bolao.id}/transparency`, "_blank", "noopener");
                 }}
                 disabled={!hasTransparency}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Baixar transparência
+                <span>Baixar transparência</span>
+                <ArrowDownTrayIcon className="h-4 w-4" aria-hidden />
               </button>
               {isAdmin && (
                 <Link
@@ -687,9 +689,10 @@ function AdminBoloesPageContent() {
                   window.open(`/api/boloes/${bolao.id}/transparency`, "_blank", "noopener");
                 }}
                 disabled={!hasTransparency}
-                className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:rounded-2xl"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:rounded-2xl"
               >
-                Baixar transparência
+                <span>Baixar transparência</span>
+                <ArrowDownTrayIcon className="h-4 w-4" aria-hidden />
               </button>
               {isAdmin && (
                 <Link
@@ -770,9 +773,10 @@ function AdminBoloesPageContent() {
                 window.open(`/api/boloes/${bolao.id}/transparency`, "_blank", "noopener");
               }}
               disabled={!hasTransparency}
-              className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Baixar transparência
+              <span>Baixar transparência</span>
+              <ArrowDownTrayIcon className="h-4 w-4" aria-hidden />
             </button>
           )}
           {isAdmin && (

@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState } from 'react';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 
 interface TransparencyDownloadProps {
@@ -50,7 +51,8 @@ export function TransparencyDownload({ bolaoId, hasFile }: TransparencyDownloadP
         disabled={!hasFile || isDownloading}
         className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white/70 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isDownloading ? 'Gerando...' : 'Baixar transparência'}
+        <span>{isDownloading ? 'Gerando...' : 'Baixar transparência'}</span>
+        <ArrowDownTrayIcon className="h-4 w-4" aria-hidden />
       </button>
       {error && <p className="text-xs text-megga-rose">{error}</p>}
       {!hasFile && !error && <p className="text-xs text-white/40">Arquivo disponível após as primeiras apostas.</p>}
