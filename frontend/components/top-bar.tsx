@@ -58,7 +58,7 @@ export function TopBar() {
               />
             )}
             <div className="flex flex-col justify-center">
-              <span className="text-[9px] uppercase tracking-[0.26em] text-white/50">Bolão entre Amigos</span>
+              <span className="text-[9px] uppercase tracking-[0.14em] text-white/50 md:tracking-[0.26em]">Bolão entre Amigos</span>
               <span className="mt-0.5 text-sm font-semibold leading-tight md:text-base">Megga Bolão</span>
             </div>
 

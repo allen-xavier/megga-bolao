@@ -82,6 +82,12 @@ export const sections: DrawerSection[] = [
         adminOnly: true,
       },
       {
+        label: "Config gerais",
+        href: "/admin/configuracoes",
+        description: "Defina acumulação da Sena e padrões de prêmios.",
+        adminOnly: true,
+      },
+      {
         label: "Minha carteira",
         href: "/carteira",
         description: "Saldo e histórico de movimentos.",

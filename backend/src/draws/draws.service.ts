@@ -82,6 +82,17 @@ export class DrawsService {
     return { deleted: true };
   }
 
+  private async getSenaRollConfig() {
+    const config = await this.prisma.generalConfig.upsert({
+      where: { id: "global" },
+      update: {},
+      create: { id: "global", senaRollPercent: 10 },
+    });
+    const rollPercent = Number(config.senaRollPercent ?? 10);
+    const rollFactor = Math.max(0, 1 - rollPercent / 100);
+    return { rollPercent, rollFactor };
+  }
+
   private async processPrizesAndClosure(bolaoId: string) {
     const bolao = await this.prisma.bolao.findUnique({
       where: { id: bolaoId },
@@ -94,6 +105,8 @@ export class DrawsService {
       },
     });
     if (!bolao) return;
+
+    const { rollFactor } = await this.getSenaRollConfig();
 
     const allNumbersSet = new Set<number>();
     bolao.draws.forEach((d) => d.numbers.forEach((n) => allNumbersSet.add(n)));
@@ -132,13 +145,10 @@ export class DrawsService {
     const isFirstDraw = bolao.draws.length === 1;
     const reservedPot = Number(bolao.senaPotReserved ?? 0);
     const globalPotAmount = Number(senaPotGlobal?.amount ?? 0);
-    const commissionFactor = Math.max(0, 1 - commissionPercent / 100);
-
     // Acumula/zera pot no primeiro sorteio, mesmo sem encerrar
     if (!shouldClose && isFirstDraw) {
       const totalGross = reservedPot + senaPrizeBase;
-      const totalNet = totalGross * commissionFactor;
-      const rolledAmount = senaWinners.length === 0 ? totalNet * 0.8 : 0;
+      const rolledAmount = senaWinners.length === 0 ? totalGross * rollFactor : 0;
       const newGlobal = senaWinners.length === 0 ? globalPotAmount + rolledAmount : 0;
 
       await this.prisma.$transaction(async (tx) => {
@@ -195,12 +205,11 @@ export class DrawsService {
 
     const potAvailable = reservedPot > 0 ? reservedPot : globalPotAmount;
     const totalSenaGross = potAvailable + senaPrizeBase;
-    const totalSenaNet = totalSenaGross * commissionFactor;
     let senaPotAmount = globalPotAmount;
-    let senaTotal = totalSenaNet;
+    let senaTotal = totalSenaGross;
 
     if (senaWinners.length === 0) {
-      senaPotAmount = totalSenaNet * 0.8;
+      senaPotAmount = totalSenaGross * rollFactor;
       senaTotal = 0;
     } else {
       senaPotAmount = 0;

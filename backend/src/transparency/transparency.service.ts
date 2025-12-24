@@ -82,6 +82,17 @@ export class TransparencyService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  private async getSenaRollConfig() {
+    const config = await this.prisma.generalConfig.upsert({
+      where: { id: 'global' },
+      update: {},
+      create: { id: 'global', senaRollPercent: 10 },
+    });
+    const rollPercent = Number(config.senaRollPercent ?? 10);
+    const rollFactor = Math.max(0, 1 - rollPercent / 100);
+    return { rollPercent, rollFactor };
+  }
+
   async ensureRecord(
     tx: Prisma.TransactionClient,
     bolaoId: string,
@@ -137,6 +148,11 @@ export class TransparencyService {
       where: { id: bolaoId },
       include: {
         prizes: true,
+        bolaoResults: {
+          orderBy: { closedAt: 'desc' },
+          take: 1,
+          include: { prizes: true },
+        },
         bets: {
           include: {
             user: { select: { fullName: true, city: true, state: true } },
@@ -222,7 +238,7 @@ export class TransparencyService {
     const totalFixed = prizeList.reduce((acc: number, prize: any) => acc + toNumber(prize.fixedValue), 0);
     const totalPct = prizeList.reduce((acc: number, prize: any) => acc + toNumber(prize.percentage), 0);
     const variablePool = Math.max(prizePool - totalFixed, 0);
-    const rollFactor = 0.8;
+    const { rollFactor } = await this.getSenaRollConfig();
     const senaPotReserved = toNumber(bolao.senaPotReserved ?? 0);
     const senaPotRolled = toNumber(bolao.senaPotRolled ?? 0);
 
@@ -233,10 +249,15 @@ export class TransparencyService {
     };
 
     const senaPrize = prizeList.find((prize: any) => prize.type === 'SENA_PRIMEIRO');
+    const senaResultTotal = toNumber(
+      bolao.bolaoResults?.[0]?.prizes?.find((result: any) => result.prizeType === 'SENA_PRIMEIRO')?.totalValue,
+    );
     const senaPrizeBase = senaPrize ? getPrizeValue(senaPrize) : 0;
     let senaPrizeTotal = senaPrizeBase;
     if (senaPrize) {
-      if (senaPotReserved > 0) {
+      if (senaResultTotal > 0) {
+        senaPrizeTotal = Math.max(senaPrizeBase, senaResultTotal);
+      } else if (senaPotReserved > 0) {
         senaPrizeTotal = senaPrizeBase + senaPotReserved;
       } else if (senaPotRolled > 0 && rollFactor > 0) {
         senaPrizeTotal = Math.max(senaPrizeBase, senaPotRolled / rollFactor);
@@ -290,15 +311,36 @@ export class TransparencyService {
     const titleY = margin + (headerHeight - titleBlockHeight) / 2;
     const metaY = titleY + headerTitleSize * 1.1 + headerGap;
 
+    const getPngSize = (buffer: Buffer) => {
+      if (buffer.length < 24) return null;
+      const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+      for (let i = 0; i < signature.length; i += 1) {
+        if (buffer[i] !== signature[i]) return null;
+      }
+      const width = buffer.readUInt32BE(16);
+      const height = buffer.readUInt32BE(20);
+      if (!width || !height) return null;
+      return { width, height };
+    };
+
     const getImageSize = (buffer: Buffer | null, height: number) => {
       if (!buffer) return null;
+      let dimensions: { width: number; height: number } | null = null;
       try {
-        const image = doc.openImage(buffer);
-        const ratio = height / image.height;
-        return { width: image.width * ratio, height };
+        const opener = (doc as unknown as { openImage?: (data: Buffer) => { width: number; height: number } }).openImage;
+        if (opener) {
+          const image = opener(buffer);
+          dimensions = { width: image.width, height: image.height };
+        }
       } catch {
-        return null;
+        dimensions = null;
       }
+      if (!dimensions) {
+        dimensions = getPngSize(buffer);
+      }
+      if (!dimensions) return null;
+      const ratio = height / dimensions.height;
+      return { width: dimensions.width * ratio, height };
     };
 
     const drawHeader = () => {
@@ -308,11 +350,7 @@ export class TransparencyService {
       const logoX = margin + mascotPadding;
       const logoDims = getImageSize(logoBuffer, logoHeight);
       if (logoDims) {
-        const glow = scale(2);
-        doc.save();
-        doc.fillOpacity(0.35);
-        doc.roundedRect(logoX - glow, logoY - glow, logoDims.width + glow * 2, logoDims.height + glow * 2, scale(6)).fill('#ffffff');
-        doc.restore();
+        // Intencionalmente sem borda/contorno.
       }
       drawImage(logoBuffer, logoX, logoY, { height: logoHeight });
       doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(headerTitleSize);
@@ -330,39 +368,36 @@ export class TransparencyService {
 
     let y = margin + headerHeight + scale(12);
 
-    const infoHeight = scale(120);
+    const infoPadding = scale(10);
+    const rightBoxWidth = scale(225);
+    const rightBoxHeight = scale(18);
+    const rightBoxGap = scale(4);
+    const rightColumnHeight = rightBoxHeight * 2 + rightBoxGap;
+    const topBlockHeight = Math.max(scale(32), rightColumnHeight);
+    const infoHeight = topBlockHeight + infoPadding * 2 + scale(4);
     doc.roundedRect(margin, y, contentWidth, infoHeight, 12).fill('#eef2f6');
     doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(scale(16));
-    doc.text(`${bolao.name}  #${bolaoCode}`, margin + scale(16), y + scale(14), { width: contentWidth - scale(32) });
+    const rightBoxX = margin + contentWidth - infoPadding - rightBoxWidth;
+    const rightBoxY = y + infoPadding;
+    const titleX = margin + infoPadding;
+    const titleWidth = rightBoxX - titleX - scale(12);
+
+    doc.text(`${bolao.name}  #${bolaoCode}`, titleX, y + infoPadding, { width: titleWidth });
     doc.font('Helvetica-Oblique').fontSize(scale(10)).fillColor('#374151');
-    doc.text('V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!', margin + scale(16), y + scale(36), {
-      width: contentWidth - scale(32),
+    doc.text('V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!', titleX, y + infoPadding + scale(18), {
+      width: titleWidth,
     });
 
-    const infoBoxY = y + scale(56);
-    const infoBoxHeight = scale(46);
-    const infoGap = scale(10);
-    const infoInset = scale(12);
-    const infoLabelSize = scale(8);
-    const infoValueSize = scale(11);
-    const infoValueLarge = scaleValue(11);
-    const infoBoxWidth = (contentWidth - infoInset * 2 - infoGap * 3) / 4;
-    const infoLabels = [
-      { label: 'In\u00edcio', value: startDate },
-      { label: 'Valor da aposta', value: formatCurrency(ticketPrice) },
-      { label: 'Total em pr\u00eamios', value: `${prizeCards.length} pr\u00eamio${prizeCards.length === 1 ? '' : 's'}` },
-      { label: 'Premia\u00e7\u00e3o total', value: formatCurrency(prizePoolAdjusted) },
-    ];
+    const drawRightBox = (label: string, value: string, boxY: number) => {
+      doc.roundedRect(rightBoxX, boxY, rightBoxWidth, rightBoxHeight, 8).fill('#ffffff');
+      doc.fillColor('#6b7280').font('Helvetica').fontSize(scale(7));
+      doc.text(label, rightBoxX + scale(8), boxY + scale(3), { width: rightBoxWidth - scale(16) });
+      doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(scale(9));
+      doc.text(value, rightBoxX + scale(8), boxY + scale(9), { width: rightBoxWidth - scale(16) });
+    };
 
-    infoLabels.forEach((item, index) => {
-      const boxX = margin + infoInset + index * (infoBoxWidth + infoGap);
-      doc.roundedRect(boxX, infoBoxY, infoBoxWidth, infoBoxHeight, 10).fill('#ffffff');
-      doc.fillColor('#6b7280').font('Helvetica').fontSize(infoLabelSize);
-      doc.text(item.label, boxX + scale(10), infoBoxY + scale(8), { width: infoBoxWidth - scale(20) });
-      const valueSize = item.value.includes('R$') ? infoValueLarge : infoValueSize;
-      doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(valueSize);
-      doc.text(item.value, boxX + scale(10), infoBoxY + scale(22), { width: infoBoxWidth - scale(20) });
-    });
+    drawRightBox('In\u00edcio', startDate, rightBoxY);
+    drawRightBox('Valor da aposta', formatCurrency(ticketPrice), rightBoxY + rightBoxHeight + rightBoxGap);
 
     y = y + infoHeight + scale(8);
     doc.fillColor('#0f1117').font('Helvetica').fontSize(scale(9));
@@ -371,7 +406,14 @@ export class TransparencyService {
       align: 'center',
     });
 
-    y += scale(20);
+    y += scale(12);
+    const summaryWidth = contentWidth * 0.8;
+    const summaryX = margin + (contentWidth - summaryWidth) / 2;
+    const prizeSummary = `${prizeCards.length} PR\u00caMIO${prizeCards.length === 1 ? '' : 'S'} = ${formatCurrency(prizePoolAdjusted)}`;
+    doc.fillColor('#6d2b2b').font('Helvetica-Bold').fontSize(scaleValue(20));
+    doc.text(prizeSummary, summaryX, y, { width: summaryWidth, align: 'center' });
+
+    y += scale(24);
     doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(scale(13));
     doc.text('Detalhes das premia\u00e7\u00f5es', margin, y);
     y += scale(18);
@@ -406,7 +448,7 @@ export class TransparencyService {
 
     const tableTitleHeight = scale(24);
     const tableHeaderHeight = scale(22);
-    const tableGap = scale(8);
+    const tableGap = 0;
 
     const tableColumns = {
       bilhete: 90,
@@ -440,7 +482,7 @@ export class TransparencyService {
       drawMascot();
       doc.addPage();
       drawHeader();
-      y = margin + headerHeight + scale(12);
+      y = margin + headerHeight;
     }
 
     drawTableTitle(y);
@@ -448,9 +490,9 @@ export class TransparencyService {
     drawTableHeader(y);
     y += tableHeaderHeight;
 
-    const baseRowHeight = scale(24);
-    const numberFontSize = scale(10);
-    const lineHeight = scale(13);
+    const baseRowHeight = scale(14);
+    const numberFontSize = scale(8.5);
+    const lineHeight = scale(10);
 
     bets.forEach((bet, index) => {
       const rawNumbers = Array.isArray(bet.numbers) ? bet.numbers : [];
@@ -460,13 +502,13 @@ export class TransparencyService {
         .sort((a, b) => a - b)
         .map((value) => value.toString().padStart(2, '0'));
       const lines = chunkNumbers(numbers, 10).map((line) => line.join(' '));
-      const rowHeight = Math.max(baseRowHeight, lines.length * lineHeight + scale(8));
+      const rowHeight = Math.max(baseRowHeight, lines.length * lineHeight + scale(4));
 
       if (y + rowHeight > pageHeight - margin) {
         drawMascot();
         doc.addPage();
         drawHeader();
-        y = margin + headerHeight + scale(12);
+        y = margin + headerHeight;
         drawTableTitle(y);
         y += tableTitleHeight + tableGap;
         drawTableHeader(y);
@@ -476,18 +518,18 @@ export class TransparencyService {
       const betId = typeof bet.id === 'string' ? bet.id : String(bet.id ?? '');
 
       doc.rect(margin, y, contentWidth, rowHeight).fill(index % 2 === 0 ? '#ffffff' : '#f3f4f6');
-      doc.fillColor('#111827').font('Helvetica').fontSize(scale(10));
-      doc.text(betId.slice(0, 8).toUpperCase(), margin + scale(8), y + scale(6), { width: tableColumns.bilhete - scale(12) });
-      doc.text(abbreviateName(bet.user?.fullName), margin + tableColumns.bilhete + scale(8), y + scale(6), {
+      doc.fillColor('#111827').font('Helvetica').fontSize(scale(9));
+      doc.text(betId.slice(0, 8).toUpperCase(), margin + scale(8), y + scale(3), { width: tableColumns.bilhete - scale(12) });
+      doc.text(abbreviateName(bet.user?.fullName), margin + tableColumns.bilhete + scale(8), y + scale(3), {
         width: tableColumns.apostador - scale(12),
       });
       const city = bet.user?.city ?? 'N/I';
       const state = bet.user?.state ?? 'N/I';
-      doc.text(`${city} - ${state}`, margin + tableColumns.bilhete + tableColumns.apostador + scale(8), y + scale(6), {
+      doc.text(`${city} - ${state}`, margin + tableColumns.bilhete + tableColumns.apostador + scale(8), y + scale(3), {
         width: tableColumns.cidade - scale(12),
       });
       doc.fontSize(numberFontSize);
-      doc.text(lines.join('\n'), margin + tableColumns.bilhete + tableColumns.apostador + tableColumns.cidade + scale(8), y + scale(6), {
+      doc.text(lines.join('\n'), margin + tableColumns.bilhete + tableColumns.apostador + tableColumns.cidade + scale(8), y + scale(3), {
         width: dezenasWidth - scale(12),
         lineGap: scale(2),
       });

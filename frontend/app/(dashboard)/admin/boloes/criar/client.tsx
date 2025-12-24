@@ -14,6 +14,12 @@ interface PrizeOption {
   enabled: boolean;
 }
 
+interface DefaultPrizeConfig {
+  id: string;
+  percentage: number;
+  enabled: boolean;
+}
+
 const basePrizes: PrizeOption[] = [
   { id: "pe-quente", name: "Pé Quente", description: "Ganha quem acertar 10 números primeiro", percentage: 40, enabled: true },
   { id: "pe-frio", name: "Pé Frio", description: "Ganha quem acertar menos números no final", percentage: 12, enabled: true },
@@ -23,6 +29,23 @@ const basePrizes: PrizeOption[] = [
   { id: "oito", name: "8 acertos", description: "Ganha quem finalizar com 8 acertos", percentage: 8, enabled: true },
   { id: "indicacao", name: "Indique e Ganhe", description: "Comissão direta e indireta", percentage: 3, enabled: true },
 ];
+
+const mapPrizeDefaults = (defaults?: DefaultPrizeConfig[]) => {
+  if (!Array.isArray(defaults) || defaults.length === 0) {
+    return basePrizes.map((prize) => ({ ...prize }));
+  }
+  const map = new Map(defaults.map((item) => [item.id, item]));
+  return basePrizes.map((prize) => {
+    const match = map.get(prize.id);
+    if (!match) return { ...prize };
+    const percentage = Number(match.percentage);
+    return {
+      ...prize,
+      percentage: Number.isFinite(percentage) ? percentage : prize.percentage,
+      enabled: Boolean(match.enabled),
+    };
+  });
+};
 
 const prizeTypeMap: Record<string, string> = {
   "pe-quente": "PE_QUENTE",
@@ -77,7 +100,8 @@ export default function CreatebolãoClient() {
   const router = useRouter();
   const bolãoId = searchParams.get("id");
 
-  const [prizes, setPrizes] = useState<PrizeOption[]>(() => basePrizes.map((prize) => ({ ...prize })));
+  const [defaultPrizes, setDefaultPrizes] = useState<PrizeOption[]>(() => mapPrizeDefaults());
+  const [prizes, setPrizes] = useState<PrizeOption[]>(() => mapPrizeDefaults());
   const [guaranteedPrize, setGuaranteedPrize] = useState("10000,00");
   const [name, setName] = useState("Bolão promocional");
   const [startsAt, setStartsAt] = useState(() => formatInputDate(new Date())); // data/hora atual SP
@@ -87,6 +111,7 @@ export default function CreatebolãoClient() {
   const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [defaultsLoaded, setDefaultsLoaded] = useState(false);
 
   const { totalPercentage, meggaTax } = useMemo(() => {
     const total = prizes.filter((prize) => prize.enabled).reduce((acc, prize) => acc + prize.percentage, 0);
@@ -131,6 +156,40 @@ export default function CreatebolãoClient() {
     loadbolão();
   }, [bolãoId, session?.user?.accessToken, status]);
 
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.accessToken || !isAdmin) return;
+    if (defaultsLoaded) return;
+    let cancelled = false;
+
+    const loadDefaults = async () => {
+      try {
+        const { data } = await api.get("/admin/general-config", {
+          headers: { Authorization: `Bearer ${session.user.accessToken}` },
+        });
+        if (cancelled) return;
+        const mapped = mapPrizeDefaults(data?.defaultPrizes as DefaultPrizeConfig[] | undefined);
+        setDefaultPrizes(mapped);
+        if (!bolãoId) {
+          setPrizes(mapped);
+        }
+      } catch (error: any) {
+        const backendMessage =
+          error?.response?.data?.message ||
+          error?.message ||
+          (typeof error === "string" ? error : null);
+        setMessage(backendMessage ? String(backendMessage) : "Erro ao carregar padrao de premiacoes.");
+      } finally {
+        if (!cancelled) setDefaultsLoaded(true);
+      }
+    };
+
+    loadDefaults();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bolãoId, defaultsLoaded, isAdmin, session?.user?.accessToken, status]);
+
   const togglePrize = (id: string) => {
     setPrizes((current) =>
       current.map((prize) =>
@@ -145,7 +204,7 @@ export default function CreatebolãoClient() {
   };
 
   const resetPrizes = () => {
-    setPrizes(basePrizes.map((prize) => ({ ...prize })));
+    setPrizes(defaultPrizes.map((prize) => ({ ...prize })));
   };
 
   const handleSave = async () => {
