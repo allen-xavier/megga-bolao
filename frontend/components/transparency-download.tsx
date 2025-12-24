@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { api } from '@/lib/api';
@@ -20,14 +20,14 @@ export function TransparencyDownload({ bolaoId, hasFile }: TransparencyDownloadP
         responseType: 'blob',
       });
 
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
 
       const contentDisposition = response.headers['content-disposition'] as string | undefined;
       const suggestedName = contentDisposition?.split('filename=')[1]?.replace(/"/g, '');
       link.href = url;
-      link.download = suggestedName || `transparencia-bolao-${bolaoId}.csv`;
+      link.download = suggestedName || `transparencia-bolao-${bolaoId}.pdf`;
 
       document.body.appendChild(link);
       link.click();

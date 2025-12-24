@@ -114,6 +114,19 @@ services:
     networks:
       - internal
       - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=minharede
+      - traefik.http.routers.megga.rule=Host(`app.allentiomolu.com.br`)
+      - traefik.http.routers.megga.entrypoints=websecure
+      - traefik.http.routers.megga.tls=true
+      - traefik.http.routers.megga.tls.certresolver=letsencryptresolver
+      - traefik.http.routers.megga.priority=1
+      - traefik.http.routers.megga.service=megga
+      - traefik.http.routers.megga.middlewares=megga-sslheader
+      - traefik.http.services.megga.loadbalancer.server.port=80
+      - traefik.http.services.megga.loadbalancer.passHostHeader=true
+      - traefik.http.middlewares.megga-sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
     deploy:
       mode: replicated
       replicas: 1

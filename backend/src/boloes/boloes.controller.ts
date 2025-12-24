@@ -76,15 +76,15 @@ export class BoloesController {
     const hasStarted = !Number.isNaN(startsAt.getTime()) && startsAt.getTime() <= Date.now();
     const isClosed = Boolean(bolao.closedAt);
     if (!hasStarted && !isClosed) {
-      throw new NotFoundException("Arquivo de transparencia so fica disponivel quando o bolao inicia");
+      throw new NotFoundException("Arquivo de transparência só fica disponível quando o bolão inicia");
     }
-    const file = await this.transparencyService.getFileForBolao(id);
-    if (!file) {
-      throw new NotFoundException("Arquivo de transparencia nao disponivel");
+    const pdf = await this.transparencyService.buildPdfForBolao(id);
+    if (!pdf) {
+      throw new NotFoundException("Arquivo de transparência não disponível");
     }
 
-    res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
-    return res.download(file.absolutePath, file.filename);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${pdf.filename}"`);
+    return res.end(pdf.buffer);
   }
 }

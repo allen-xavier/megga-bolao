@@ -194,7 +194,7 @@ export function WalletSummary() {
           </div>
         </div>
         {!canWithdraw && (
-          <p className="mt-2 text-xs text-white/60">Saque minimo: R$ {minWithdrawLabel}.</p>
+          <p className="mt-2 text-xs text-white/60">Saque mínimo: R$ {minWithdrawLabel}.</p>
         )}
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-white/10 bg-[#151824] px-3 py-3 shadow md:px-5 md:py-4">
@@ -295,7 +295,7 @@ export function WalletSummary() {
               onChange={(event) => setHideAffiliate(event.target.checked)}
               className="h-4 w-4 rounded border-white/20 bg-white/10 text-megga-yellow focus:ring-megga-yellow"
             />
-            Ocultar comissoes de afiliados
+            Ocultar comissões de afiliados
           </label>
 
           <ul className="mt-3 max-h-60 space-y-3 overflow-y-auto pr-1 text-sm">
@@ -343,7 +343,7 @@ export function WalletSummary() {
               </button>
             </div>
             <p className="mt-2 text-xs text-white/60">Saldo disponivel para saque: R$ {balance}.</p>
-            <p className="mt-1 text-xs text-white/60">Saque minimo: R$ {minWithdrawLabel}.</p>
+            <p className="mt-1 text-xs text-white/60">Saque mínimo: R$ {minWithdrawLabel}.</p>
 
             <div className="mt-4 flex items-center justify-between gap-3 text-sm text-white/70">
               <span>Valor do saque</span>
@@ -375,12 +375,12 @@ export function WalletSummary() {
               }}
               disabled={withdrawUseTotal}
               className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-              placeholder={`Minimo R$ ${minWithdrawLabel}`}
+              placeholder={`Mínimo R$ ${minWithdrawLabel}`}
             />
 
             <div className="mt-3 rounded-2xl border border-white/10 bg-[#151824] p-3 text-sm">
               <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Chave PIX cadastrada</p>
-              <p className="mt-1 font-semibold text-white">{userPixKey || "Nao cadastrada"}</p>
+              <p className="mt-1 font-semibold text-white">{userPixKey || "Não cadastrada"}</p>
               <p className="mt-2 text-xs text-white/60">
                 O PIX deve pertencer ao CPF {formattedCpf || "cadastrado"}.
               </p>

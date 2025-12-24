@@ -184,7 +184,7 @@ export default function SaquesClient() {
     if (!token) return;
     const ok = window.confirm("Negar este saque?");
     if (!ok) return;
-    const reasonInput = window.prompt("Motivo da negacao (opcional):");
+    const reasonInput = window.prompt("Motivo da negação (opcional):");
     const reason = reasonInput?.trim();
     setActionId(paymentId);
     setActionMessage(null);
@@ -206,7 +206,7 @@ export default function SaquesClient() {
   if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
-        <p className="text-sm text-white/80">Faca login como administrador para acessar as aprovacoes de saque.</p>
+        <p className="text-sm text-white/80">Faça login como administrador para acessar as aprovações de saque.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -219,7 +219,7 @@ export default function SaquesClient() {
   if (!isAdmin) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
-        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+        <p className="text-sm text-megga-rose">Você não tem permissão para acessar esta página.</p>
       </div>
     );
   }
@@ -228,15 +228,15 @@ export default function SaquesClient() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Pagamentos</p>
-        <h1 className="text-2xl font-semibold">Aprovacoes de saque</h1>
-        <p className="text-sm text-white/70">Gerencie pedidos pendentes e acompanhe o historico completo de saques.</p>
+        <h1 className="text-2xl font-semibold">Aprovações de saque</h1>
+        <p className="text-sm text-white/70">Gerencie pedidos pendentes e acompanhe o histórico completo de saques.</p>
       </header>
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 px-2 py-5 shadow-lg ring-1 ring-white/5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/50">Pedidos em aberto</p>
-            <h2 className="mt-2 text-xl font-semibold">Saques para aprovacao</h2>
+            <h2 className="mt-2 text-xl font-semibold">Saques para aprovação</h2>
             <p className="text-sm text-white/70">Apenas saques em processamento aparecem aqui.</p>
           </div>
           <button
@@ -251,7 +251,7 @@ export default function SaquesClient() {
         {userIdParam && (
           <div className="rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-xs text-white/70 md:px-4">
             <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Filtro</p>
-            <p className="mt-2 text-sm">Usuario filtrado: {userIdParam}</p>
+            <p className="mt-2 text-sm">Usuário filtrado: {userIdParam}</p>
             <Link href="/admin/saques" className="mt-2 inline-flex text-xs text-megga-yellow hover:underline">
               Ver todos
             </Link>
@@ -275,7 +275,7 @@ export default function SaquesClient() {
               <li key={payment.id} className="rounded-2xl border border-white/10 bg-white/5 px-2 py-4 text-sm text-white/80 md:p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-base font-semibold text-white">{payment.user?.fullName ?? "Usuario"}</p>
+                    <p className="text-base font-semibold text-white">{payment.user?.fullName ?? "Usuário"}</p>
                     <p className="text-xs text-white/60">CPF: {payment.user?.cpf ?? "--"} | PIX: {payment.user?.pixKey ?? "--"}</p>
                   </div>
                   <div className="text-right">
@@ -321,7 +321,7 @@ export default function SaquesClient() {
           })}
           {!approvalsLoading && (approvals?.length ?? 0) === 0 && (
             <li className="rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-sm text-white/60 md:px-4">
-              Nenhum saque aguardando aprovacao.
+              Nenhum saque aguardando aprovação.
             </li>
           )}
         </ul>
@@ -331,7 +331,7 @@ export default function SaquesClient() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/50">Extrato</p>
-            <h2 className="mt-2 text-xl font-semibold">Historico de saques</h2>
+            <h2 className="mt-2 text-xl font-semibold">Histórico de saques</h2>
             <p className="text-sm text-white/70">Pedidos, aprovados e negados com filtros por usuario e data.</p>
           </div>
           <button
@@ -345,7 +345,7 @@ export default function SaquesClient() {
 
         <div className="grid w-full min-w-0 gap-3 md:grid-cols-3">
           <label className="flex w-full min-w-0 flex-col overflow-hidden text-[11px] uppercase tracking-[0.3em] text-white/50">
-            Usuario (nome, CPF ou PIX)
+            Usuário (nome, CPF ou PIX)
             <input
               type="text"
               value={historySearch}
@@ -363,7 +363,7 @@ export default function SaquesClient() {
             />
           </label>
           <label className="flex w-full min-w-0 flex-col overflow-hidden text-[11px] uppercase tracking-[0.3em] text-white/50">
-            Ate
+            Até
             <input
               type="date"
               value={historyTo}
@@ -388,11 +388,11 @@ export default function SaquesClient() {
         </div>
 
         {historyLoading && (
-          <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Carregando historico...</p>
+          <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Carregando histórico...</p>
         )}
         {historyError && (
           <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-megga-rose md:px-4">
-            Erro ao carregar historico: {historyError?.message ?? "falha desconhecida"}
+            Erro ao carregar histórico: {historyError?.message ?? "falha desconhecida"}
           </p>
         )}
 
@@ -402,7 +402,7 @@ export default function SaquesClient() {
               <li key={payment.id} className="rounded-2xl border border-white/10 bg-white/5 px-2 py-4 text-sm text-white/80 md:p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-base font-semibold text-white">{payment.user?.fullName ?? "Usuario"}</p>
+                    <p className="text-base font-semibold text-white">{payment.user?.fullName ?? "Usuário"}</p>
                     <p className="text-xs text-white/60">CPF: {payment.user?.cpf ?? "--"} | PIX: {payment.user?.pixKey ?? "--"}</p>
                   </div>
                   <div className="text-right">

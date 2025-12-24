@@ -376,7 +376,7 @@ function AdminBoloesPageContent() {
             <header className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <h3 className="text-xl font-semibold leading-tight text-white">{bolao.name}</h3>
-                <p className="mt-0.5 text-xs text-white/65">Bolao encerrado em {closedAtLabel}</p>
+                <p className="mt-0.5 text-xs text-white/65">Bolão encerrado em {closedAtLabel}</p>
               </div>
               <div className="flex shrink-0 flex-col items-end justify-end rounded-2xl border border-white/10 bg-[#141823] px-4 py-3 text-right">
                 <p className="text-[10px] uppercase tracking-[0.18em] text-white/50 md:tracking-[0.2em]">Cota</p>
@@ -388,7 +388,7 @@ function AdminBoloesPageContent() {
 
             <div className={`rounded-2xl border px-4 py-1 text-white shadow-inner ${panelClass}`}>
               <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/50">
-                <span>Valor da premiacao</span>
+                <span>Valor da premiação</span>
               </div>
               <p className="mt-0.5 text-center text-3xl font-bold text-[#ff4d4f]">{formatCurrency(totalEstimado)}</p>
             </div>
@@ -399,9 +399,9 @@ function AdminBoloesPageContent() {
                 <span className="mt-1 block text-base font-semibold text-white">{closedAtLabel}</span>
               </div>
               <div className={`rounded-2xl border px-4 py-3 ${infoPanelClass}`}>
-                <span className="block text-[10px] text-white/40">Premios configurados</span>
+                <span className="block text-[10px] text-white/40">Prêmios configurados</span>
                 <span className="mt-1 block text-base font-semibold text-white">
-                  {premiosPrevistos > 0 ? `${premiosPrevistos} premio${premiosPrevistos > 1 ? 's' : ''}` : 'Em configuracao'}
+                  {premiosPrevistos > 0 ? `${premiosPrevistos} prêmio${premiosPrevistos > 1 ? 's' : ''}` : 'Em configuração'}
                 </span>
               </div>
             </div>
@@ -422,7 +422,7 @@ function AdminBoloesPageContent() {
                 disabled={!hasTransparency}
                 className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Baixar transparencia
+                Baixar transparência
               </button>
               {isAdmin && (
                 <Link
@@ -497,7 +497,7 @@ function AdminBoloesPageContent() {
             <header className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <h3 className="text-xl font-semibold leading-tight text-white">{bolao.name}</h3>
-                <p className="mt-0.5 text-xs text-white/65">Bolao inicia em {formatStartsAt(startsAt)}</p>
+                <p className="mt-0.5 text-xs text-white/65">Bolão inicia em {formatStartsAt(startsAt)}</p>
               </div>
               <div className="flex shrink-0 flex-col items-end justify-end rounded-2xl border border-white/10 bg-[#141823] px-4 py-3 text-right">
                 <p className="text-[10px] uppercase tracking-[0.18em] text-white/50 md:tracking-[0.2em]">Cota</p>
@@ -559,9 +559,9 @@ function AdminBoloesPageContent() {
                 </span>
               </div>
               <div className={`rounded-2xl border px-4 py-3 text-white ${accumPanelClass}`}>
-                <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Premios previstos</span>
+                <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Prêmios previstos</span>
                 <span className="mt-1 block text-base font-semibold text-white">
-                  {premiosPrevistos > 0 ? `${premiosPrevistos} premio${premiosPrevistos > 1 ? 's' : ''}` : 'Em configuracao'}
+                  {premiosPrevistos > 0 ? `${premiosPrevistos} prêmio${premiosPrevistos > 1 ? 's' : ''}` : 'Em configuração'}
                 </span>
               </div>
             </div>
@@ -643,7 +643,7 @@ function AdminBoloesPageContent() {
             <header className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <h3 className="text-xl font-semibold leading-tight text-white">{bolao.name}</h3>
-                <p className="mt-0.5 text-xs text-white/65">Bolao em andamento</p>
+                <p className="mt-0.5 text-xs text-white/65">Bolão em andamento</p>
               </div>
               <div className="flex shrink-0 flex-col items-end justify-end rounded-2xl border border-white/10 bg-[#141823] px-4 py-3 text-right">
                 <p className="text-[10px] uppercase tracking-[0.18em] text-white/50 md:tracking-[0.2em]">Cota</p>
@@ -655,7 +655,7 @@ function AdminBoloesPageContent() {
 
             <div className={`rounded-2xl border px-4 py-1 text-white shadow-inner ${progressPanelClass}`}>
               <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/50">
-                <span>Valor da premiacao</span>
+                <span>Valor da premiação</span>
               </div>
               <p className="mt-0.5 text-center text-3xl font-bold text-megga-yellow">{formatCurrency(totalEstimado)}</p>
             </div>
@@ -666,9 +666,9 @@ function AdminBoloesPageContent() {
                 <span className="mt-1 block text-base font-semibold text-white">{nextDrawLabel}</span>
               </div>
               <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
-                <span className="block text-[10px] text-white/40">Premios configurados</span>
+                <span className="block text-[10px] text-white/40">Prêmios configurados</span>
                 <span className="mt-1 block text-base font-semibold text-white">
-                  {premiosPrevistos > 0 ? `${premiosPrevistos} premio${premiosPrevistos > 1 ? 's' : ''}` : 'Em configuracao'}
+                  {premiosPrevistos > 0 ? `${premiosPrevistos} prêmio${premiosPrevistos > 1 ? 's' : ''}` : 'Em configuração'}
                 </span>
               </div>
             </div>
@@ -689,7 +689,7 @@ function AdminBoloesPageContent() {
                 disabled={!hasTransparency}
                 className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:rounded-2xl"
               >
-                Baixar transparencia
+                Baixar transparência
               </button>
               {isAdmin && (
                 <Link
@@ -719,7 +719,7 @@ function AdminBoloesPageContent() {
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">#{bolao.id}</p>
             <h3 className="mt-1 text-lg font-semibold">{bolao.name}</h3>
             <p className="text-xs text-white/60">
-              Inicio: {formatSaoPaulo(bolao.startsAt)} - Cota: {formatCurrency(parseAmount(bolao.ticketPrice))} - Minimo: {bolao.minimumQuotas} cotas
+              Início: {formatSaoPaulo(bolao.startsAt)} - Cota: {formatCurrency(parseAmount(bolao.ticketPrice))} - Mínimo: {bolao.minimumQuotas} cotas
             </p>
             {(bolao.isParticipant ||
               bolao.myBets?.some?.((b) => b.userId === userId) ||
@@ -741,17 +741,17 @@ function AdminBoloesPageContent() {
         </div>
         <div className="mt-4 grid gap-3 text-sm text-white/70 md:grid-cols-3">
           <div className="rounded-2xl bg-white/5 px-4 py-3">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premiacao garantida</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premiação garantida</p>
             <p className="mt-2 text-base font-semibold text-[#f7b500]">
               {formatCurrency(parseAmount(bolao.guaranteedPrize))}
             </p>
           </div>
           <div className="rounded-2xl bg-white/5 px-4 py-3">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Comissao</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Comissão</p>
             <p className="mt-2 text-base font-semibold text-white">{Number(bolao.commissionPercent ?? 0).toFixed(2)}%</p>
           </div>
           <div className="rounded-2xl bg-white/5 px-4 py-3">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Premios configurados</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Prêmios configurados</p>
             <p className="mt-2 text-base font-semibold text-white">{bolao.prizes?.length ?? 0} premiacoes</p>
           </div>
         </div>
@@ -772,7 +772,7 @@ function AdminBoloesPageContent() {
               disabled={!hasTransparency}
               className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-3 text-center text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Baixar transparencia
+              Baixar transparência
             </button>
           )}
           {isAdmin && (
@@ -818,7 +818,7 @@ function AdminBoloesPageContent() {
   if (status !== 'authenticated') {
     return (
       <p className="rounded-2xl bg-[#111218] p-4 text-sm text-white/70 ring-1 ring-white/5">
-        Faca login para visualizar os boloes.
+        Faça login para visualizar os bolões.
       </p>
     );
   }
@@ -840,9 +840,9 @@ function AdminBoloesPageContent() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-white/50">
-            {isAdmin ? 'Gestao de boloes' : 'Historico de boloes'}
+            {isAdmin ? 'Gestão de bolões' : 'Histórico de bolões'}
           </p>
-          <h1 className="text-2xl font-semibold">{isAdmin ? 'Boloes' : 'Boloes encerrados'}</h1>
+          <h1 className="text-2xl font-semibold">{isAdmin ? 'Bolões' : 'Bolões encerrados'}</h1>
         </div>
         {isAdmin && (
           <Link

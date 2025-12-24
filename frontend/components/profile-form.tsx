@@ -42,7 +42,7 @@ export function ProfileForm({ user }: { user: UserProfile }) {
       setLoading(true);
       setMessage(null);
       if (!userId) {
-        setMessage("Nao foi possivel identificar o usuario.");
+        setMessage("Não foi possível identificar o usuário.");
         setLoading(false);
         return;
       }

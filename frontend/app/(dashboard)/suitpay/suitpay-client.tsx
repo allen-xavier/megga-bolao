@@ -56,11 +56,11 @@ export default function SuitPayConfigPage() {
         webhookSecret: config.webhookSecret ?? undefined,
       };
       await api.patch("/admin/suitpay/config", payload, { headers: { Authorization: `Bearer ${token}` } });
-      setMessage("Configuracao atualizada com sucesso.");
+      setMessage("Configuração atualizada com sucesso.");
       setForm(null);
       mutate();
     } catch (err: any) {
-      setMessage(err?.response?.data?.message ?? "Falha ao salvar configuracao.");
+      setMessage(err?.response?.data?.message ?? "Falha ao salvar configuração.");
     } finally {
       setSaving(false);
     }
@@ -69,7 +69,7 @@ export default function SuitPayConfigPage() {
   if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-white/80">Faca login como administrador para acessar as configuracoes da SuitPay.</p>
+        <p className="text-sm text-white/80">Faça login como administrador para acessar as configurações da SuitPay.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -82,7 +82,7 @@ export default function SuitPayConfigPage() {
   if (!isAdmin) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+        <p className="text-sm text-megga-rose">Você não tem permissão para acessar esta página.</p>
       </div>
     );
   }
@@ -91,18 +91,18 @@ export default function SuitPayConfigPage() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Pagamentos</p>
-        <h1 className="text-2xl font-semibold">SuitPay - Configuracao</h1>
+        <h1 className="text-2xl font-semibold">SuitPay - Configuração</h1>
         <p className="text-sm text-white/70">Defina ambiente, endpoint e chaves de acesso (sandbox ou producao).</p>
       </header>
 
       <section className="rounded-3xl bg-megga-navy/80 p-6 shadow-lg ring-1 ring-white/5">
         {error && (
           <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-rose">
-            Erro ao carregar configuracao: {error?.message ?? "falha desconhecida"}
+            Erro ao carregar configuração: {error?.message ?? "falha desconhecida"}
           </p>
         )}
         {!config && !error && (
-          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Carregando configuracao...</p>
+          <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-white/70">Carregando configuração...</p>
         )}
         {config && (
           <form onSubmit={save} className="space-y-4">
@@ -162,7 +162,7 @@ export default function SuitPayConfigPage() {
                 disabled={saving}
                 className="rounded-2xl bg-megga-yellow px-6 py-3 text-sm font-semibold text-megga-navy transition hover:opacity-95 disabled:opacity-50"
               >
-                {saving ? "Salvando..." : "Salvar configuracao"}
+                {saving ? "Salvando..." : "Salvar configuração"}
               </button>
               <p className="text-xs text-white/60">Sandbox: https://sandbox.ws.suitpay.app | Producao: https://ws.suitpay.app</p>
             </div>

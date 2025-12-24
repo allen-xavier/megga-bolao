@@ -109,7 +109,7 @@ export function WinnersBanner() {
                 {firstName(w.winner.name)} - {w.winner.city ?? "--"} - {w.winner.state ?? "--"}
               </p>
               <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/55">
-                {w.bolaoName ? `Bolao ${w.bolaoName}` : "Premiacao"}{" "}
+                {w.bolaoName ? `Bolão ${w.bolaoName}` : "Premiação"}{" "}
                 {w.closedAt ? `- ${new Date(w.closedAt).toLocaleDateString("pt-BR")}` : ""}
               </p>
             </div>

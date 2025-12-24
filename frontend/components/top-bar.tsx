@@ -1,9 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { api } from "@/lib/api";
 import { AppDrawer } from "@/components/app-drawer";
 
@@ -25,6 +26,7 @@ export function TopBar() {
     revalidateIfStale: true,
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [logoVisible, setLogoVisible] = useState(true);
 
   const balance = Number(data?.balance ?? 0).toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
@@ -47,6 +49,14 @@ export function TopBar() {
           </button>
 
           <div className="flex flex-1 items-center gap-3">
+            {logoVisible && (
+              <img
+                src="/brand/megga-logo.png"
+                alt="Megga Bolão"
+                className="h-9 w-9 rounded-xl object-contain"
+                onError={() => setLogoVisible(false)}
+              />
+            )}
             <div className="flex flex-col justify-center">
               <span className="text-[10px] uppercase tracking-[0.28em] text-white/50">Bolão entre Amigos</span>
               <span className="mt-0.5 text-base font-semibold leading-tight md:text-lg">Megga Bolão</span>
@@ -63,7 +73,7 @@ export function TopBar() {
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white/80 transition hover:border-[#1ea7a4] hover:text-[#f7b500]"
           >
             <span className="sr-only">Ir para o perfil</span>
-            <span aria-hidden>MB</span>
+            <UserCircleIcon className="h-5 w-5" aria-hidden />
           </Link>
         </div>
       </header>

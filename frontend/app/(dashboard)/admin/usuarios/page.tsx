@@ -114,14 +114,14 @@ export default function AdminUsuariosPage() {
 
   async function handleDelete(id: string) {
     if (!token) return;
-    const ok = window.confirm("Excluir o usu\u00e1rio? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.");
+    const ok = window.confirm("Excluir o usuário? Esta ação não pode ser desfeita.");
     if (!ok) return;
     try {
       setDeletingId(id);
       await api.delete(`/users/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       await mutate((prev) => (prev ? prev.map((page) => page.filter((u) => u.id !== id)) : prev), false);
     } catch (err: any) {
-      const message = err?.response?.data?.message ?? "N\u00e3o foi poss\u00edvel excluir o usu\u00e1rio.";
+      const message = err?.response?.data?.message ?? "Não foi possível excluir o usuário.";
       alert(message);
     } finally {
       setDeletingId(null);
@@ -131,7 +131,7 @@ export default function AdminUsuariosPage() {
   if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
-        <p className="text-sm text-white/80">Faca login como administrador para acessar esta pagina.</p>
+        <p className="text-sm text-white/80">Faça login como administrador para acessar esta página.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -144,7 +144,7 @@ export default function AdminUsuariosPage() {
   if (!isAdmin) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
-        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+        <p className="text-sm text-megga-rose">Você não tem permissão para acessar esta página.</p>
       </div>
     );
   }
@@ -152,14 +152,14 @@ export default function AdminUsuariosPage() {
   return (
     <div className="space-y-5">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Gestao de contas</p>
-        <h1 className="text-2xl font-semibold">Usuarios cadastrados</h1>
+        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Gestão de contas</p>
+        <h1 className="text-2xl font-semibold">Usuários cadastrados</h1>
         <p className="text-sm text-white/70">Pesquisa por nome/CPF/telefone, filtro por status e links para perfil/saque.</p>
       </header>
 
       <section className="space-y-3 rounded-3xl bg-megga-navy/80 px-2 py-5 shadow-lg ring-1 ring-white/5 md:p-5">
         <div className="rounded-2xl bg-white/5 px-2 py-4 text-sm text-white/80 md:p-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Filtro rapido</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Filtro rápido</p>
           <div className="mt-3 grid gap-3 md:grid-cols-3">
             <input
               type="text"
@@ -189,7 +189,7 @@ export default function AdminUsuariosPage() {
 
         {error?.response?.status === 401 && (
           <div className="space-y-2 rounded-2xl bg-white/5 px-2 py-3 text-sm text-megga-yellow md:px-4">
-            <p>Sessao expirada ou sem permissao. Faca login novamente.</p>
+            <p>Sessão expirada ou sem permissão. Faça login novamente.</p>
             <Link
               href="/login"
               className="inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -198,10 +198,10 @@ export default function AdminUsuariosPage() {
             </Link>
           </div>
         )}
-        {isLoading && <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Carregando usuarios...</p>}
+        {isLoading && <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Carregando usuários...</p>}
         {error && (
           <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-megga-rose md:px-4">
-            Erro ao carregar usuarios: {error?.message ?? "falha desconhecida"}
+            Erro ao carregar usuários: {error?.message ?? "falha desconhecida"}
           </p>
         )}
 

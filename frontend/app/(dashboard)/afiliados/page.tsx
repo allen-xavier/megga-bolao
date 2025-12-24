@@ -63,7 +63,7 @@ export default function AfiliadosPage() {
   if (!token || status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-white/80">Faca login para ver seu programa de indicacoes.</p>
+        <p className="text-sm text-white/80">Faça login para ver seu programa de indicações.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -91,12 +91,12 @@ export default function AfiliadosPage() {
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Programa de afiliados</p>
         <h1 className="text-2xl font-semibold">Indique e ganhe</h1>
-        <p className="text-sm text-white/70">Compartilhe seu codigo ou link para trazer novos participantes.</p>
+        <p className="text-sm text-white/70">Compartilhe seu código ou link para trazer novos participantes.</p>
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Codigo</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Código</p>
           <p className="mt-2 text-2xl font-semibold text-megga-yellow">{data.code}</p>
           {data.inviteLink && (
             <button
@@ -118,12 +118,12 @@ export default function AfiliadosPage() {
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Indicados</p>
           <p className="mt-2 text-2xl font-semibold text-megga-yellow">
-            {data.directCount} diretos · {data.indirectCount} indiretos
+            {data.directCount} diretos | {data.indirectCount} indiretos
           </p>
-          <p className="mt-1 text-sm text-white/60">Niveis 1 e 2</p>
+          <p className="mt-1 text-sm text-white/60">Níveis 1 e 2</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Comissoes recebidas</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Comissões recebidas</p>
           <p className="mt-2 text-2xl font-semibold text-megga-yellow">{formatCurrency(data.earnings)}</p>
           <p className="mt-1 text-sm text-white/60">Geradas pelas apostas dos seus indicados</p>
         </div>
@@ -132,7 +132,7 @@ export default function AfiliadosPage() {
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <header className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Indicados diretos</h2>
-          <span className="text-xs uppercase tracking-[0.3em] text-white/50">{data.directCount} usuario(s)</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-white/50">{data.directCount} usuário(s)</span>
         </header>
         <ul className="space-y-2 text-sm text-white/80">
           {data.direct.map((u) => (
@@ -151,7 +151,7 @@ export default function AfiliadosPage() {
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <header className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Indicados indiretos</h2>
-          <span className="text-xs uppercase tracking-[0.3em] text-white/50">{data.indirectCount} usuario(s)</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-white/50">{data.indirectCount} usuário(s)</span>
         </header>
         <ul className="space-y-2 text-sm text-white/80">
           {data.indirect.map((u) => (
@@ -169,8 +169,8 @@ export default function AfiliadosPage() {
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <header className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Extrato de comissoes</h2>
-          <span className="text-xs uppercase tracking-[0.3em] text-white/50">{(earnings ?? []).length} lancamento(s)</span>
+          <h2 className="text-lg font-semibold text-white">Extrato de comissões</h2>
+          <span className="text-xs uppercase tracking-[0.3em] text-white/50">{(earnings ?? []).length} lançamento(s)</span>
         </header>
         <ul className="space-y-2 text-sm text-white/80">
           {(earnings ?? []).map((e) => (
@@ -181,13 +181,13 @@ export default function AfiliadosPage() {
               </div>
               <p className="text-xs text-white/70">{e.description}</p>
               <div className="mt-2 flex flex-wrap gap-3 text-xs text-white/60">
-                {e.bolaoName && <span>Bolao: {e.bolaoName}</span>}
+                {e.bolaoName && <span>Bolão: {e.bolaoName}</span>}
                 {e.sourceUser && <span>Jogador: {e.sourceUser.name} ({e.sourceUser.phone})</span>}
               </div>
             </li>
           ))}
           {(earnings ?? []).length === 0 && (
-            <li className="rounded-2xl bg-white/5 px-4 py-3 text-white/70">Nenhuma comissao registrada ainda.</li>
+            <li className="rounded-2xl bg-white/5 px-4 py-3 text-white/70">Nenhuma comissão registrada ainda.</li>
           )}
         </ul>
       </section>

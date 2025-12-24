@@ -71,9 +71,9 @@ export default function AdminPoliciesPage() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       await mutate();
-      setMessage('Conteudo salvo com sucesso.');
+      setMessage('Conteúdo salvo com sucesso.');
     } catch (err: any) {
-      setMessage(err?.response?.data?.message ?? 'Erro ao salvar conteudo.');
+      setMessage(err?.response?.data?.message ?? 'Erro ao salvar conteúdo.');
     } finally {
       setSaving(false);
     }
@@ -82,7 +82,7 @@ export default function AdminPoliciesPage() {
   if (status !== 'authenticated') {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-white/80">Faca login como administrador para acessar esta pagina.</p>
+        <p className="text-sm text-white/80">Faça login como administrador para acessar esta página.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -95,7 +95,7 @@ export default function AdminPoliciesPage() {
   if (!isAdmin) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+        <p className="text-sm text-megga-rose">Você não tem permissão para acessar esta página.</p>
       </div>
     );
   }
@@ -103,10 +103,10 @@ export default function AdminPoliciesPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Politicas</p>
-        <h1 className="text-2xl font-semibold">Editar conteudos legais</h1>
+        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Políticas</p>
+        <h1 className="text-2xl font-semibold">Editar conteúdos legais</h1>
         <p className="text-sm text-white/70">
-          Atualize os textos exibidos nas paginas de Termos, Politica de Privacidade e Jogo Responsavel.
+          Atualize os textos exibidos nas páginas de Termos, Política de Privacidade e Jogo Responsável.
         </p>
       </header>
 
@@ -129,18 +129,18 @@ export default function AdminPoliciesPage() {
 
       <div className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 ring-1 ring-white/5">
         <label className="space-y-2 text-sm text-white/80">
-          <span className="text-xs uppercase tracking-[0.3em] text-white/40">Titulo</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-white/40">Título</span>
           <input
             type="text"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
-            placeholder="Ex: Termos e Condicoes"
+            placeholder="Ex: Termos e Condições"
           />
         </label>
 
         <div className="space-y-2 text-sm text-white/80">
-          <span className="text-xs uppercase tracking-[0.3em] text-white/40">Conteudo</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-white/40">Conteúdo</span>
           <div className="rounded-2xl border border-white/10 bg-white text-black">
             <ReactQuill
               theme="snow"

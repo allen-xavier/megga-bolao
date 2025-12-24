@@ -4,7 +4,7 @@ import { RankingHighlights } from "@/components/ranking-highlights";
 import { WinnersBanner } from "@/components/winners-banner";
 
 export const metadata = {
-  title: "Inicio - Megga Bolao",
+  title: "Início - Megga Bolão",
 };
 
 const LoadingCard = ({ children }: { children: ReactNode }) => (

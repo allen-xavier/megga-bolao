@@ -20,7 +20,7 @@ const prizeInfo: Record<string, PrizeInfo> = {
   SENA_PRIMEIRO: { title: "Sena 1o sorteio", description: "Ganha quem fizer sena no primeiro sorteio" },
   LIGEIRINHO: { title: "Ligeirinho", description: "Ganha quem tiver mais acertos no primeiro sorteio" },
   OITO_ACERTOS: { title: "8 acertos", description: "Ganha quem finalizar com 8 acertos" },
-  INDICACAO_DIRETA: { title: "Indique e ganhe", description: "Comissao por indicacao direta/indireta" },
+  INDICACAO_DIRETA: { title: "Indique e ganhe", description: "Comissão por indicação direta/indireta" },
 };
 
 type Bolao = any;
@@ -87,12 +87,12 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
       const statusCode = err?.response?.status;
       if (statusCode === 401 || statusCode === 403) {
         setUnauthorized(true);
-        setError("Sessao expirada. Faca login novamente.");
+        setError("Sessão expirada. Faça login novamente.");
         setBolao(null);
       } else if (statusCode === 404) {
         if (status !== "authenticated") {
           setUnauthorized(true);
-          setError("Sessao expirada. Faca login novamente.");
+          setError("Sessão expirada. Faça login novamente.");
         } else {
           setNotFoundState(true);
         }
@@ -214,7 +214,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     if (unauthorized) {
       return (
         <div className="rounded-3xl border border-white/5 bg-[#111218] p-3 text-white shadow-lg md:p-4">
-          Sessao expirada. Redirecionando para o login...
+          Sessão expirada. Redirecionando para o login...
         </div>
       );
     }
@@ -339,7 +339,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
               {statusConfig.label}
             </span>
             <div className="flex flex-col items-end gap-1 text-right">
-              <span className="rounded-full bg-white/10 px-3 py-1">Bolao #{bolao.id.slice(0, 6)}</span>
+              <span className="rounded-full bg-white/10 px-3 py-1">Bolão #{bolao.id.slice(0, 6)}</span>
               {isParticipant && (
                 <span className="rounded-full bg-[#1ea7a4]/15 px-3 py-1 text-[#1ea7a4]">Participando</span>
               )}
@@ -384,7 +384,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                   )}
                 </div>
                 <p className="mt-1 text-sm text-white/60">
-                  Inicio{" "}
+                  Início{" "}
                   {startsAt.toLocaleDateString("pt-BR", {
                     day: "2-digit",
                     month: "long",
@@ -414,7 +414,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                   <p className="mt-2 text-xl font-semibold text-[#f7b500] md:text-2xl">R$ {formatCurrency(ticketPrice)}</p>
                 </div>
                 <div className={`${summaryHighlightClass} order-2 col-span-2 md:order-2 md:col-auto`}>
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/60">Premiacao total</p>
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/60">Premiação total</p>
                   <p className="mt-2 text-3xl font-semibold text-[#3fdc7c] md:text-2xl">R$ {formatCurrency(displayTotal)}</p>
                   {senaPotApplied > 0 && (
                     <p className="text-[11px] text-white/70">
@@ -507,7 +507,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
               <li key={prize.id} className="flex items-center justify-between rounded-2xl bg-white/5 px-3 py-3 text-sm md:px-4">
                 <div>
                   <p className="font-medium text-white">{prizeInfo[prize.type]?.title ?? prize.type}</p>
-                  <p className="text-xs text-white/60">{prizeInfo[prize.type]?.description ?? "Premiacao prevista"}</p>
+                  <p className="text-xs text-white/60">{prizeInfo[prize.type]?.description ?? "Premiação prevista"}</p>
                 </div>
                 <span className="text-sm font-semibold text-[#f7b500]">
                   {(() => {
@@ -549,7 +549,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
             ))}
             {(!bolao.prizes || bolao.prizes.length === 0) && (
               <li className="rounded-2xl bg-white/5 px-3 py-3 text-sm text-white/60 md:px-4">
-                Nenhuma premiacao configurada para este bolao.
+                Nenhuma premiação configurada para este bolão.
               </li>
             )}
           </ul>
@@ -561,7 +561,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
           <header className="flex cursor-pointer items-center justify-between" onClick={() => toggle("live")}>
             <div>
               <h2 className="text-lg font-semibold">Premiacoes ja atingidas</h2>
-              <p className="text-sm text-white/60">Premios liberados antes do encerramento.</p>
+              <p className="text-sm text-white/60">Prêmios liberados antes do encerramento.</p>
             </div>
             <span className="text-xl">{openSection.live ? "▼" : "▶"}</span>
           </header>
@@ -571,7 +571,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                 <div key={prize.prizeType} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3 md:p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
+                      <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiação</p>
                       <p className="text-base font-semibold">{prize.prizeType}</p>
                     </div>
                     <div className="text-right">
@@ -616,7 +616,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
             <div>
               <h2 className="text-lg font-semibold">Resultados e ganhadores</h2>
               <p className="text-sm text-white/60">
-                Bolao encerrado em{" "}
+                Bolão encerrado em{" "}
                 {new Date(bolao.closedAt).toLocaleString("pt-BR", {
                   dateStyle: "short",
                   timeStyle: "short",
@@ -633,7 +633,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
                 <div key={prize.id} className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3 md:p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiacao</p>
+                      <p className="text-xs uppercase tracking-[0.24em] text-white/50">Premiação</p>
                       <p className="text-base font-semibold">{prizeInfo[prize.prizeType]?.title ?? prize.prizeType}</p>
                       {prizeInfo[prize.prizeType]?.description && (
                         <p className="text-xs text-white/60">{prizeInfo[prize.prizeType].description}</p>

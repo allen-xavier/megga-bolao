@@ -169,7 +169,7 @@ export function RegisterForm() {
             />
           </label>
           <label className="text-sm text-white/80">
-            Codigo de convite (opcional)
+            Código de convite (opcional)
             <input
               className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-navy/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
               value={form.referralCode ?? ''}

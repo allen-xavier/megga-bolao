@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
   if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-white/80">Faca login como administrador para acessar o painel.</p>
+        <p className="text-sm text-white/80">Faça login como administrador para acessar o painel.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
   if (!isAdmin) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+        <p className="text-sm text-megga-rose">Você não tem permissão para acessar esta página.</p>
       </div>
     );
   }
@@ -95,7 +95,7 @@ export default function AdminDashboardPage() {
   if (unauthorized) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-white/80">Sessao expirada ou sem permissao. Faca login novamente.</p>
+        <p className="text-sm text-white/80">Sessão expirada ou sem permissão. Faça login novamente.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -109,45 +109,45 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Administracao</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Administração</p>
         <h1 className="text-2xl font-semibold">Painel do administrador</h1>
-        <p className="text-sm text-white/70">Indicadores reais dos boloes e da carteira administrativa.</p>
+        <p className="text-sm text-white/70">Indicadores reais dos bolões e da carteira administrativa.</p>
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Premiacao garantida (ativos)</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Premiação garantida (ativos)</p>
           <p className="mt-3 text-2xl font-semibold text-megga-yellow">{formatCurrency(bolaoStats.garantida)}</p>
-          <p className="mt-2 text-sm text-white/60">{bolaoStats.andamento.length} bolao(s) em andamento</p>
+          <p className="mt-2 text-sm text-white/60">{bolaoStats.andamento.length} bolão(ões) em andamento</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Carteira administrativa</p>
           <p className="mt-3 text-2xl font-semibold text-megga-yellow">
             {formatCurrency(statsData?.adminBalance ?? 0)}
           </p>
-          <p className="mt-2 text-sm text-white/60">Total apostado menos premios pagos</p>
+          <p className="mt-2 text-sm text-white/60">Total apostado menos prêmios pagos</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Boloes</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Bolões</p>
           <p className="mt-3 text-2xl font-semibold text-megga-yellow">
-            {bolaoStats.andamento.length} ativos · {bolaoStats.futuros.length} futuros · {bolaoStats.encerrados.length} encerrados
+            {bolaoStats.andamento.length} ativos | {bolaoStats.futuros.length} futuros | {bolaoStats.encerrados.length} encerrados
           </p>
           <p className="mt-2 text-sm text-white/60">Dados em tempo real via API</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Saldo dos usuarios</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/40">Saldo dos usuários</p>
           <p className="mt-3 text-2xl font-semibold text-megga-yellow">
             {formatCurrency(statsData?.walletOutstanding ?? 0)}
           </p>
-          <p className="mt-2 text-sm text-white/60">Soma dos saldos em carteira (premios/comissoes nao sacados)</p>
+          <p className="mt-2 text-sm text-white/60">Soma dos saldos em carteira (prêmios/comissões não sacados)</p>
         </div>
       </section>
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-white/40">Boloes em destaque</p>
-            <h2 className="mt-1 text-lg font-semibold">Visao geral das campanhas</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/40">Bolões em destaque</p>
+            <h2 className="mt-1 text-lg font-semibold">Visão geral das campanhas</h2>
           </div>
           <Link
             href="/admin/boloes"
@@ -168,17 +168,17 @@ export default function AdminDashboardPage() {
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-white/40">{statusLabel}</p>
                   <h3 className="mt-1 text-lg font-semibold text-white">{highlight.name}</h3>
-                  <p className="text-xs text-white/60">Inicio: {formatDate(highlight.startsAt)}</p>
+                  <p className="text-xs text-white/60">Início: {formatDate(highlight.startsAt)}</p>
                 </div>
                 <span className="text-sm font-semibold text-megga-lime">
-                  Premiacao garantida {formatCurrency(highlight.guaranteedPrize ?? 0)}
+                  Premiação garantida {formatCurrency(highlight.guaranteedPrize ?? 0)}
                 </span>
               </li>
             );
           })}
           {destaques(boloes ?? []).length === 0 && (
             <li className="rounded-2xl border border-white/5 bg-white/5 p-4 text-sm text-white/70">
-              Nenhum bolao em destaque no momento.
+              Nenhum bolão em destaque no momento.
             </li>
           )}
         </ul>

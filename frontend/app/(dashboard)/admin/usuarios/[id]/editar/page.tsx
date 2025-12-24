@@ -82,7 +82,7 @@ export default function EditUserPage() {
   if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-white/80">Faca login como administrador para editar usuarios.</p>
+        <p className="text-sm text-white/80">Faça login como administrador para editar usuários.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -95,7 +95,7 @@ export default function EditUserPage() {
   if (!isAdmin) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+        <p className="text-sm text-megga-rose">Você não tem permissão para acessar esta página.</p>
       </div>
     );
   }
@@ -103,7 +103,7 @@ export default function EditUserPage() {
   if (error?.response?.status === 401) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-white/80">Sessao expirada ou sem permissao. Faca login novamente.</p>
+        <p className="text-sm text-white/80">Sessão expirada ou sem permissão. Faça login novamente.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -132,7 +132,7 @@ export default function EditUserPage() {
   return (
     <div className="space-y-5">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Gestao de contas</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Gestão de contas</p>
         <h1 className="text-2xl font-semibold">Editar usuario</h1>
         <p className="text-sm text-white/70">Atualize dados cadastrais e status de verificacao.</p>
       </header>
@@ -209,7 +209,7 @@ export default function EditUserPage() {
               onChange={handleChange("acceptedTerms")}
               className="h-4 w-4 rounded border-white/30 bg-transparent text-megga-teal focus:ring-megga-magenta"
             />
-            <span>Usuario verificado (aceitou termos)</span>
+            <span>Usuário verificado (aceitou termos)</span>
           </label>
         </div>
 

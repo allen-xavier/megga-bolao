@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
   {
-    label: 'In\u00edcio',
+    label: 'Início',
     href: '/inicio',
     icon: (
       <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5">

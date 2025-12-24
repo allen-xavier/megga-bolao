@@ -498,7 +498,7 @@ export function DashboardBoloes() {
                         disabled={!hasTransparency}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:rounded-2xl"
                       >
-                        Baixar transparencia
+                        Baixar transparência
                       </button>
                     )}
                   </div>

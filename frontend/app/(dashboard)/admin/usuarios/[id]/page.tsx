@@ -235,7 +235,7 @@ export default function AdminUsuarioOverviewPage() {
   if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
-        <p className="text-sm text-white/80">Faca login como administrador para acessar esta pagina.</p>
+        <p className="text-sm text-white/80">Faça login como administrador para acessar esta página.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -248,7 +248,7 @@ export default function AdminUsuarioOverviewPage() {
   if (!isAdmin) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
-        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+        <p className="text-sm text-megga-rose">Você não tem permissão para acessar esta página.</p>
       </div>
     );
   }
@@ -256,10 +256,10 @@ export default function AdminUsuarioOverviewPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Usuario</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-white/50">Usuário</p>
         <h1 className="text-2xl font-semibold">{data?.user?.fullName ?? "Perfil do usuario"}</h1>
         <p className="text-sm text-white/70">
-          Atividade completa do usuario: apostas, boloes, ganhos, depositos, saques e comissoes.
+          Atividade completa do usuário: apostas, bolões, ganhos, depósitos, saques e comissões.
         </p>
       </header>
 
@@ -303,11 +303,11 @@ export default function AdminUsuarioOverviewPage() {
               <p className="text-xs uppercase tracking-[0.3em] text-white/50">Resumo</p>
               <div className="mt-3 space-y-2 text-sm text-white/80">
                 <p>Apostas: {data.bets.length}</p>
-                <p>Boloes: {betsByBolao.length}</p>
+                <p>Bolões: {betsByBolao.length}</p>
                 <p>Premiacoes: R$ {formatCurrency(totalPrizes)}</p>
                 <p>Depositos: R$ {formatCurrency(totalDeposits)}</p>
                 <p>Saques: R$ {formatCurrency(totalWithdraws)}</p>
-                <p>Comissoes: R$ {formatCurrency(totalCommissions)}</p>
+                <p>Comissões: R$ {formatCurrency(totalCommissions)}</p>
               </div>
             </div>
           </section>
@@ -329,7 +329,7 @@ export default function AdminUsuarioOverviewPage() {
                   />
                 </label>
                 <label className="text-[11px] uppercase tracking-[0.3em] text-white/50">
-                  Ate
+                  Até
                   <input
                     type="date"
                     value={filterTo}
@@ -349,8 +349,8 @@ export default function AdminUsuarioOverviewPage() {
               aria-expanded={openSection === "boloes"}
             >
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/50">Boloes</p>
-                <h2 className="mt-2 text-xl font-semibold">Boloes participados</h2>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/50">Bolões</p>
+                <h2 className="mt-2 text-xl font-semibold">Bolões participados</h2>
               </div>
               <span className="text-xs uppercase tracking-[0.3em] text-white/60">
                 {openSection === "boloes" ? "Fechar" : "Abrir"}
@@ -444,7 +444,7 @@ export default function AdminUsuarioOverviewPage() {
             {openSection === "ganhos" && (
               <div className="mt-4 max-h-[320px] overflow-y-auto pr-2" onScroll={handleListScroll("ganhos", filteredPrizeWins.length)}>
                 {filteredPrizeWins.length === 0 ? (
-                  <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/60 md:px-4">Nenhuma premiacao registrada.</p>
+                  <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/60 md:px-4">Nenhuma premiação registrada.</p>
                 ) : (
                   <ul className="space-y-3 text-sm text-white/80">
                     {visibleWins.map((win) => (
@@ -452,7 +452,7 @@ export default function AdminUsuarioOverviewPage() {
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="text-base font-semibold text-white">{win.prizeResult.bolaoResult.bolao.name}</p>
-                            <p className="text-xs text-white/60">Premio: {win.prizeResult.prizeType}</p>
+                            <p className="text-xs text-white/60">Prêmio: {win.prizeResult.prizeType}</p>
                           </div>
                           <div className="text-right text-sm text-white/70">
                             <p className="text-megga-lime">R$ {formatCurrency(win.amount)}</p>
@@ -479,7 +479,7 @@ export default function AdminUsuarioOverviewPage() {
             >
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-white/50">Depositos</p>
-                <h2 className="mt-2 text-xl font-semibold">Historico de depositos</h2>
+                <h2 className="mt-2 text-xl font-semibold">Histórico de depósitos</h2>
               </div>
               <span className="text-xs uppercase tracking-[0.3em] text-white/60">
                 {openSection === "depositos" ? "Fechar" : "Abrir"}
@@ -517,7 +517,7 @@ export default function AdminUsuarioOverviewPage() {
             >
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-white/50">Saques</p>
-                <h2 className="mt-2 text-xl font-semibold">Historico de saques</h2>
+                <h2 className="mt-2 text-xl font-semibold">Histórico de saques</h2>
               </div>
               <span className="text-xs uppercase tracking-[0.3em] text-white/60">
                 {openSection === "saques" ? "Fechar" : "Abrir"}
@@ -556,7 +556,7 @@ export default function AdminUsuarioOverviewPage() {
             >
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-white/50">Afiliados</p>
-                <h2 className="mt-2 text-xl font-semibold">Comissoes de afiliados</h2>
+                <h2 className="mt-2 text-xl font-semibold">Comissões de afiliados</h2>
               </div>
               <span className="text-xs uppercase tracking-[0.3em] text-white/60">
                 {openSection === "comissoes" ? "Fechar" : "Abrir"}
@@ -565,7 +565,7 @@ export default function AdminUsuarioOverviewPage() {
             {openSection === "comissoes" && (
               <div className="mt-4 max-h-[320px] overflow-y-auto pr-2" onScroll={handleListScroll("comissoes", filteredCommissions.length)}>
                 {filteredCommissions.length === 0 ? (
-                  <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/60 md:px-4">Nenhuma comissao registrada.</p>
+                  <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/60 md:px-4">Nenhuma comissão registrada.</p>
                 ) : (
                   <ul className="space-y-3 text-sm text-white/80">
                     {visibleCommissions.map((entry) => (

@@ -15,13 +15,13 @@ interface PrizeOption {
 }
 
 const basePrizes: PrizeOption[] = [
-  { id: "pe-quente", name: "Pe Quente", description: "Ganha quem acertar 10 numeros primeiro", percentage: 40, enabled: true },
-  { id: "pe-frio", name: "Pe Frio", description: "Ganha quem acertar menos numeros no final", percentage: 12, enabled: true },
-  { id: "consolacao", name: "Consolacao", description: "Ganha quem ficar com 9 acertos no final", percentage: 8, enabled: true },
-  { id: "sena", name: "Sena 1o Sorteio", description: "Ganha quem completar 6 acertos no primeiro sorteio", percentage: 10, enabled: true },
+  { id: "pe-quente", name: "Pé Quente", description: "Ganha quem acertar 10 números primeiro", percentage: 40, enabled: true },
+  { id: "pe-frio", name: "Pé Frio", description: "Ganha quem acertar menos números no final", percentage: 12, enabled: true },
+  { id: "consolacao", name: "Consolação", description: "Ganha quem ficar com 9 acertos no final", percentage: 8, enabled: true },
+  { id: "sena", name: "Sena 1º Sorteio", description: "Ganha quem completar 6 acertos no primeiro sorteio", percentage: 10, enabled: true },
   { id: "ligeirinho", name: "Ligeirinho", description: "Ganha quem fizer mais acertos no primeiro sorteio", percentage: 5, enabled: true },
   { id: "oito", name: "8 acertos", description: "Ganha quem finalizar com 8 acertos", percentage: 8, enabled: true },
-  { id: "indicacao", name: "Indique e Ganhe", description: "Comissao direta e indireta", percentage: 3, enabled: true },
+  { id: "indicacao", name: "Indique e Ganhe", description: "Comissão direta e indireta", percentage: 3, enabled: true },
 ];
 
 const prizeTypeMap: Record<string, string> = {
@@ -79,7 +79,7 @@ export default function CreatebolãoClient() {
 
   const [prizes, setPrizes] = useState<PrizeOption[]>(() => basePrizes.map((prize) => ({ ...prize })));
   const [guaranteedPrize, setGuaranteedPrize] = useState("10000,00");
-  const [name, setName] = useState("bolão Promocional");
+  const [name, setName] = useState("Bolão promocional");
   const [startsAt, setStartsAt] = useState(() => formatInputDate(new Date())); // data/hora atual SP
   const [ticketPrice, setTicketPrice] = useState(35);
   const [minimumQuotas, setMinimumQuotas] = useState(500);
@@ -154,7 +154,7 @@ export default function CreatebolãoClient() {
       setMessage(null);
 
       if (status !== "authenticated" || !session?.user?.accessToken) {
-        throw new Error("Faca login como administrador para salvar.");
+        throw new Error("Faça login como administrador para salvar.");
       }
 
       const payload = {
@@ -179,14 +179,14 @@ export default function CreatebolãoClient() {
             Authorization: `Bearer ${session.user.accessToken}`,
           },
         });
-        setMessage("bolão atualizado com sucesso.");
+        setMessage("Bolão atualizado com sucesso.");
       } else {
         await api.post("/boloes", payload, {
           headers: {
             Authorization: `Bearer ${session.user.accessToken}`,
           },
         });
-        setMessage("bolão criado com sucesso.");
+        setMessage("Bolão criado com sucesso.");
       }
     } catch (error: any) {
       const backendMessage =
@@ -212,7 +212,7 @@ export default function CreatebolãoClient() {
       setMessage(null);
 
       if (status !== "authenticated" || !session?.user?.accessToken) {
-        throw new Error("Faca login como administrador para excluir.");
+        throw new Error("Faça login como administrador para excluir.");
       }
 
       await api.delete(`/boloes/${bolãoId}`, {
@@ -220,7 +220,7 @@ export default function CreatebolãoClient() {
           Authorization: `Bearer ${session.user.accessToken}`,
         },
       });
-      setMessage("bolão excluido com sucesso.");
+      setMessage("Bolão excluído com sucesso.");
       router.push("/admin/boloes");
     } catch (error: any) {
       const backendMessage =
@@ -237,7 +237,7 @@ export default function CreatebolãoClient() {
   if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-white/80">Faca login como administrador para acessar esta pagina.</p>
+        <p className="text-sm text-white/80">Faça login como administrador para acessar esta página.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -250,7 +250,7 @@ export default function CreatebolãoClient() {
   if (!isAdmin) {
     return (
       <div className="rounded-3xl bg-megga-navy/80 p-6 text-white shadow-lg ring-1 ring-white/5">
-        <p className="text-sm text-megga-rose">Voce nao tem permissao para acessar esta pagina.</p>
+        <p className="text-sm text-megga-rose">Você não tem permissão para acessar esta página.</p>
       </div>
     );
   }
@@ -268,7 +268,7 @@ export default function CreatebolãoClient() {
           className="inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95 disabled:opacity-60"
           disabled={saving}
         >
-          {saving ? "Salvando" : "Salvar"}
+          {saving ? "Salvando..." : "Salvar"}
         </button>
       </header>
 
@@ -328,16 +328,16 @@ export default function CreatebolãoClient() {
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">Resumo financeiro</p>
           <p className="mt-2 text-base font-semibold text-megga-yellow">{totalPercentage}% destinado a prêmios</p>
           <p className="text-xs text-white/60">
-            A Taxa Megga atual e de <span className="font-semibold text-megga-yellow">{meggaTax}%</span>. Ajuste as premiações para não exceder o arrecadado.
+            A Taxa Megga atual é de <span className="font-semibold text-megga-yellow">{meggaTax}%</span>. Ajuste as premiações para não exceder o arrecadado.
           </p>
         </div>
       </section>
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <header className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">premiações</p>
-          <h2 className="text-xl font-semibold">Percentuais configuraveis</h2>
-          <p className="text-sm text-white/60">Ative ou desative prêmios conforme a estrategia do bolão.</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Premiações</p>
+          <h2 className="text-xl font-semibold">Percentuais configuráveis</h2>
+          <p className="text-sm text-white/60">Ative ou desative prêmios conforme a estratégia do bolão.</p>
         </header>
         <div className="grid gap-4 md:grid-cols-2">
           {prizes.map((prize) => (
@@ -384,7 +384,7 @@ export default function CreatebolãoClient() {
             className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-sm font-semibold text-[#0f1117] transition hover:brightness-110 disabled:opacity-60"
             disabled={saving}
           >
-            {saving ? "Salvando" : "Salvar configurações"}
+            {saving ? "Salvando..." : "Salvar configurações"}
           </button>
         </div>
         {bolãoId && (

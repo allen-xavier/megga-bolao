@@ -37,7 +37,7 @@ const statusStyles: Record<string, string> = {
   Premiado: "bg-megga-lime/15 text-megga-lime border-megga-lime/30",
   "Em andamento": "bg-megga-yellow/10 text-megga-yellow border-megga-yellow/30",
   Aguardando: "bg-white/10 text-white/70 border-white/15",
-  "Nao premiado": "bg-red-500/10 text-red-200 border-red-500/30",
+  "Não premiado": "bg-red-500/10 text-red-200 border-red-500/30",
 };
 
 const statusCardStyles: Record<string, { cardClass: string; patternStyle: { backgroundImage: string } }> = {
@@ -55,7 +55,7 @@ const statusCardStyles: Record<string, { cardClass: string; patternStyle: { back
         "radial-gradient(circle at 15% 0%, rgba(63, 220, 124, 0.2), transparent 55%), repeating-linear-gradient(135deg, rgba(63, 220, 124, 0.08) 0, rgba(63, 220, 124, 0.08) 1px, transparent 1px, transparent 10px)",
     },
   },
-  "Nao premiado": {
+  "Não premiado": {
     cardClass: "border-[#ff4d4f]/25 bg-gradient-to-br from-[#1c0b10] via-[#141520] to-[#0e1118]",
     patternStyle: {
       backgroundImage:
@@ -87,7 +87,7 @@ const formatNumbers = (numbers: number[]) =>
 function getTicketStatus(ticket: Ticket) {
   const prizeTotal = ticket.prizeWinners.reduce((acc, winner) => acc + Number(winner.amount ?? 0), 0);
   if (prizeTotal > 0) return "Premiado";
-  if (ticket.bolao?.closedAt) return "Nao premiado";
+  if (ticket.bolao?.closedAt) return "Não premiado";
   const startsAt = new Date(ticket.bolao.startsAt);
   if (!Number.isNaN(startsAt.getTime()) && startsAt.getTime() <= Date.now()) return "Em andamento";
   return "Aguardando";
@@ -137,7 +137,7 @@ export default function TicketsClient() {
   if (status !== "authenticated") {
     return (
       <div className="rounded-3xl bg-megga-navy/80 px-2 py-5 text-white shadow-lg ring-1 ring-white/5 md:p-6">
-        <p className="text-sm text-white/80">Faca login para acessar seus tickets.</p>
+        <p className="text-sm text-white/80">Faça login para acessar seus tickets.</p>
         <Link
           href="/login"
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95"
@@ -152,9 +152,9 @@ export default function TicketsClient() {
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Comprovantes</p>
-        <h1 className="text-2xl font-semibold">Tickets e transparencia</h1>
+        <h1 className="text-2xl font-semibold">Tickets e transparência</h1>
         <p className="text-sm text-white/70">
-          Consulte seus tickets, acompanhe o status do bolao e guarde seus numeros para futuras conferencias.
+          Consulte seus tickets, acompanhe o status do bolão e guarde seus números para futuras conferências.
         </p>
       </header>
 
@@ -164,11 +164,11 @@ export default function TicketsClient() {
           <p className="mt-2 text-2xl font-semibold text-white">{tickets.length}</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 px-2 py-4 shadow-lg ring-1 ring-white/5 md:p-5">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Premios ganhos</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Prêmios ganhos</p>
           <p className="mt-2 text-2xl font-semibold text-megga-lime">R$ {formatCurrency(totalPrize)}</p>
         </div>
         <div className="rounded-3xl bg-megga-navy/80 px-2 py-4 shadow-lg ring-1 ring-white/5 md:p-5">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Ultimo ticket</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Último ticket</p>
           <p className="mt-2 text-sm text-white/70">{lastTicketDate ? formatDate(lastTicketDate) : "--"}</p>
         </div>
       </section>
@@ -177,7 +177,7 @@ export default function TicketsClient() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/50">Filtros</p>
-            <p className="text-sm text-white/70">Refine por bolao ou periodo.</p>
+            <p className="text-sm text-white/70">Refine por bolão ou período.</p>
           </div>
           <button
             type="button"
@@ -190,12 +190,12 @@ export default function TicketsClient() {
 
         <div className="grid w-full min-w-0 max-w-full gap-3 overflow-hidden md:grid-cols-3">
           <label className="flex w-full min-w-0 flex-col overflow-hidden text-[11px] uppercase tracking-[0.3em] text-white/50">
-            Bolao
+            Bolão
             <input
               type="text"
               value={bolaoFilter}
               onChange={(event) => setBolaoFilter(event.target.value)}
-              placeholder="Nome ou codigo"
+              placeholder="Nome ou código"
               className="mt-2 block w-full min-w-0 max-w-full rounded-2xl border border-white/10 bg-transparent px-3 py-3 text-sm text-white focus:border-megga-yellow focus:outline-none box-border"
             />
           </label>
@@ -209,7 +209,7 @@ export default function TicketsClient() {
             />
           </label>
           <label className="flex w-full min-w-0 flex-col overflow-hidden text-[11px] uppercase tracking-[0.3em] text-white/50">
-            Ate
+            Até
             <input
               type="date"
               value={dateTo}
@@ -253,8 +253,8 @@ export default function TicketsClient() {
             const cardVisual = statusCardStyles[statusLabel] ?? statusCardStyles.Aguardando;
             const prizeText = prizeAmount > 0
               ? `R$ ${formatCurrency(prizeAmount)}`
-              : statusLabel === "Nao premiado"
-                ? "Sem premio"
+              : statusLabel === "Não premiado"
+                ? "Sem prêmio"
                 : "Aguardando";
 
             return (
@@ -267,7 +267,7 @@ export default function TicketsClient() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Ticket #{ticket.id.slice(0, 8)}</p>
-                      <h2 className="mt-1 text-lg font-semibold text-white">{ticket.bolao?.name ?? "Bolao"}</h2>
+                      <h2 className="mt-1 text-lg font-semibold text-white">{ticket.bolao?.name ?? "Bolão"}</h2>
                       <p className="mt-1 text-xs text-white/60">Criado em: {formatDate(ticket.createdAt)}</p>
                     </div>
                     <StatusPill status={statusLabel} />
@@ -275,7 +275,7 @@ export default function TicketsClient() {
 
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
                     <div className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">
-                      <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Numeros apostados</p>
+                      <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">Números apostados</p>
                       <div className="mt-3 grid grid-cols-10 gap-1">
                         {numbers.map((num) => (
                           <span
@@ -289,7 +289,7 @@ export default function TicketsClient() {
                     </div>
                     <div className="space-y-2 rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">
                       <div className="flex items-center justify-between">
-                        <span className="uppercase tracking-[0.3em] text-white/40">Premiacao</span>
+                        <span className="uppercase tracking-[0.3em] text-white/40">Premiação</span>
                         <span className={`text-base font-semibold ${prizeAmount > 0 ? "text-megga-lime" : "text-megga-yellow"}`}>
                           {prizeText}
                         </span>
@@ -310,7 +310,7 @@ export default function TicketsClient() {
                       href={`/boloes/${ticket.bolao?.id}`}
                       className={`inline-flex w-full items-center justify-center rounded-2xl bg-megga-yellow px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-megga-navy transition hover:opacity-95 sm:w-auto ${canShowTransparency ? "" : "col-span-2"}`}
                     >
-                      Ver bolao
+                      Ver bolão
                     </Link>
                     {canShowTransparency && (
                       <button
@@ -322,7 +322,7 @@ export default function TicketsClient() {
                         disabled={!hasTransparency}
                         className="w-full rounded-2xl border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/70 transition hover:border-megga-yellow hover:text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                       >
-                        Baixar transparencia
+                        Baixar transparência
                       </button>
                     )}
                   </div>

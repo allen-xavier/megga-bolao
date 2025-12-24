@@ -38,7 +38,7 @@ export default function LoginPage() {
       </div>
       <AuthForm />
       <p className="text-center text-sm text-white/60">
-        Nao tem conta?{" "}
+        Não tem conta?{" "}
         <Link href="/register" className="font-medium text-megga-yellow underline">
           Criar conta
         </Link>
