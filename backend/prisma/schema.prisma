@@ -47,6 +47,8 @@ model User {
   cpf            String     @unique
   cep            String
   address        String
+  addressNumber  String?
+  addressComplement String?
   city           String
   state          String
   pixKey         String

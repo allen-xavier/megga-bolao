@@ -66,6 +66,27 @@ export class PaymentsService {
     return Buffer.from(cleaned, 'base64');
   }
 
+  private async fetchCepInfo(cep: string) {
+    const normalized = String(cep ?? '').replace(/\D/g, '');
+    if (normalized.length !== 8) return null;
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${normalized}/json/`);
+      if (!response.ok) return null;
+      const data = (await response.json()) as {
+        erro?: boolean;
+        logradouro?: string;
+        bairro?: string;
+        localidade?: string;
+        uf?: string;
+        ibge?: string;
+      };
+      if (data.erro) return null;
+      return data;
+    } catch {
+      return null;
+    }
+  }
+
   private async buildDepositReceiptPdf(params: {
     paymentId: string;
     amount: number;
@@ -186,6 +207,8 @@ export class PaymentsService {
         email: true,
         cep: true,
         address: true,
+        addressNumber: true,
+        addressComplement: true,
         city: true,
         state: true,
       },
@@ -217,18 +240,24 @@ export class PaymentsService {
     dueDate.setDate(dueDate.getDate() + 1);
 
     const cpfDigits = String(user.cpf ?? '').replace(/\D/g, '');
-    const phoneDigits = String(user.phone ?? '').replace(/\D/g, '');
+    const phoneDigitsRaw = String(user.phone ?? '').replace(/\D/g, '');
+    const phoneDigits =
+      phoneDigitsRaw.startsWith('55') && phoneDigitsRaw.length > 11
+        ? phoneDigitsRaw.slice(2)
+        : phoneDigitsRaw;
 
+    const cepInfo = user.cep ? await this.fetchCepInfo(user.cep) : null;
     const addressPayload =
-      user.cep && user.city && user.state
+      cepInfo?.ibge
         ? {
-            zipCode: user.cep,
-            street: user.address,
-            number: 'S/N',
-            complement: '',
-            neighborhood: '',
-            city: user.city,
-            state: user.state,
+            codIbge: cepInfo.ibge,
+            zipCode: String(user.cep ?? '').replace(/\D/g, ''),
+            street: cepInfo.logradouro ?? user.address ?? '',
+            number: user.addressNumber ?? 'S/N',
+            complement: user.addressComplement ?? '',
+            neighborhood: cepInfo.bairro ?? '',
+            city: cepInfo.localidade ?? user.city ?? '',
+            state: cepInfo.uf ?? user.state ?? '',
           }
         : undefined;
 
@@ -289,14 +318,19 @@ export class PaymentsService {
         receiptAvailable: true,
       };
     } catch (err: any) {
+      const reason =
+        err?.response?.data?.response ??
+        err?.response?.data?.message ??
+        err?.message ??
+        'Falha ao gerar PIX.';
       await this.prisma.payment.update({
         where: { id: payment.id },
         data: {
           status: PaymentStatus.FAILED,
-          metadata: { ...((payment.metadata ?? {}) as any), error: err?.response?.data?.response ?? err?.message },
+          metadata: { ...((payment.metadata ?? {}) as any), error: reason },
         },
       });
-      throw new BadRequestException('Falha ao gerar PIX.');
+      throw new BadRequestException(String(reason));
     }
   }
 

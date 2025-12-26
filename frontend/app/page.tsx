@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth-options";
 import {
   RocketLaunchIcon,
   SparklesIcon,
@@ -26,7 +29,12 @@ const features = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await getServerSession(authOptions);
+  if (session?.user) {
+    redirect("/inicio");
+  }
+
   return (
     <div className="mx-auto w-full max-w-full space-y-8 px-4 pb-10 pt-4 sm:px-6 lg:px-8">
       <section className="grid gap-4 rounded-3xl border border-white/5 bg-[#0f1117] p-6 text-white shadow-lg ring-1 ring-white/5 md:grid-cols-3">

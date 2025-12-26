@@ -15,6 +15,8 @@ type RegisterPayload = {
   email?: string;
   cep: string;
   address: string;
+  addressNumber: string;
+  addressComplement?: string;
   city: string;
   state: string;
   pixKey: string;
@@ -131,6 +133,8 @@ export function RegisterForm() {
     email: '',
     cep: '',
     address: '',
+    addressNumber: '',
+    addressComplement: '',
     city: '',
     state: '',
     pixKey: '',
@@ -170,7 +174,7 @@ export function RegisterForm() {
       const value = e.target.value;
       setForm((prev) => {
         let nextValue = value;
-        if (field === 'fullName' || field === 'address' || field === 'city' || field === 'state') {
+        if (field === 'fullName' || field === 'address' || field === 'addressNumber' || field === 'addressComplement' || field === 'city' || field === 'state') {
           nextValue = value.toUpperCase();
         } else if (field === 'email') {
           nextValue = value.toLowerCase();
@@ -217,32 +221,47 @@ export function RegisterForm() {
     }
   };
 
-  const handleCpfBlur = () => {
+  const checkAvailability = async (params: { cpf?: string; email?: string; phone?: string }) => {
+    try {
+      await api.get('/auth/check', { params });
+      setMessage(null);
+      return true;
+    } catch (error: any) {
+      if (error?.response?.status === 409 || error?.response?.status === 400) {
+        setMessage(error?.response?.data?.message ?? 'Dado ja cadastrado.');
+        return false;
+      }
+      setMessage('Nao foi possivel validar os dados.');
+      return false;
+    }
+  };
+
+  const handleCpfBlur = async () => {
     const cpf = normalizeDigits(form.cpf);
     if (!cpf) return;
     if (!isValidCpf(cpf)) {
       setMessage('CPF invalido.');
       return;
     }
-    setMessage(null);
+    await checkAvailability({ cpf });
   };
 
-  const handleEmailBlur = () => {
+  const handleEmailBlur = async () => {
     if (!form.email) return;
     if (!isValidEmail(form.email)) {
       setMessage('Email invalido.');
       return;
     }
-    setMessage(null);
+    await checkAvailability({ email: form.email });
   };
 
-  const handlePhoneBlur = () => {
+  const handlePhoneBlur = async () => {
     if (!form.phone) return;
     if (!isValidPhone(form.phone)) {
       setMessage('Telefone invalido.');
       return;
     }
-    setMessage(null);
+    await checkAvailability({ phone: form.phone });
   };
 
   const handlePixKeyBlur = () => {
@@ -274,6 +293,9 @@ export function RegisterForm() {
       if (!normalizedCep || normalizedCep.length !== 8) {
         throw new Error('CEP invalido.');
       }
+      if (!form.addressNumber?.trim()) {
+        throw new Error('Numero do endereco obrigatorio.');
+      }
       const normalizedEmail = form.email ? form.email.trim().toLowerCase() : undefined;
       if (normalizedEmail && !isValidEmail(normalizedEmail)) {
         throw new Error('Email invalido.');
@@ -293,6 +315,8 @@ export function RegisterForm() {
         cpf: normalizedCpf,
         cep: normalizedCep,
         address: form.address.toUpperCase(),
+        addressNumber: form.addressNumber.toUpperCase(),
+        addressComplement: form.addressComplement ? form.addressComplement.toUpperCase() : undefined,
         city: form.city.toUpperCase(),
         state: form.state.toUpperCase(),
         email: normalizedEmail,
@@ -387,6 +411,23 @@ export function RegisterForm() {
               className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-navy/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
               value={form.address}
               onChange={handleChange('address')}
+            />
+          </label>
+          <label className="text-sm text-white/80">
+            Numero
+            <input
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-navy/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
+              value={form.addressNumber}
+              onChange={handleChange('addressNumber')}
+              required
+            />
+          </label>
+          <label className="text-sm text-white/80">
+            Complemento (opcional)
+            <input
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-navy/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
+              value={form.addressComplement ?? ''}
+              onChange={handleChange('addressComplement')}
             />
           </label>
           <label className="text-sm text-white/80">

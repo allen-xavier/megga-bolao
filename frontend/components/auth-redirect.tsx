@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 const isPublicPath = (pathname: string) => {
   if (pathname === '/') return true;
@@ -15,7 +15,32 @@ const isPublicPath = (pathname: string) => {
 export function AuthRedirect() {
   const pathname = usePathname();
   const router = useRouter();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    const token = (session?.user as any)?.accessToken as string | undefined;
+    if (!token) {
+      signOut({ callbackUrl: '/' });
+      return;
+    }
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      signOut({ callbackUrl: '/' });
+      return;
+    }
+    try {
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+      const decoded = JSON.parse(atob(padded));
+      const exp = Number(decoded?.exp ?? 0);
+      if (exp && Date.now() >= exp * 1000) {
+        signOut({ callbackUrl: '/' });
+      }
+    } catch {
+      signOut({ callbackUrl: '/' });
+    }
+  }, [session, status]);
 
   useEffect(() => {
     if (status !== 'unauthenticated') return;

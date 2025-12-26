@@ -64,4 +64,52 @@ export class SuitpayClientService {
       idTransaction,
     });
   }
+
+  async testConnection() {
+    const config = await this.configService.getConfig();
+    if (!config.apiUrl || !config.clientId || !config.clientSecret) {
+      return {
+        ok: false,
+        status: 400,
+        message: "Configuracao da SuitPay incompleta.",
+      };
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.http.request({
+          method: "get",
+          url: `${config.apiUrl}/api/v1/gateway/get-receipt-pix-cashout`,
+          headers: { ci: config.clientId, cs: config.clientSecret },
+          params: { idTransaction: "00000000-0000-0000-0000-000000000000" },
+          validateStatus: () => true,
+        }),
+      );
+
+      const status = response.status ?? 0;
+      const data = response.data;
+      const detail =
+        typeof data === "string"
+          ? data
+          : data?.response ?? data?.message ?? JSON.stringify(data ?? {});
+
+      if (status === 401 || status === 403) {
+        return { ok: false, status, message: detail || "Access Denied", data };
+      }
+      if (status === 404) {
+        return { ok: true, status, message: "Credenciais validas (id nao encontrado).", data };
+      }
+      if (status >= 200 && status < 300) {
+        return { ok: true, status, message: detail || "Conexao ok.", data };
+      }
+      return { ok: false, status, message: detail || "Erro ao conectar.", data };
+    } catch (err: any) {
+      return {
+        ok: false,
+        status: err?.response?.status ?? 0,
+        message: err?.response?.data?.response ?? err?.response?.data?.message ?? err?.message ?? "Falha ao conectar.",
+        data: err?.response?.data,
+      };
+    }
+  }
 }

@@ -15,6 +15,23 @@ export const normalizeCpf = (value: string) => normalizeDigits(value || "");
 
 export const normalizeCep = (value: string) => normalizeDigits(value || "");
 
+export const normalizePhone = (phone: string) => {
+  if (!phone) {
+    return "";
+  }
+  const digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("55") && digits.length === 13) {
+    return `+${digits}`;
+  }
+  if (digits.length === 11) {
+    return `+55${digits}`;
+  }
+  if (phone.startsWith("+")) {
+    return phone;
+  }
+  return `+${digits}`;
+};
+
 export const isValidCpf = (value: string) => {
   const cpf = normalizeCpf(value);
   if (cpf.length !== 11) return false;

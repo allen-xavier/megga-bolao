@@ -32,6 +32,8 @@ export default function SuitPayConfigPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [form, setForm] = useState<SuitpayConfig | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testMessage, setTestMessage] = useState<string | null>(null);
 
   const config = form ?? data;
 
@@ -81,6 +83,27 @@ export default function SuitPayConfigPage() {
       setMessage(err?.response?.data?.message ?? "Falha ao salvar configuração.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const testConnection = async () => {
+    if (!token) return;
+    setTesting(true);
+    setTestMessage(null);
+    try {
+      const response = await api.get("/admin/suitpay/test", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const payload = response.data ?? {};
+      const status = payload.status ?? 0;
+      const detail = payload.message ?? payload.response ?? "Sem detalhes.";
+      setTestMessage(`${payload.ok ? "Conexao ok" : "Erro"} (${status}): ${detail}`);
+    } catch (err: any) {
+      const status = err?.response?.status ?? 0;
+      const detail = err?.response?.data?.message ?? err?.message ?? "Falha ao testar conexao.";
+      setTestMessage(`Erro (${status}): ${detail}`);
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -193,9 +216,18 @@ export default function SuitPayConfigPage() {
               >
                 {saving ? "Salvando..." : "Salvar configuração"}
               </button>
+              <button
+                type="button"
+                onClick={testConnection}
+                disabled={testing}
+                className="rounded-2xl border border-white/10 px-6 py-3 text-sm font-semibold text-white/80 transition hover:border-megga-yellow hover:text-white disabled:opacity-50"
+              >
+                {testing ? "Testando..." : "Testar conexao"}
+              </button>
               <p className="text-xs text-white/60">Sandbox: https://sandbox.ws.suitpay.app | Producao: https://ws.suitpay.app</p>
             </div>
             {message && <p className="text-sm text-megga-lime">{message}</p>}
+            {testMessage && <p className="text-sm text-white/70">{testMessage}</p>}
           </form>
         )}
       </section>

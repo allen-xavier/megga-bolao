@@ -1,9 +1,9 @@
 ﻿'use client';
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { api } from "@/lib/api";
 import { AppDrawer } from "@/components/app-drawer";
@@ -18,9 +18,11 @@ const authedFetcher = ([url, token]: [string, string]) =>
     .then((response) => response.data as WalletResponse);
 
 export function TopBar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const token = (session?.user as any)?.accessToken;
-  const { data } = useSWR<WalletResponse>(token ? ["/wallet/me", token] : null, authedFetcher, {
+  const isAuthed = status === "authenticated" && Boolean(token);
+  const logoutRef = useRef(false);
+  const { data, error } = useSWR<WalletResponse>(isAuthed ? ["/wallet/me", token] : null, authedFetcher, {
     revalidateOnFocus: true,
     refreshInterval: 15000,
     revalidateIfStale: true,
@@ -32,6 +34,15 @@ export function TopBar() {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+
+  useEffect(() => {
+    if (!error || logoutRef.current) return;
+    const statusCode = (error as any)?.response?.status;
+    if (statusCode === 401) {
+      logoutRef.current = true;
+      signOut({ callbackUrl: "/" });
+    }
+  }, [error]);
 
   return (
     <>
@@ -62,12 +73,24 @@ export function TopBar() {
               <span className="mt-0.5 text-sm font-semibold leading-tight md:text-base">Megga Bolão</span>
             </div>
 
+          {isAuthed ? (
             <div className="ml-auto flex flex-col items-start gap-0.5 text-[10px] text-white/75 md:inline-flex md:flex-row md:items-center md:gap-3 md:rounded-2xl md:border md:border-white/10 md:bg-white/5 md:px-4 md:py-2 md:text-xs">
               <span className="uppercase tracking-[0.24em] text-white/45">Saldo</span>
               <span className="text-sm font-semibold text-[#f7b500] md:text-sm">R$ {balance}</span>
             </div>
-          </div>
+          ) : (
+            <div className="ml-auto flex items-center gap-2">
+              <Link
+                href="/login"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80 transition hover:border-[#f7b500] hover:text-white"
+              >
+                Entrar
+              </Link>
+            </div>
+          )}
+        </div>
 
+        {isAuthed && (
           <Link
             href="/perfil"
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-white/80 transition hover:border-[#1ea7a4] hover:text-[#f7b500]"
@@ -75,6 +98,7 @@ export function TopBar() {
             <span className="sr-only">Ir para o perfil</span>
             <UserCircleIcon className="h-4 w-4" aria-hidden />
           </Link>
+        )}
         </div>
       </header>
 

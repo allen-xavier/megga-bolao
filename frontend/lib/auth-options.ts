@@ -44,6 +44,8 @@ export const authOptions: NextAuthOptions = {
           cpf: u.cpf,
           cep: u.cep,
           address: u.address,
+          addressNumber: u.addressNumber,
+          addressComplement: u.addressComplement,
           city: u.city,
           state: u.state,
           pixKey: u.pixKey,
@@ -69,6 +71,8 @@ export const authOptions: NextAuthOptions = {
         token.cpf = (user as any).cpf;
         token.cep = (user as any).cep;
         token.address = (user as any).address;
+        token.addressNumber = (user as any).addressNumber;
+        token.addressComplement = (user as any).addressComplement;
         token.city = (user as any).city;
         token.state = (user as any).state;
         token.pixKey = (user as any).pixKey;
@@ -81,6 +85,8 @@ export const authOptions: NextAuthOptions = {
         token.cpf = updateData.cpf ?? token.cpf;
         token.cep = updateData.cep ?? token.cep;
         token.address = updateData.address ?? token.address;
+        token.addressNumber = updateData.addressNumber ?? token.addressNumber;
+        token.addressComplement = updateData.addressComplement ?? token.addressComplement;
         token.city = updateData.city ?? token.city;
         token.state = updateData.state ?? token.state;
         token.pixKey = updateData.pixKey ?? token.pixKey;
@@ -103,6 +109,8 @@ export const authOptions: NextAuthOptions = {
         cpf: token.cpf as string | undefined,
         cep: token.cep as string | undefined,
         address: token.address as string | undefined,
+        addressNumber: token.addressNumber as string | undefined,
+        addressComplement: token.addressComplement as string | undefined,
         city: token.city as string | undefined,
         state: token.state as string | undefined,
         pixKey: token.pixKey as string | undefined,

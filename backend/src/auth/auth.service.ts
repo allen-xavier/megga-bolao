@@ -15,6 +15,7 @@ import {
   normalizeCpf,
   normalizeEmail,
   normalizeName,
+  normalizePhone,
   normalizePixKey,
   isValidCpf,
 } from '../common/user-validation';
@@ -44,32 +45,15 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
-  private normalizePhone(phone: string): string {
-    if (!phone) {
-      return '';
-    }
-
-    const digits = phone.replace(/\D/g, '');
-    if (digits.startsWith('55') && digits.length === 13) {
-      return `+${digits}`;
-    }
-    if (digits.length === 11) {
-      // Assume BR number without country code
-      return `+55${digits}`;
-    }
-    if (phone.startsWith('+')) {
-      return phone;
-    }
-    return `+${digits}`;
-  }
-
   async register(dto: RegisterUserDto): Promise<AuthResult> {
-    const normalizedPhone = this.normalizePhone(dto.phone);
+    const normalizedPhone = normalizePhone(dto.phone);
     const normalizedEmail = normalizeEmail(dto.email);
     const normalizedCpf = normalizeCpf(dto.cpf);
     const normalizedCep = normalizeCep(dto.cep);
     const normalizedName = normalizeName(dto.fullName);
     const normalizedAddress = normalizeName(dto.address);
+    const normalizedAddressNumber = normalizeName(dto.addressNumber);
+    const normalizedAddressComplement = dto.addressComplement ? normalizeName(dto.addressComplement) : undefined;
     const normalizedCity = normalizeName(dto.city);
     const normalizedState = normalizeName(dto.state);
     const pixKeyType = (dto.pixKeyType ?? 'document') as (typeof PIX_KEY_TYPES)[number];
@@ -79,6 +63,9 @@ export class AuthService {
     }
     if (normalizedCep.length !== 8) {
       throw new BadRequestException('CEP invalido.');
+    }
+    if (!normalizedAddressNumber) {
+      throw new BadRequestException('Numero do endereco obrigatorio.');
     }
 
     const pixKeyResult = normalizePixKey(pixKeyType, dto.pixKey, {
@@ -127,6 +114,8 @@ export class AuthService {
             email: normalizedEmail,
             cep: normalizedCep,
             address: normalizedAddress,
+            addressNumber: normalizedAddressNumber,
+            addressComplement: normalizedAddressComplement,
             city: normalizedCity,
             state: normalizedState,
             pixKey: pixKeyResult.value ?? dto.pixKey,
@@ -168,6 +157,62 @@ export class AuthService {
       tokens: await this.generateTokens({ sub: user.id, role: user.role }),
     };
   }
+
+  async checkAvailability(params: { cpf?: string; email?: string; phone?: string; excludeId?: string }) {
+    const normalizedCpf = params.cpf ? normalizeCpf(params.cpf) : undefined;
+    const normalizedEmail = params.email ? normalizeEmail(params.email) : undefined;
+    const normalizedPhone = params.phone ? normalizePhone(params.phone) : undefined;
+
+    if (!normalizedCpf && !normalizedEmail && !normalizedPhone) {
+      throw new BadRequestException('Informe CPF, email ou telefone para verificar.');
+    }
+
+    if (normalizedCpf && !isValidCpf(normalizedCpf)) {
+      throw new BadRequestException('CPF invalido.');
+    }
+    if (params.email && !normalizedEmail) {
+      throw new BadRequestException('Email invalido.');
+    }
+    if (normalizedPhone) {
+      const phoneDigits = normalizedPhone.replace(/\D/g, '');
+      if (phoneDigits.length < 10 || phoneDigits.length > 14) {
+        throw new BadRequestException('Telefone invalido.');
+      }
+    }
+
+    const filters: Prisma.UserWhereInput[] = [];
+    if (normalizedCpf) {
+      filters.push({ cpf: normalizedCpf });
+    }
+    if (normalizedEmail) {
+      filters.push({ email: normalizedEmail });
+    }
+    if (normalizedPhone) {
+      filters.push({ phone: normalizedPhone });
+    }
+
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        OR: filters,
+        ...(params.excludeId ? { NOT: { id: params.excludeId } } : {}),
+      },
+    });
+
+    if (existing) {
+      if (normalizedCpf && existing.cpf === normalizedCpf) {
+        throw new ConflictException('CPF ja cadastrado.');
+      }
+      if (normalizedEmail && existing.email === normalizedEmail) {
+        throw new ConflictException('Email ja cadastrado.');
+      }
+      if (normalizedPhone && existing.phone === normalizedPhone) {
+        throw new ConflictException('Telefone ja cadastrado.');
+      }
+      throw new ConflictException('Dados ja cadastrados.');
+    }
+
+    return { available: true };
+  }
   private async linkReferrals(newUserId: string, inviteCode?: string) {
     if (!inviteCode) return;
     const referrer = await this.prisma.user.findUnique({ where: { referralCode: inviteCode } });
@@ -208,7 +253,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResult> {
-    const normalizedPhone = this.normalizePhone(dto.phone);
+    const normalizedPhone = normalizePhone(dto.phone);
     const user = await this.prisma.user.findUnique({ where: { phone: normalizedPhone } });
 
     if (!user) {

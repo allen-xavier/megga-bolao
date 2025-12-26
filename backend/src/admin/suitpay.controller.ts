@@ -3,12 +3,16 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../users/decorators/current-user.decorator";
 import { UserProfile, UserRole } from "../users/entities/user.entity";
 import { SuitpayConfigService } from "../payments/suitpay-config.service";
+import { SuitpayClientService } from "../payments/suitpay-client.service";
 import { UpdateSuitpayConfigDto } from "../payments/dto/update-suitpay-config.dto";
 
 @Controller("admin/suitpay")
 @UseGuards(JwtAuthGuard)
 export class SuitpayAdminController {
-  constructor(private readonly suitpay: SuitpayConfigService) {}
+  constructor(
+    private readonly suitpay: SuitpayConfigService,
+    private readonly suitpayClient: SuitpayClientService,
+  ) {}
 
   private assertAdmin(user: UserProfile) {
     if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERVISOR) {
@@ -42,5 +46,11 @@ export class SuitpayAdminController {
       webhookSecret: saved.webhookSecret,
       autoApprovalLimit: saved.autoApprovalLimit,
     };
+  }
+
+  @Get("test")
+  async testConnection(@CurrentUser() user: UserProfile) {
+    this.assertAdmin(user);
+    return this.suitpayClient.testConnection();
   }
 }

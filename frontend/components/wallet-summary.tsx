@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { api } from "@/lib/api";
 
 type WalletStatement = {
@@ -37,7 +37,7 @@ export function WalletSummary() {
   const { data: session, status } = useSession();
   const token = session?.user?.accessToken;
 
-  const { data, isLoading, mutate } = useSWR<Wallet>(
+  const { data, isLoading, error, mutate } = useSWR<Wallet>(
     token ? "/wallet/me" : null,
     () =>
       api
@@ -49,6 +49,7 @@ export function WalletSummary() {
       revalidateOnFocus: false,
     }
   );
+  const logoutRef = useRef(false);
 
   const [filterMode, setFilterMode] = useState<"last30" | "month">("last30");
   const [filterMonth, setFilterMonth] = useState(() => new Date().getMonth());
@@ -111,6 +112,15 @@ export function WalletSummary() {
     });
   }, [statements, filterMode, filterMonth, filterYear, flowFilter, hideAffiliate]);
 
+  useEffect(() => {
+    if (!error || logoutRef.current) return;
+    const statusCode = (error as any)?.response?.status;
+    if (statusCode === 401) {
+      logoutRef.current = true;
+      signOut({ callbackUrl: "/" });
+    }
+  }, [error]);
+
   if (status !== "authenticated") {
     return (
       <div className="rounded-3xl border border-white/5 bg-[#0f1117] p-6 text-sm text-white/70 shadow-lg">
@@ -164,6 +174,7 @@ export function WalletSummary() {
     setWithdrawAmount(canWithdraw ? String(MIN_WITHDRAW) : "");
     setWithdrawOpen(true);
   };
+
   const closeWithdraw = () => {
     setWithdrawOpen(false);
     setWithdrawMessage(null);

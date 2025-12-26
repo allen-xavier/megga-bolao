@@ -20,6 +20,13 @@ export class RegisterUserDto {
   address!: string;
 
   @IsString()
+  addressNumber!: string;
+
+  @IsOptional()
+  @IsString()
+  addressComplement?: string;
+
+  @IsString()
   city!: string;
 
   @IsString()

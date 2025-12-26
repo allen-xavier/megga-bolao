@@ -14,6 +14,8 @@ export interface UserProfile {
   cpf: string;
   cep: string;
   address: string;
+  addressNumber: string;
+  addressComplement?: string;
   city: string;
   state: string;
   pixKey: string;
@@ -126,6 +128,8 @@ export function ProfileForm({ user }: { user: UserProfile }) {
     cpf: user.cpf ?? '',
     cep: user.cep ?? '',
     address: user.address ?? '',
+    addressNumber: (user as any).addressNumber ?? '',
+    addressComplement: (user as any).addressComplement ?? '',
     city: user.city ?? '',
     state: user.state ?? '',
     pixKey: user.pixKey ?? '',
@@ -135,6 +139,8 @@ export function ProfileForm({ user }: { user: UserProfile }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const { data: session, update: updateSession } = useSession();
+  const role = session?.user?.role;
+  const canEditLockedFields = role === 'ADMIN' || role === 'SUPERVISOR';
   const token = session?.user?.accessToken;
   const userId = user.id ?? (session?.user as any)?.id ?? (session?.user as any)?.sub;
 
@@ -172,6 +178,9 @@ export function ProfileForm({ user }: { user: UserProfile }) {
       if (!normalizedCep || normalizedCep.length !== 8) {
         throw new Error('CEP invalido.');
       }
+      if (!form.addressNumber?.trim()) {
+        throw new Error('Numero do endereco obrigatorio.');
+      }
       const normalizedEmail = form.email ? form.email.trim().toLowerCase() : undefined;
       if (normalizedEmail && !isValidEmail(normalizedEmail)) {
         throw new Error('Email invalido.');
@@ -191,6 +200,8 @@ export function ProfileForm({ user }: { user: UserProfile }) {
         cpf: normalizedCpf,
         cep: normalizedCep,
         address: form.address.toUpperCase(),
+        addressNumber: form.addressNumber.toUpperCase(),
+        addressComplement: form.addressComplement ? form.addressComplement.toUpperCase() : undefined,
         city: form.city.toUpperCase(),
         state: form.state.toUpperCase(),
         pixKey: pixKeyResult.value ?? form.pixKey,
@@ -214,7 +225,7 @@ export function ProfileForm({ user }: { user: UserProfile }) {
       const value = event.target.value;
       setForm((current) => {
         let nextValue = value;
-        if (key === 'fullName' || key === 'address' || key === 'city' || key === 'state') {
+        if (key === 'fullName' || key === 'address' || key === 'addressNumber' || key === 'addressComplement' || key === 'city' || key === 'state') {
           nextValue = value.toUpperCase();
         } else if (key === 'email') {
           nextValue = value.toLowerCase();
@@ -225,10 +236,13 @@ export function ProfileForm({ user }: { user: UserProfile }) {
         }
 
         const nextState: UserProfile = { ...current, [key]: nextValue };
+        if (key === 'cpf' && current.pixKeyType === 'document') {
+          nextState.pixKey = normalizeDigits(nextValue as string);
+        }
         if (key === 'pixKeyType') {
           const nextType = nextValue as PixKeyType;
           if (nextType === 'document' || nextType === 'phoneNumber') {
-            nextState.pixKey = normalizeDigits(current.pixKey);
+            nextState.pixKey = normalizeDigits(nextType === 'document' ? current.cpf : current.pixKey);
           }
         }
         return nextState;
@@ -256,22 +270,47 @@ export function ProfileForm({ user }: { user: UserProfile }) {
     }
   };
 
-  const handleEmailBlur = () => {
+  const checkAvailability = async (params: { cpf?: string; email?: string; phone?: string }) => {
+    try {
+      await api.get('/auth/check', {
+        params: { ...params, excludeId: userId },
+      });
+      setMessage(null);
+      return true;
+    } catch (error: any) {
+      if (error?.response?.status === 409 || error?.response?.status === 400) {
+        setMessage(error?.response?.data?.message ?? 'Dado ja cadastrado.');
+        return false;
+      }
+      setMessage('Nao foi possivel validar os dados.');
+      return false;
+    }
+  };
+
+  const handleEmailBlur = async () => {
     if (!form.email) return;
     if (!isValidEmail(form.email)) {
       setMessage('Email invalido.');
       return;
     }
-    setMessage(null);
+    if (form.email === (user.email ?? '')) {
+      setMessage(null);
+      return;
+    }
+    await checkAvailability({ email: form.email });
   };
 
-  const handlePhoneBlur = () => {
+  const handlePhoneBlur = async () => {
     if (!form.phone) return;
     if (!isValidPhone(form.phone)) {
       setMessage('Telefone invalido.');
       return;
     }
-    setMessage(null);
+    if (form.phone === user.phone) {
+      setMessage(null);
+      return;
+    }
+    await checkAvailability({ phone: form.phone });
   };
 
   const handlePixKeyBlur = () => {
@@ -286,6 +325,20 @@ export function ProfileForm({ user }: { user: UserProfile }) {
       return;
     }
     setMessage(null);
+  };
+
+  const handleCpfBlur = async () => {
+    if (!form.cpf) return;
+    const cpf = normalizeDigits(form.cpf);
+    if (!isValidCpf(cpf)) {
+      setMessage('CPF invalido.');
+      return;
+    }
+    if (normalizeDigits(user.cpf ?? '') === cpf) {
+      setMessage(null);
+      return;
+    }
+    await checkAvailability({ cpf });
   };
 
   return (
@@ -330,7 +383,8 @@ export function ProfileForm({ user }: { user: UserProfile }) {
             className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
             value={form.cpf}
             onChange={onChange('cpf')}
-            readOnly
+            onBlur={handleCpfBlur}
+            readOnly={!canEditLockedFields}
           />
         </label>
         <label className="text-sm text-white/80">
@@ -351,6 +405,23 @@ export function ProfileForm({ user }: { user: UserProfile }) {
           />
         </label>
         <label className="text-sm text-white/80">
+          Numero
+          <input
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
+            value={form.addressNumber}
+            onChange={onChange('addressNumber')}
+            required
+          />
+        </label>
+        <label className="text-sm text-white/80">
+          Complemento
+          <input
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
+            value={form.addressComplement ?? ''}
+            onChange={onChange('addressComplement')}
+          />
+        </label>
+        <label className="text-sm text-white/80">
           Cidade
           <input
             className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
@@ -367,6 +438,16 @@ export function ProfileForm({ user }: { user: UserProfile }) {
           />
         </label>
         <label className="text-sm text-white/80">
+          Chave Pix
+          <input
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
+            value={form.pixKey}
+            onChange={onChange('pixKey')}
+            onBlur={handlePixKeyBlur}
+            readOnly={form.pixKeyType === 'document'}
+          />
+        </label>
+        <label className="text-sm text-white/80">
           Tipo da chave Pix
           <select
             className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
@@ -379,15 +460,6 @@ export function ProfileForm({ user }: { user: UserProfile }) {
               </option>
             ))}
           </select>
-        </label>
-        <label className="text-sm text-white/80">
-          Chave Pix
-          <input
-            className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
-            value={form.pixKey}
-            onChange={onChange('pixKey')}
-            onBlur={handlePixKeyBlur}
-          />
         </label>
       </div>
       <div className="flex justify-center">
