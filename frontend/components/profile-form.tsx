@@ -438,16 +438,6 @@ export function ProfileForm({ user }: { user: UserProfile }) {
           />
         </label>
         <label className="text-sm text-white/80">
-          Chave Pix
-          <input
-            className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
-            value={form.pixKey}
-            onChange={onChange('pixKey')}
-            onBlur={handlePixKeyBlur}
-            readOnly={form.pixKeyType === 'document'}
-          />
-        </label>
-        <label className="text-sm text-white/80">
           Tipo da chave Pix
           <select
             className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
@@ -460,6 +450,16 @@ export function ProfileForm({ user }: { user: UserProfile }) {
               </option>
             ))}
           </select>
+        </label>
+        <label className="text-sm text-white/80">
+          Chave Pix
+          <input
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-megga-surface/80 px-4 py-2 text-sm text-white focus:border-megga-magenta focus:outline-none focus:ring-2 focus:ring-megga-magenta/40"
+            value={form.pixKey}
+            onChange={onChange('pixKey')}
+            onBlur={handlePixKeyBlur}
+            readOnly={form.pixKeyType === 'document'}
+          />
         </label>
       </div>
       <div className="flex justify-center">

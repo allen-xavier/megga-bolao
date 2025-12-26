@@ -37,7 +37,7 @@ export class PaymentsController {
 
   @Post('withdraw')
   requestWithdraw(@Body() dto: RequestWithdrawDto, @CurrentUser() user: UserProfile) {
-    return this.paymentsService.requestWithdraw(user.id, dto);
+    return this.paymentsService.requestWithdraw(user.id, dto, user.role === UserRole.ADMIN);
   }
 
   @Patch(':id/confirm')

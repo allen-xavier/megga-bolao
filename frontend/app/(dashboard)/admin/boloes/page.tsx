@@ -429,7 +429,7 @@ function AdminBoloesPageContent() {
               {isAdmin && (
                 <Link
                   href={`/admin/boloes/criar?id=${bolao.id}`}
-                  className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
+                  className="inline-flex flex-1 items-center justify-center rounded-2xl bg-[#1ea7a4] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
                 >
                   Editar / pausar
                 </Link>
@@ -697,7 +697,7 @@ function AdminBoloesPageContent() {
               {isAdmin && (
                 <Link
                   href={`/admin/boloes/criar?id=${bolao.id}`}
-                  className="flex-1 rounded-xl bg-[#1ea7a4] px-4 py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110 md:rounded-2xl"
+                  className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#1ea7a4] px-4 py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110 md:rounded-2xl"
                 >
                   Editar / pausar
                 </Link>
@@ -782,7 +782,7 @@ function AdminBoloesPageContent() {
           {isAdmin && (
             <Link
               href={`/admin/boloes/criar?id=${bolao.id}`}
-              className="flex-1 rounded-2xl bg-[#1ea7a4] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
+              className="inline-flex flex-1 items-center justify-center rounded-2xl bg-[#1ea7a4] py-3 text-center text-sm font-semibold text-[#0f1117] transition hover:brightness-110"
             >
               Editar / pausar
             </Link>

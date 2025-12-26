@@ -71,6 +71,14 @@ export function WalletSummary() {
     paymentCodeBase64: string;
   } | null>(null);
 
+  useEffect(() => {
+    if (!depositOpen || !depositData) return;
+    const interval = setInterval(() => {
+      mutate();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [depositOpen, depositData, mutate]);
+
   const userPixKey = (session?.user as any)?.pixKey ?? "";
   const userCpf = (session?.user as any)?.cpf ?? "";
 
@@ -111,6 +119,18 @@ export function WalletSummary() {
       return true;
     });
   }, [statements, filterMode, filterMonth, filterYear, flowFilter, hideAffiliate]);
+
+  useEffect(() => {
+    if (!depositOpen || !depositData) return;
+    const confirmed = statements.some(
+      (item) => item.referenceId === depositData.id && item.receiptAvailable,
+    );
+    if (!confirmed) return;
+    setDepositOpen(false);
+    setDepositMessage(null);
+    setDepositData(null);
+    setDepositLoading(false);
+  }, [depositOpen, depositData?.id, statements]);
 
   useEffect(() => {
     if (!error || logoutRef.current) return;
@@ -388,7 +408,7 @@ export function WalletSummary() {
           <ul className="mt-3 max-h-60 space-y-3 overflow-y-auto pr-1 text-sm">
             {filteredStatements.map((item) => {
               const amount = Number(item.amount);
-              const formattedAmount = amount.toLocaleString("pt-BR", {
+              const formattedAmount = Math.abs(amount).toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               });
@@ -493,9 +513,6 @@ export function WalletSummary() {
 
             {depositData && (
               <div className="mt-4 space-y-4 text-center">
-                <div className="mx-auto w-full max-w-[220px] rounded-2xl bg-white p-3">
-                  {depositQrSrc && <img src={depositQrSrc} alt="QR Code Pix" className="h-auto w-full" />}
-                </div>
                 <div className="rounded-2xl border border-white/10 bg-[#151824] px-3 py-3 text-xs text-white/70">
                   <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Codigo PIX</p>
                   <p className="mt-2 break-all text-sm text-white">{depositData.paymentCode}</p>
@@ -506,6 +523,9 @@ export function WalletSummary() {
                   >
                     Copiar codigo
                   </button>
+                </div>
+                <div className="mx-auto w-full max-w-[220px] rounded-2xl bg-white p-3">
+                  {depositQrSrc && <img src={depositQrSrc} alt="QR Code Pix" className="h-auto w-full" />}
                 </div>
                 <button
                   type="button"

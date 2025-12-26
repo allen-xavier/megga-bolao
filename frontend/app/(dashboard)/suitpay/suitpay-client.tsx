@@ -139,7 +139,9 @@ export default function SuitPayConfigPage() {
       <section className="rounded-3xl bg-megga-navy/80 p-6 shadow-lg ring-1 ring-white/5">
         {error && (
           <p className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-megga-rose">
-            Erro ao carregar configuração: {error?.message ?? "falha desconhecida"}
+            {error?.response?.status === 403
+              ? "Sem permissao para acessar a configuracao da SuitPay."
+              : `Erro ao carregar configuracao: ${error?.message ?? "falha desconhecida"}`}
           </p>
         )}
         {!config && !error && (

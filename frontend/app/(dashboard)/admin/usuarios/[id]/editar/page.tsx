@@ -22,6 +22,7 @@ type User = {
   pixKey?: string | null;
   pixKeyType?: "document" | "phoneNumber" | "email" | "randomKey" | null;
   acceptedTerms?: boolean;
+  role?: "ADMIN" | "SUPERVISOR" | "USER";
 };
 
 type PixKeyType = "document" | "phoneNumber" | "email" | "randomKey";
@@ -246,6 +247,7 @@ export default function EditUserPage() {
         pixKey: form.pixKey ?? undefined,
         pixKeyType: form.pixKeyType ?? undefined,
         acceptedTerms: form.acceptedTerms ?? false,
+        role: form.role ?? undefined,
       };
       await api.patch(`/users/${userId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
       setMessage("Perfil atualizado com sucesso.");
@@ -305,6 +307,8 @@ export default function EditUserPage() {
   if (!form) {
     return <p className="rounded-3xl bg-megga-navy/80 p-6 text-sm text-white/70">Carregando dados do usuario...</p>;
   }
+
+  const isAdminRole = form.role === "ADMIN" || form.role === "SUPERVISOR";
 
   return (
     <div className="space-y-5">
@@ -442,6 +446,25 @@ export default function EditUserPage() {
               className="h-4 w-4 rounded border-white/30 bg-transparent text-megga-teal focus:ring-megga-magenta"
             />
             <span>Usuário verificado (aceitou termos)</span>
+          </label>
+          <label className="flex items-center gap-3 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={isAdminRole}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setForm((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        role: checked ? (prev.role === "SUPERVISOR" ? "SUPERVISOR" : "ADMIN") : "USER",
+                      }
+                    : prev,
+                );
+              }}
+              className="h-4 w-4 rounded border-white/30 bg-transparent text-megga-yellow focus:ring-megga-magenta"
+            />
+            <span>Administrador</span>
           </label>
         </div>
 

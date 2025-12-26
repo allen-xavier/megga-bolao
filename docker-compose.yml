@@ -72,6 +72,7 @@ services:
       SUITPAY_CLIENT_ID: megpagamentosgmailcom_1748886092994
       SUITPAY_CLIENT_SECRET: ed7ef724861b245e6d700245746db5e5f02772fd5c7442c1e02f7105bdba661e3f04849c955f4c5789bd553c4c56ad9e
       SUITPAY_WEBHOOK_SECRET: ""
+      SUITPAY_WEBHOOK_DEBUG: "true"
       PORT: 3001
       TZ: America/Sao_Paulo
     depends_on:

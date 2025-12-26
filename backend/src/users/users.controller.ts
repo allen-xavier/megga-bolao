@@ -38,8 +38,12 @@ export class UsersController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUserDto, @CurrentUser() user: UserProfile) {
-    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERVISOR && user.id === id) {
-      delete (dto as any).cpf;
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPERVISOR;
+    if (!isAdmin) {
+      delete (dto as any).role;
+      if (user.id === id) {
+        delete (dto as any).cpf;
+      }
     }
     return this.usersService.update(id, dto);
   }
