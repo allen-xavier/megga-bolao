@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "pixKeyType" TEXT NOT NULL DEFAULT 'document';

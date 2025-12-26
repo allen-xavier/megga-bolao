@@ -50,6 +50,7 @@ model User {
   city           String
   state          String
   pixKey         String
+  pixKeyType     String     @default("document")
   passwordHash   String
   role           UserRole   @default(USER)
   acceptedTerms  Boolean    @default(false)

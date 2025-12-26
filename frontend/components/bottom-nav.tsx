@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 const navItems = [
   {
@@ -101,6 +102,9 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { status } = useSession();
+
+  if (status !== 'authenticated') return null;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 w-full border-t border-white/10 bg-[#0f1117]/98 px-4 py-3 text-white shadow-[0_-6px_18px_rgba(0,0,0,0.45)] backdrop-blur md:hidden">

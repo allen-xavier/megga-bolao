@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers";
 import { TopBar } from "@/components/top-bar";
 import { BottomNav } from "@/components/bottom-nav";
 import { AppSidebar } from "@/components/app-sidebar";
+import { AuthRedirect } from "@/components/auth-redirect";
 
 export const metadata: Metadata = {
   title: "Megga Bolão",
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-display">
         <Providers>
           <div className="flex min-h-screen w-full bg-megga-gradient text-white">
+            <AuthRedirect />
             <AppSidebar />
             <div className="flex min-h-screen flex-1 flex-col items-center">
               <TopBar />

@@ -8,8 +8,9 @@ import { signOut } from 'next-auth/react';
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const role = session?.user?.role;
+  const isAuthed = status === 'authenticated';
 
   const filteredSections = sections
     .map((section) => ({
@@ -18,16 +19,35 @@ export function AppSidebar() {
     }))
     .filter((section) => section.items.length > 0);
 
+  const publicSections = sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => item.href.startsWith('/politica')),
+    }))
+    .filter((section) => section.items.length > 0);
+
+  const visibleSections = isAuthed ? filteredSections : publicSections;
+
   return (
     <aside className="hidden h-full w-72 shrink-0 flex-col gap-6 rounded-3xl bg-megga-surface/60 p-6 text-white shadow-glow ring-1 ring-white/5 md:flex">
       <header className="space-y-1 border-b border-white/5 pb-4">
         <p className="text-[11px] uppercase tracking-[0.24em] text-white/50">Megga Bolão</p>
         <p className="text-xl font-semibold text-white">Painel</p>
         <p className="text-sm text-white/60">Navegue entre administração, bolões e configurações.</p>
+        {!isAuthed && (
+          <div className="pt-4">
+            <Link
+              href="/login"
+              className="inline-flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 transition hover:border-megga-magenta hover:text-megga-yellow"
+            >
+              Entrar / Criar conta
+            </Link>
+          </div>
+        )}
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto pr-1">
-        {filteredSections.map((section) => (
+        {visibleSections.map((section) => (
           <section key={section.title} className="space-y-3">
             <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/40">{section.title}</h2>
             <ul className="space-y-2">
@@ -53,15 +73,17 @@ export function AppSidebar() {
           </section>
         ))}
       </div>
-      <div>
-        <button
-          type="button"
-          onClick={() => signOut({ callbackUrl: '/login' })}
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition hover:border-megga-magenta hover:text-megga-yellow"
-        >
-          Sair da conta
-        </button>
-      </div>
+      {isAuthed && (
+        <div>
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: '/' })}
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition hover:border-megga-magenta hover:text-megga-yellow"
+          >
+            Sair da conta
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

@@ -1,5 +1,6 @@
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsIn, IsOptional, IsString, Length, Matches } from 'class-validator';
 import { UserRole } from '../../users/entities/user.entity';
+import { PIX_KEY_TYPES } from '../../common/user-validation';
 
 export class RegisterUserDto {
   @IsString()
@@ -10,7 +11,6 @@ export class RegisterUserDto {
   phone!: string;
 
   @IsString()
-  @Matches(/^\d{11}$/)
   cpf!: string;
 
   @IsString()
@@ -27,6 +27,10 @@ export class RegisterUserDto {
 
   @IsString()
   pixKey!: string;
+
+  @IsString()
+  @IsIn(PIX_KEY_TYPES)
+  pixKeyType!: (typeof PIX_KEY_TYPES)[number];
 
   @IsString()
   @Length(6, 50)

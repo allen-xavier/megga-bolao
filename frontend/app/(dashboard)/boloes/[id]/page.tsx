@@ -117,7 +117,7 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if (!unauthorized) return;
-    signOut({ callbackUrl: "/login" });
+    signOut({ callbackUrl: "/" });
     router.replace("/login");
   }, [unauthorized, router]);
 

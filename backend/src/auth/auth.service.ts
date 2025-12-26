@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
@@ -9,6 +9,15 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UserRole } from '../users/entities/user.entity';
 import { randomUUID } from 'crypto';
+import {
+  PIX_KEY_TYPES,
+  normalizeCep,
+  normalizeCpf,
+  normalizeEmail,
+  normalizeName,
+  normalizePixKey,
+  isValidCpf,
+} from '../common/user-validation';
 
 interface AuthPayload {
   sub: string;
@@ -56,14 +65,38 @@ export class AuthService {
 
   async register(dto: RegisterUserDto): Promise<AuthResult> {
     const normalizedPhone = this.normalizePhone(dto.phone);
+    const normalizedEmail = normalizeEmail(dto.email);
+    const normalizedCpf = normalizeCpf(dto.cpf);
+    const normalizedCep = normalizeCep(dto.cep);
+    const normalizedName = normalizeName(dto.fullName);
+    const normalizedAddress = normalizeName(dto.address);
+    const normalizedCity = normalizeName(dto.city);
+    const normalizedState = normalizeName(dto.state);
+    const pixKeyType = (dto.pixKeyType ?? 'document') as (typeof PIX_KEY_TYPES)[number];
+
+    if (!isValidCpf(normalizedCpf)) {
+      throw new BadRequestException('CPF invalido.');
+    }
+    if (normalizedCep.length !== 8) {
+      throw new BadRequestException('CEP invalido.');
+    }
+
+    const pixKeyResult = normalizePixKey(pixKeyType, dto.pixKey, {
+      cpf: normalizedCpf,
+      phone: normalizedPhone,
+      email: normalizedEmail,
+    });
+    if (!pixKeyResult.valid) {
+      throw new BadRequestException(pixKeyResult.message ?? 'Chave Pix invalida.');
+    }
 
     const uniqueFilters: Prisma.UserWhereInput[] = [
       { phone: normalizedPhone },
-      { cpf: dto.cpf },
+      { cpf: normalizedCpf },
     ];
 
-    if (dto.email) {
-      uniqueFilters.push({ email: dto.email });
+    if (normalizedEmail) {
+      uniqueFilters.push({ email: normalizedEmail });
     }
 
     const existing = await this.prisma.user.findFirst({
@@ -73,7 +106,7 @@ export class AuthService {
     });
 
     if (existing) {
-      throw new ConflictException('Usuário com telefone, CPF ou e-mail já cadastrado');
+      throw new ConflictException('Usuario com telefone, CPF ou e-mail ja cadastrado');
     }
 
     const passwordHash = await argon2.hash(dto.password);
@@ -88,36 +121,37 @@ export class AuthService {
       try {
         user = await this.prisma.user.create({
           data: {
-            fullName: dto.fullName,
+            fullName: normalizedName,
             phone: normalizedPhone,
-            cpf: dto.cpf,
-            email: dto.email,
-            cep: dto.cep,
-            address: dto.address,
-            city: dto.city,
-            state: dto.state,
-              pixKey: dto.pixKey,
-              passwordHash,
-              role: dto.role ?? UserRole.USER,
-              acceptedTerms: dto.acceptedTerms ?? false,
-              referralCode,
-              wallet: {
-                create: {
-                  balance: 1000, // saldo fictício para testes
-                  statements: {
-                    create: {
-                      amount: 1000,
-                      description: 'Cr\u00e9dito inicial de teste',
-                      type: PaymentType.DEPOSIT,
-                    },
+            cpf: normalizedCpf,
+            email: normalizedEmail,
+            cep: normalizedCep,
+            address: normalizedAddress,
+            city: normalizedCity,
+            state: normalizedState,
+            pixKey: pixKeyResult.value ?? dto.pixKey,
+            pixKeyType,
+            passwordHash,
+            role: dto.role ?? UserRole.USER,
+            acceptedTerms: dto.acceptedTerms ?? false,
+            referralCode,
+            wallet: {
+              create: {
+                balance: 1000, // saldo ficticio para testes
+                statements: {
+                  create: {
+                    amount: 1000,
+                    description: 'Cr\u00e9dito inicial de teste',
+                    type: PaymentType.DEPOSIT,
                   },
                 },
               },
             },
-          });
-        } catch (err: any) {
-          if (err?.code === 'P2002' && err?.meta?.target?.includes('referralCode')) {
-          continue; // tenta gerar outro
+          },
+        });
+      } catch (err: any) {
+        if (err?.code === 'P2002' && err?.meta?.target?.includes('referralCode')) {
+          continue;
         }
         throw err;
       }
@@ -134,7 +168,6 @@ export class AuthService {
       tokens: await this.generateTokens({ sub: user.id, role: user.role }),
     };
   }
-
   private async linkReferrals(newUserId: string, inviteCode?: string) {
     if (!inviteCode) return;
     const referrer = await this.prisma.user.findUnique({ where: { referralCode: inviteCode } });
@@ -226,3 +259,5 @@ export class AuthService {
     return safeUser;
   }
 }
+
+

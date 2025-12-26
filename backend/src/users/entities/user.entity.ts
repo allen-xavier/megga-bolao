@@ -8,6 +8,7 @@ export interface UserProfile {
   fullName: string;
   phone: string;
   cpf: string;
+  pixKeyType?: string | null;
   email?: string | null;
   role: PrismaUserRole;
   city?: string | null;

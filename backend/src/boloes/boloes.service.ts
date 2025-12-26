@@ -10,6 +10,11 @@ import { UserProfile } from "../users/entities/user.entity";
 export class BoloesService {
   constructor(private readonly prisma: PrismaService, private readonly events: EventsService) {}
 
+  private normalizeBolaoName(name: string | undefined | null) {
+    if (!name) return '';
+    return name.trim().toUpperCase();
+  }
+
   async list(currentUser?: UserProfile) {
     const userId = (currentUser as any)?.id ?? (currentUser as any)?.userId ?? (currentUser as any)?.sub;
     await this.reserveSenaPotIfNeeded();
@@ -123,7 +128,7 @@ export class BoloesService {
     this.ensurePrizeDistribution(dto);
     const bolao = await this.prisma.bolao.create({
       data: {
-        name: dto.name,
+        name: this.normalizeBolaoName(dto.name),
         startsAt: toSaoPauloDate(dto.startsAt),
         ticketPrice: dto.ticketPrice,
         minimumQuotas: dto.minimumQuotas,
@@ -153,6 +158,7 @@ export class BoloesService {
       where: { id },
       data: {
         ...dto,
+        name: dto.name ? this.normalizeBolaoName(dto.name) : undefined,
         startsAt: dto.startsAt ? toSaoPauloDate(dto.startsAt) : undefined,
         prizes: dto.prizes
           ? {

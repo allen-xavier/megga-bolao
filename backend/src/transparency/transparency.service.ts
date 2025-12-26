@@ -406,14 +406,14 @@ export class TransparencyService {
       align: 'center',
     });
 
-    y += scale(12);
+    y += scale(14);
     const summaryWidth = contentWidth * 0.8;
     const summaryX = margin + (contentWidth - summaryWidth) / 2;
     const prizeSummary = `${prizeCards.length} PR\u00caMIO${prizeCards.length === 1 ? '' : 'S'} = ${formatCurrency(prizePoolAdjusted)}`;
-    doc.fillColor('#6d2b2b').font('Helvetica-Bold').fontSize(scaleValue(20));
+    doc.fillColor('#6d2b2b').font('Helvetica-Bold').fontSize(scaleValue(24));
     doc.text(prizeSummary, summaryX, y, { width: summaryWidth, align: 'center' });
 
-    y += scale(24);
+    y += scale(30);
     doc.fillColor('#0f1117').font('Helvetica-Bold').fontSize(scale(13));
     doc.text('Detalhes das premia\u00e7\u00f5es', margin, y);
     y += scale(18);

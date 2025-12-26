@@ -16,6 +16,7 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const role = session?.user?.role;
+  const isAuthed = status === 'authenticated';
   const lastPathRef = useRef(pathname);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
     }
   }, [pathname, open, onClose]);
 
-  if (!open || status !== "authenticated") return null;
+  if (!open) return null;
 
   const filteredSections = sections
     .map((section) => ({
@@ -50,6 +51,15 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
       ),
     }))
     .filter((section) => section.items.length > 0);
+
+  const publicSections = sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => item.href.startsWith("/politica")),
+    }))
+    .filter((section) => section.items.length > 0);
+
+  const visibleSections = isAuthed ? filteredSections : publicSections;
 
   const handleNavigate = () => onClose();
 
@@ -85,7 +95,17 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
           </button>
         </header>
         <div className="space-y-6">
-          {filteredSections.map((section) => (
+
+          {!isAuthed && (
+            <Link
+              href="/login"
+              onClick={handleNavigate}
+              className="inline-flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/90 transition hover:border-[#3fdc7c] hover:text-[#f7b500]"
+            >
+              Entrar / Criar conta
+            </Link>
+          )}
+          {visibleSections.map((section) => (
             <section key={section.title} className="space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/40">
                 {section.title}
@@ -112,15 +132,17 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
               </ul>
             </section>
           ))}
-          <div className="pt-4">
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              className="w-full rounded-2xl border border-red-400/40 bg-red-600/30 px-4 py-3 text-left text-sm font-semibold text-white transition hover:border-red-300 hover:bg-red-600/50"
-            >
-              Sair da conta
-            </button>
-          </div>
+          {isAuthed && (
+            <div className="pt-4">
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="w-full rounded-2xl border border-red-400/40 bg-red-600/30 px-4 py-3 text-left text-sm font-semibold text-white transition hover:border-red-300 hover:bg-red-600/50"
+              >
+                Sair da conta
+              </button>
+            </div>
+          )}
         </div>
       </aside>
     </div>
