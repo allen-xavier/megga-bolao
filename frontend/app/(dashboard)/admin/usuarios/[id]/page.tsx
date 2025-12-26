@@ -61,6 +61,9 @@ type UserOverview = {
     createdAt: string;
     processedAt?: string | null;
     metadata?: { [key: string]: any } | null;
+    receiptPath?: string | null;
+    receiptFilename?: string | null;
+    receiptMime?: string | null;
   }>;
   commissions: Array<{
     id: string;
@@ -86,6 +89,27 @@ const formatDate = (value?: string | null) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "--";
   return date.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+};
+
+const downloadReceipt = async (paymentId: string, token?: string | null) => {
+  if (!token) return;
+  try {
+    const response = await api.get(`/payments/${paymentId}/receipt`, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: "blob",
+    });
+    const disposition = response.headers["content-disposition"] ?? "";
+    const match = disposition.match(/filename=\"?([^\";]+)\"?/i);
+    const filename = match?.[1] ?? `comprovante-${paymentId}.pdf`;
+    const url = window.URL.createObjectURL(response.data);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    window.URL.revokeObjectURL(url);
+  } catch {
+    // ignore
+  }
 };
 
 const formatNumbers = (numbers?: number[]) => {
@@ -498,7 +522,32 @@ export default function AdminUsuarioOverviewPage() {
                             <p className="text-sm font-semibold text-white">R$ {formatCurrency(payment.amount)}</p>
                             <p className="text-xs text-white/60">Solicitado em: {formatDate(payment.createdAt)}</p>
                           </div>
-                          <span className="text-xs uppercase tracking-[0.3em] text-white/60">{payment.status}</span>
+                          <div className="text-right text-xs uppercase tracking-[0.3em] text-white/60">
+                            <span>{payment.status}</span>
+                            {payment.receiptPath && (
+                              <button
+                                type="button"
+                                onClick={() => downloadReceipt(payment.id, token)}
+                                className="mt-2 inline-flex items-center justify-center rounded-full border border-white/10 p-2 text-white/70 transition hover:border-megga-yellow hover:text-white"
+                                aria-label="Baixar comprovante"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="h-4 w-4"
+                                >
+                                  <path d="M12 3v12" />
+                                  <path d="m7 10 5 5 5-5" />
+                                  <path d="M5 21h14" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </li>
                     ))}
@@ -536,7 +585,32 @@ export default function AdminUsuarioOverviewPage() {
                             <p className="text-sm font-semibold text-white">R$ {formatCurrency(payment.amount)}</p>
                             <p className="text-xs text-white/60">Solicitado em: {formatDate(payment.createdAt)}</p>
                           </div>
-                          <span className="text-xs uppercase tracking-[0.3em] text-white/60">{payment.status}</span>
+                          <div className="text-right text-xs uppercase tracking-[0.3em] text-white/60">
+                            <span>{payment.status}</span>
+                            {payment.receiptPath && (
+                              <button
+                                type="button"
+                                onClick={() => downloadReceipt(payment.id, token)}
+                                className="mt-2 inline-flex items-center justify-center rounded-full border border-white/10 p-2 text-white/70 transition hover:border-megga-yellow hover:text-white"
+                                aria-label="Baixar comprovante"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="h-4 w-4"
+                                >
+                                  <path d="M12 3v12" />
+                                  <path d="m7 10 5 5 5-5" />
+                                  <path d="M5 21h14" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <p className="mt-2 text-xs text-white/50">Processado em: {formatDate(payment.processedAt)}</p>
                       </li>

@@ -1,5 +1,6 @@
-import { BadRequestException, Body, Controller, ForbiddenException, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, ForbiddenException, Get, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { PaymentStatus } from '@prisma/client';
+import { Response } from 'express';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../users/decorators/current-user.decorator';
@@ -16,6 +17,17 @@ export class PaymentsController {
   @Get('me')
   listMine(@CurrentUser() user: UserProfile) {
     return this.paymentsService.listUserPayments(user.id);
+  }
+
+  @Get(':id/receipt')
+  async receipt(@Param('id') id: string, @CurrentUser() user: UserProfile, @Res() res: Response) {
+    const receipt = await this.paymentsService.getReceipt(id);
+    if (user.role !== UserRole.ADMIN && user.id !== receipt.payment.userId) {
+      throw new ForbiddenException('Apenas administradores ou o proprio usuario podem baixar o comprovante');
+    }
+    res.setHeader('Content-Type', receipt.mime);
+    res.setHeader('Content-Disposition', `attachment; filename="${receipt.filename}"`);
+    return res.sendFile(receipt.absolutePath);
   }
 
   @Post('deposit')
@@ -85,7 +97,7 @@ export class PaymentsController {
     if (user.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Apenas administradores podem processar saques');
     }
-    return this.paymentsService.completeWithdraw(id);
+    return this.paymentsService.completeWithdraw(id, user.id);
   }
 
   @Patch(':id/withdraw/fail')

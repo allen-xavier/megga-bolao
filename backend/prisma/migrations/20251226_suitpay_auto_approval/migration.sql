@@ -1,0 +1,2 @@
+ALTER TABLE "SuitpayConfig"
+ADD COLUMN "autoApprovalLimit" DECIMAL(12, 2) NOT NULL DEFAULT 0;

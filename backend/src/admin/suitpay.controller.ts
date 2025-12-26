@@ -26,6 +26,7 @@ export class SuitpayAdminController {
       clientId: cfg.clientId,
       clientSecret: cfg.clientSecret,
       webhookSecret: cfg.webhookSecret,
+      autoApprovalLimit: cfg.autoApprovalLimit,
     };
   }
 
@@ -39,6 +40,7 @@ export class SuitpayAdminController {
       clientId: saved.clientId,
       clientSecret: saved.clientSecret,
       webhookSecret: saved.webhookSecret,
+      autoApprovalLimit: saved.autoApprovalLimit,
     };
   }
 }

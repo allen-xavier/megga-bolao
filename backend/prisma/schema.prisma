@@ -166,6 +166,12 @@ model Payment {
   type        PaymentType
   status      PaymentStatus @default(PENDING)
   metadata    Json?
+  provider    String?
+  providerId  String?
+  externalId  String?
+  receiptPath String?
+  receiptMime String?
+  receiptFilename String?
   createdAt   DateTime      @default(now())
   processedAt DateTime?
   approvedBy  String?
@@ -253,6 +259,7 @@ model SuitpayConfig {
   clientId       String
   clientSecret   String
   webhookSecret  String?
+  autoApprovalLimit Decimal @default(0) @db.Decimal(12, 2)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }

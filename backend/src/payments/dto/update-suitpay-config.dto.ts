@@ -1,4 +1,5 @@
-import { IsIn, IsOptional, IsString, IsUrl } from "class-validator";
+import { Type } from "class-transformer";
+import { IsIn, IsNumber, IsOptional, IsString, IsUrl, Min } from "class-validator";
 
 export class UpdateSuitpayConfigDto {
   @IsOptional()
@@ -20,4 +21,10 @@ export class UpdateSuitpayConfigDto {
   @IsOptional()
   @IsString()
   webhookSecret?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  autoApprovalLimit?: number;
 }

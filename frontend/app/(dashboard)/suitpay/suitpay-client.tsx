@@ -12,6 +12,7 @@ type SuitpayConfig = {
   clientId: string;
   clientSecret: string;
   webhookSecret?: string | null;
+  autoApprovalLimit: number;
 };
 
 const fetcher = <T,>(url: string, token?: string) =>
@@ -35,11 +36,27 @@ export default function SuitPayConfigPage() {
   const config = form ?? data;
 
   const handleChange = (field: keyof SuitpayConfig) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const value = field === "environment" ? (e.target.value as SuitpayConfig["environment"]) : e.target.value;
-    setForm((prev) => ({
-      ...(prev ?? data ?? { environment: "sandbox", apiUrl: "", clientId: "", clientSecret: "" }),
-      [field]: value,
-    }));
+    let value: SuitpayConfig[keyof SuitpayConfig] = e.target.value as SuitpayConfig[keyof SuitpayConfig];
+    if (field === "environment") {
+      value = e.target.value as SuitpayConfig["environment"];
+    }
+    if (field === "autoApprovalLimit") {
+      value = Number(e.target.value);
+    }
+    setForm((prev) => {
+      const base = prev ?? data ?? {
+        environment: "sandbox",
+        apiUrl: "https://sandbox.ws.suitpay.app",
+        clientId: "",
+        clientSecret: "",
+        autoApprovalLimit: 0,
+      };
+      const next = { ...base, [field]: value };
+      if (field === "environment") {
+        next.apiUrl = value === "production" ? "https://ws.suitpay.app" : "https://sandbox.ws.suitpay.app";
+      }
+      return next;
+    });
   };
 
   const save = async (e: React.FormEvent) => {
@@ -54,6 +71,7 @@ export default function SuitPayConfigPage() {
         clientId: config.clientId,
         clientSecret: config.clientSecret,
         webhookSecret: config.webhookSecret ?? undefined,
+        autoApprovalLimit: Number(config.autoApprovalLimit ?? 0),
       };
       await api.patch("/admin/suitpay/config", payload, { headers: { Authorization: `Bearer ${token}` } });
       setMessage("Configuração atualizada com sucesso.");
@@ -92,7 +110,7 @@ export default function SuitPayConfigPage() {
       <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-white/50">Pagamentos</p>
         <h1 className="text-2xl font-semibold">SuitPay - Configuração</h1>
-        <p className="text-sm text-white/70">Defina ambiente, endpoint e chaves de acesso (sandbox ou producao).</p>
+        <p className="text-sm text-white/70">Defina ambiente, endpoint e chaves de acesso (homologacao ou producao).</p>
       </header>
 
       <section className="rounded-3xl bg-megga-navy/80 p-6 shadow-lg ring-1 ring-white/5">
@@ -114,7 +132,7 @@ export default function SuitPayConfigPage() {
                   onChange={handleChange("environment")}
                   className="w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-sm text-white focus:border-megga-magenta focus:outline-none"
                 >
-                  <option value="sandbox" className="bg-megga-navy">Sandbox</option>
+                  <option value="sandbox" className="bg-megga-navy">Homologacao</option>
                   <option value="production" className="bg-megga-navy">Producao</option>
                 </select>
               </label>
@@ -151,6 +169,17 @@ export default function SuitPayConfigPage() {
                   type="text"
                   value={config.webhookSecret ?? ""}
                   onChange={handleChange("webhookSecret")}
+                  className="w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
+                />
+              </label>
+              <label className="space-y-1 text-sm text-white/70">
+                <span>Limite de aprovacao automatica (R$)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={config.autoApprovalLimit ?? 0}
+                  onChange={handleChange("autoApprovalLimit")}
                   className="w-full rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
                 />
               </label>

@@ -12,6 +12,7 @@ type WalletStatement = {
   createdAt: string;
   type?: "DEPOSIT" | "WITHDRAW" | "COMMISSION" | "PRIZE" | string;
   referenceId?: string | null;
+  receiptAvailable?: boolean;
 };
 
 interface Wallet {
@@ -59,6 +60,15 @@ export function WalletSummary() {
   const [withdrawMessage, setWithdrawMessage] = useState<string | null>(null);
   const [withdrawUseTotal, setWithdrawUseTotal] = useState(false);
   const [withdrawSuccessOpen, setWithdrawSuccessOpen] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositMessage, setDepositMessage] = useState<string | null>(null);
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [depositData, setDepositData] = useState<{
+    id: string;
+    paymentCode: string;
+    paymentCodeBase64: string;
+  } | null>(null);
 
   const userPixKey = (session?.user as any)?.pixKey ?? "";
   const userCpf = (session?.user as any)?.cpf ?? "";
@@ -135,6 +145,14 @@ export function WalletSummary() {
   const withdrawParsed = Number(withdrawAmount.replace(",", "."));
   const withdrawValue = Number.isFinite(withdrawParsed) ? withdrawParsed : 0;
   const withdrawValid = withdrawValue >= MIN_WITHDRAW && withdrawValue <= balanceValue;
+  const depositParsed = Number(depositAmount.replace(",", "."));
+  const depositValue = Number.isFinite(depositParsed) ? depositParsed : 0;
+  const depositValid = depositValue > 0;
+  const depositQrSrc = depositData?.paymentCodeBase64
+    ? depositData.paymentCodeBase64.startsWith("data:image")
+      ? depositData.paymentCodeBase64
+      : `data:image/png;base64,${depositData.paymentCodeBase64}`
+    : "";
   const pixKeyAvailable = Boolean(userPixKey);
   const confirmDisabled = !withdrawValid || !pixKeyAvailable;
   const formattedCpf = formatCpf(userCpf);
@@ -169,6 +187,63 @@ export function WalletSummary() {
     }
   };
 
+  const downloadReceipt = async (paymentId: string) => {
+    if (!token) return;
+    try {
+      const response = await api.get(`/payments/${paymentId}/receipt`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      const disposition = response.headers["content-disposition"] ?? "";
+      const match = disposition.match(/filename=\"?([^\";]+)\"?/i);
+      const filename = match?.[1] ?? `comprovante-${paymentId}.pdf`;
+      const url = window.URL.createObjectURL(response.data);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      // ignore
+    }
+  };
+
+  const openDeposit = () => {
+    setDepositMessage(null);
+    setDepositAmount("");
+    setDepositData(null);
+    setDepositOpen(true);
+  };
+
+  const closeDeposit = () => {
+    setDepositOpen(false);
+    setDepositMessage(null);
+    setDepositData(null);
+    setDepositLoading(false);
+  };
+
+  const confirmDeposit = async () => {
+    if (!token || !depositValid) return;
+    setDepositMessage(null);
+    setDepositLoading(true);
+    try {
+      const response = await api.post(
+        "/payments/deposit",
+        { amount: depositValue },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setDepositData({
+        id: response.data.id,
+        paymentCode: response.data.paymentCode,
+        paymentCodeBase64: response.data.paymentCodeBase64,
+      });
+    } catch (err: any) {
+      setDepositMessage(err?.response?.data?.message ?? "Falha ao gerar PIX.");
+    } finally {
+      setDepositLoading(false);
+    }
+  };
+
   return (
     <>
       <section className="rounded-3xl border border-white/5 bg-[#0f1117] px-3 py-4 text-white shadow-lg md:p-6">
@@ -187,6 +262,7 @@ export function WalletSummary() {
             </button>
             <button
               type="button"
+              onClick={openDeposit}
               className="w-full rounded-full bg-[#3fdc7c] px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#0f1117] transition hover:opacity-95"
             >
               Depositar
@@ -305,6 +381,7 @@ export function WalletSummary() {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               });
+              const hasReceipt = Boolean(item.receiptAvailable && item.referenceId);
               return (
                 <li
                   key={item.id}
@@ -314,9 +391,34 @@ export function WalletSummary() {
                     <p className="font-medium text-white/90">{item.description}</p>
                     <p className="text-xs text-white/50">{new Date(item.createdAt).toLocaleString("pt-BR")}</p>
                   </div>
-                  <span className={`text-sm font-semibold ${amount >= 0 ? "text-[#3fdc7c]" : "text-[#ff6b8b]"}`}>
-                    {amount >= 0 ? "+" : "-"}R$ {formattedAmount}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-sm font-semibold ${amount >= 0 ? "text-[#3fdc7c]" : "text-[#ff6b8b]"}`}>
+                      {amount >= 0 ? "+" : "-"}R$ {formattedAmount}
+                    </span>
+                    {hasReceipt && (
+                      <button
+                        type="button"
+                        onClick={() => downloadReceipt(item.referenceId as string)}
+                        className="rounded-full border border-white/10 p-2 text-white/70 transition hover:border-megga-yellow hover:text-white"
+                        aria-label="Baixar comprovante"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <path d="M12 3v12" />
+                          <path d="m7 10 5 5 5-5" />
+                          <path d="M5 21h14" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </li>
               );
             })}
@@ -328,6 +430,84 @@ export function WalletSummary() {
           </ul>
         </div>
       </section>
+
+      {depositOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3 py-6">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0f1117] p-4 text-white shadow-xl">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold">Depositar via PIX</h3>
+              <button
+                type="button"
+                onClick={closeDeposit}
+                className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/70"
+              >
+                Fechar
+              </button>
+            </div>
+
+            {!depositData && (
+              <>
+                <p className="mt-2 text-xs text-white/60">Informe o valor para gerar o QR Code de pagamento.</p>
+                <input
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  value={depositAmount}
+                  onChange={(event) => setDepositAmount(event.target.value)}
+                  className="mt-4 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none"
+                  placeholder="Valor do deposito"
+                />
+                {depositMessage && (
+                  <p className="mt-3 rounded-2xl bg-white/10 px-3 py-2 text-xs text-megga-lime">{depositMessage}</p>
+                )}
+                <div className="mt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={closeDeposit}
+                    className="flex-1 rounded-2xl border border-white/10 px-4 py-2 text-sm font-semibold text-white/70 transition hover:border-megga-yellow hover:text-white"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmDeposit}
+                    disabled={!depositValid || depositLoading}
+                    className="flex-1 rounded-2xl bg-[#3fdc7c] px-4 py-2 text-sm font-semibold text-[#0f1117] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {depositLoading ? "Gerando..." : "Gerar PIX"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {depositData && (
+              <div className="mt-4 space-y-4 text-center">
+                <div className="mx-auto w-full max-w-[220px] rounded-2xl bg-white p-3">
+                  {depositQrSrc && <img src={depositQrSrc} alt="QR Code Pix" className="h-auto w-full" />}
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-[#151824] px-3 py-3 text-xs text-white/70">
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Codigo PIX</p>
+                  <p className="mt-2 break-all text-sm text-white">{depositData.paymentCode}</p>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(depositData.paymentCode)}
+                    className="mt-3 rounded-full border border-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70 hover:border-megga-yellow hover:text-white"
+                  >
+                    Copiar codigo
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => downloadReceipt(depositData.id)}
+                  className="w-full rounded-2xl bg-megga-yellow px-4 py-2 text-sm font-semibold text-megga-navy transition hover:opacity-95"
+                >
+                  Baixar comprovante
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {withdrawOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3 py-6">

@@ -7,6 +7,7 @@ export type SuitpayConfigState = {
   clientId: string;
   clientSecret: string;
   webhookSecret?: string | null;
+  autoApprovalLimit: number;
 };
 
 @Injectable()
@@ -22,6 +23,7 @@ export class SuitpayConfigService {
         clientId: db.clientId,
         clientSecret: db.clientSecret,
         webhookSecret: db.webhookSecret,
+        autoApprovalLimit: Number(db.autoApprovalLimit ?? 0),
       };
     }
     // fallback to env
@@ -31,6 +33,7 @@ export class SuitpayConfigService {
       clientId: process.env.SUITPAY_CLIENT_ID ?? "",
       clientSecret: process.env.SUITPAY_CLIENT_SECRET ?? "",
       webhookSecret: process.env.SUITPAY_WEBHOOK_SECRET ?? null,
+      autoApprovalLimit: 0,
     };
   }
 
@@ -42,6 +45,7 @@ export class SuitpayConfigService {
       clientId: input.clientId ?? current.clientId,
       clientSecret: input.clientSecret ?? current.clientSecret,
       webhookSecret: input.webhookSecret ?? current.webhookSecret,
+      autoApprovalLimit: input.autoApprovalLimit ?? current.autoApprovalLimit,
     };
 
     const saved = await this.prisma.suitpayConfig.upsert({
@@ -56,6 +60,7 @@ export class SuitpayConfigService {
       clientId: saved.clientId,
       clientSecret: saved.clientSecret,
       webhookSecret: saved.webhookSecret,
+      autoApprovalLimit: Number(saved.autoApprovalLimit ?? 0),
     };
   }
 }

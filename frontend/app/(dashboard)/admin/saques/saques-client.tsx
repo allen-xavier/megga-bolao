@@ -16,6 +16,9 @@ type WithdrawPayment = {
   status: WithdrawStatus;
   createdAt: string;
   processedAt?: string | null;
+  receiptPath?: string | null;
+  receiptFilename?: string | null;
+  receiptMime?: string | null;
   metadata?: {
     note?: string;
     reason?: string;
@@ -149,10 +152,36 @@ export default function SaquesClient() {
     return date.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
   };
 
+  const downloadReceipt = async (paymentId: string) => {
+    if (!token) return;
+    try {
+      const response = await api.get(`/payments/${paymentId}/receipt`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      const disposition = response.headers["content-disposition"] ?? "";
+      const match = disposition.match(/filename=\"?([^\";]+)\"?/i);
+      const filename = match?.[1] ?? `comprovante-${paymentId}.pdf`;
+      const url = window.URL.createObjectURL(response.data);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      // ignore
+    }
+  };
+
   const refreshAll = () => {
     mutateApprovals();
     mutateHistory();
   };
+
+  const approvalsList = useMemo(
+    () => (approvals ?? []).filter((payment) => payment.metadata?.requiresApproval !== false),
+    [approvals],
+  );
 
   const handleHistoryScroll = (event: UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
@@ -269,7 +298,7 @@ export default function SaquesClient() {
         )}
 
         <ul className="space-y-3">
-          {(approvals ?? []).map((payment) => {
+          {approvalsList.map((payment) => {
             const disableActions = actionId === payment.id;
             return (
               <li key={payment.id} className="rounded-2xl border border-white/10 bg-white/5 px-2 py-4 text-sm text-white/80 md:p-4">
@@ -319,7 +348,7 @@ export default function SaquesClient() {
               </li>
             );
           })}
-          {!approvalsLoading && (approvals?.length ?? 0) === 0 && (
+          {!approvalsLoading && approvalsList.length === 0 && (
             <li className="rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-sm text-white/60 md:px-4">
               Nenhum saque aguardando aprovação.
             </li>
@@ -413,6 +442,29 @@ export default function SaquesClient() {
                       {payment.status}
                     </span>
                     <p className="mt-2 text-lg font-semibold text-megga-yellow">R$ {formatCurrency(payment.amount)}</p>
+                    {payment.receiptPath && (
+                      <button
+                        type="button"
+                        onClick={() => downloadReceipt(payment.id)}
+                        className="mt-2 inline-flex items-center justify-center rounded-full border border-white/10 p-2 text-white/70 transition hover:border-megga-yellow hover:text-white"
+                        aria-label="Baixar comprovante"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <path d="M12 3v12" />
+                          <path d="m7 10 5 5 5-5" />
+                          <path d="M5 21h14" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
 
