@@ -301,7 +301,33 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
     ),
   );
   const allBets = bolao.bets ?? [];
-  const visibleBetsList = allBets.slice(0, visibleBets);
+  const winningSet = new Set(
+    winningNumbers
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value)),
+  );
+  const scoredBets = allBets.map((bet: any) => {
+    const numbers = Array.isArray(bet?.numbers) ? bet.numbers : [];
+    const hits = numbers.reduce((acc: number, value: number | string) => {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed)) return acc;
+      return winningSet.has(parsed) ? acc + 1 : acc;
+    }, 0);
+    return { ...bet, hits };
+  });
+  const sortedBets = [...scoredBets].sort((a: any, b: any) => {
+    const diff = (b?.hits ?? 0) - (a?.hits ?? 0);
+    if (diff !== 0) return diff;
+    const nameA = String(a?.user?.fullName ?? "").toLowerCase();
+    const nameB = String(b?.user?.fullName ?? "").toLowerCase();
+    if (nameA !== nameB) {
+      return nameA.localeCompare(nameB, "pt-BR");
+    }
+    const dateA = new Date(a?.createdAt ?? 0).getTime();
+    const dateB = new Date(b?.createdAt ?? 0).getTime();
+    return dateA - dateB;
+  });
+  const visibleBetsList = sortedBets.slice(0, visibleBets);
   const totalCollected = (bolao.bets?.length ?? 0) * Number(bolao.ticketPrice ?? 0);
   const commissionPercent = Number(bolao.commissionPercent ?? 0);
   const netPool = totalCollected * (1 - commissionPercent / 100);
@@ -739,11 +765,11 @@ export default function BolaoPage({ params }: { params: { id: string } }) {
         {openSection.apostadores && (
           <div ref={betsRef} className="max-h-96 space-y-2 overflow-y-auto pr-1">
             <BetsList bets={visibleBetsList as any[]} winningNumbers={winningNumbers} />
-            {allBets.length > visibleBets && (
+            {sortedBets.length > visibleBets && (
               <button
                 type="button"
                 className="w-full rounded-2xl bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/20"
-                onClick={() => setVisibleBets((prev) => Math.min(prev + 15, allBets.length))}
+                onClick={() => setVisibleBets((prev) => Math.min(prev + 15, sortedBets.length))}
               >
                 Carregar mais apostadores
               </button>

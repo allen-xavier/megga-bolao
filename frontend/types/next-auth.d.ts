@@ -17,6 +17,7 @@ declare module 'next-auth' {
       city?: string;
       state?: string;
       pixKey?: string;
+      pixKeyType?: string;
     } & DefaultSession['user'];
   }
 
@@ -34,6 +35,7 @@ declare module 'next-auth' {
     city?: string;
     state?: string;
     pixKey?: string;
+    pixKeyType?: string;
   }
 }
 
@@ -52,5 +54,6 @@ declare module 'next-auth/jwt' {
     city?: string;
     state?: string;
     pixKey?: string;
+    pixKeyType?: string;
   }
 }

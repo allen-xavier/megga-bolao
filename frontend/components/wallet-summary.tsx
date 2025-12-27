@@ -81,6 +81,8 @@ export function WalletSummary() {
 
   const userPixKey = (session?.user as any)?.pixKey ?? "";
   const userCpf = (session?.user as any)?.cpf ?? "";
+  const role = (session?.user as any)?.role;
+  const isAdmin = role === "ADMIN" || role === "SUPERVISOR";
 
   const statements = useMemo(() => data?.statements ?? EMPTY_STATEMENTS, [data?.statements]);
   const availableYears = useMemo(() => {
@@ -167,14 +169,15 @@ export function WalletSummary() {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  const minWithdrawLabel = MIN_WITHDRAW.toLocaleString("pt-BR", {
+  const minWithdrawValue = isAdmin ? 0.01 : MIN_WITHDRAW;
+  const minWithdrawLabel = minWithdrawValue.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  const canWithdraw = balanceValue >= MIN_WITHDRAW;
+  const canWithdraw = balanceValue >= minWithdrawValue;
   const withdrawParsed = Number(withdrawAmount.replace(",", "."));
   const withdrawValue = Number.isFinite(withdrawParsed) ? withdrawParsed : 0;
-  const withdrawValid = withdrawValue >= MIN_WITHDRAW && withdrawValue <= balanceValue;
+  const withdrawValid = withdrawValue >= minWithdrawValue && withdrawValue <= balanceValue;
   const depositParsed = Number(depositAmount.replace(",", "."));
   const depositValue = Number.isFinite(depositParsed) ? depositParsed : 0;
   const depositValid = depositValue > 0;
@@ -191,7 +194,7 @@ export function WalletSummary() {
     setWithdrawMessage(null);
     setWithdrawUseTotal(false);
     setWithdrawSuccessOpen(false);
-    setWithdrawAmount(canWithdraw ? String(MIN_WITHDRAW) : "");
+    setWithdrawAmount(canWithdraw ? String(minWithdrawValue) : "");
     setWithdrawOpen(true);
   };
 
@@ -300,7 +303,7 @@ export function WalletSummary() {
             </button>
           </div>
         </div>
-        {!canWithdraw && (
+        {!canWithdraw && !isAdmin && (
           <p className="mt-2 text-xs text-white/60">Saque mínimo: R$ {minWithdrawLabel}.</p>
         )}
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -554,7 +557,7 @@ export function WalletSummary() {
               </button>
             </div>
             <p className="mt-2 text-xs text-white/60">Saldo disponivel para saque: R$ {balance}.</p>
-            <p className="mt-1 text-xs text-white/60">Saque mínimo: R$ {minWithdrawLabel}.</p>
+            {!isAdmin && <p className="mt-1 text-xs text-white/60">Saque mínimo: R$ {minWithdrawLabel}.</p>}
 
             <div className="mt-4 flex items-center justify-between gap-3 text-sm text-white/70">
               <span>Valor do saque</span>
@@ -576,7 +579,7 @@ export function WalletSummary() {
             </div>
             <input
               type="number"
-              min={MIN_WITHDRAW}
+              min={minWithdrawValue}
               max={balanceValue}
               step="0.01"
               value={withdrawAmount}
@@ -586,14 +589,14 @@ export function WalletSummary() {
               }}
               disabled={withdrawUseTotal}
               className="mt-2 w-full rounded-2xl border border-white/10 bg-[#151824] px-3 py-2 text-sm text-white focus:border-megga-yellow focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-              placeholder={`Mínimo R$ ${minWithdrawLabel}`}
+              placeholder={isAdmin ? "Valor do saque" : `Mínimo R$ ${minWithdrawLabel}`}
             />
 
             <div className="mt-3 rounded-2xl border border-white/10 bg-[#151824] p-3 text-sm">
               <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Chave PIX cadastrada</p>
               <p className="mt-1 font-semibold text-white">{userPixKey || "Não cadastrada"}</p>
               <p className="mt-2 text-xs text-white/60">
-                O PIX deve pertencer ao CPF {formattedCpf || "cadastrado"}.
+                A chave será validada pela SuitPay com o CPF {formattedCpf || "cadastrado"}.
               </p>
             </div>
 

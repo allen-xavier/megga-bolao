@@ -290,6 +290,7 @@ export class PaymentsService {
     userName?: string | null;
     userCpf?: string | null;
     userPixKey?: string | null;
+    userPixKeyType?: string | null;
     generatedAt: Date;
     paymentDate?: string;
     providerId?: string | null;
@@ -372,6 +373,15 @@ export class PaymentsService {
 
     const destinationName = params.destinationName ?? params.userName ?? '-';
     const destinationTaxId = params.destinationTaxId ?? params.userCpf ?? '-';
+    const pixKeyTypeLabel = (() => {
+      const value = String(params.userPixKeyType ?? '').toUpperCase();
+      if (value === 'DOCUMENT') return 'CPF/CNPJ';
+      if (value === 'PHONENUMBER') return 'TELEFONE';
+      if (value === 'EMAIL') return 'EMAIL';
+      if (value === 'RANDOMKEY') return 'CHAVE ALEATORIA';
+      if (value === 'PAYMENTCODE') return 'CODIGO QR';
+      return params.userPixKeyType ? String(params.userPixKeyType) : '-';
+    })();
 
     doc.font('Helvetica-Bold').fontSize(9).text('Dados do saque', { width: contentWidth });
     doc.moveDown(0.3);
@@ -386,6 +396,9 @@ export class PaymentsService {
     }
     if (params.userPixKey) {
       writeField('Chave PIX', params.userPixKey);
+    }
+    if (params.userPixKeyType) {
+      writeField('Tipo da chave', pixKeyTypeLabel);
     }
     writeField('Gerado em', generatedAt);
     if (params.paymentDate) {
@@ -408,6 +421,17 @@ export class PaymentsService {
     return createHash('sha256').update(combined).digest('hex');
   }
 
+  private mapSuitpayWithdrawError(reason: string) {
+    const code = String(reason ?? '').trim().toUpperCase();
+    if (code.includes('DOCUMENT_VALIDATE')) {
+      return 'CHAVE PIX NAO PERTENCE A CPF DO USUÁRIO.';
+    }
+    if (code.includes('PIX_KEY_NOT_FOUND')) {
+      return 'CHAVE PIX INVALIDA.';
+    }
+    return reason;
+  }
+
   private async sendWithdrawToSuitpay(
     payment: { id: string; userId: string; amount: Prisma.Decimal; metadata?: any; providerId?: string | null },
     user: { cpf: string; pixKey: string; pixKeyType: string },
@@ -423,13 +447,15 @@ export class PaymentsService {
       return payment;
     }
     const callbackUrl = this.getCallbackUrl('/api/payments/webhooks/suitpay/cash-out');
+    const config = await this.suitpayConfig.getConfig();
+    const documentValidation = config.enforceWithdrawCpfMatch ? user.cpf : undefined;
     try {
       const response = await this.suitpay.requestPixOut({
         value: Number(payment.amount),
         key: user.pixKey,
         typeKey: user.pixKeyType,
         callbackUrl,
-        documentValidation: user.cpf,
+        documentValidation,
         externalId: payment.id,
       });
       return this.prisma.payment.update({
@@ -447,9 +473,10 @@ export class PaymentsService {
         },
       });
     } catch (err: any) {
-      const reason = err?.response?.data?.response ?? err?.response?.data?.message ?? err?.message ?? 'Falha ao enviar saque';
-      await this.failWithdraw(payment.id, String(reason));
-      throw new BadRequestException(String(reason));
+      const rawReason = err?.response?.data?.response ?? err?.response?.data?.message ?? err?.message ?? 'Falha ao enviar saque';
+      const reason = this.mapSuitpayWithdrawError(String(rawReason));
+      await this.failWithdraw(payment.id, reason);
+      throw new BadRequestException(reason);
     }
   }
 
@@ -626,9 +653,11 @@ export class PaymentsService {
       throw new NotFoundException('Usuario nao encontrado');
     }
     const cpfDigits = String(user.cpf ?? '').replace(/\D/g, '');
-    const pixDigits = String(user.pixKey ?? '').replace(/\D/g, '');
-    if (user.pixKeyType !== 'document' || !pixDigits || pixDigits !== cpfDigits) {
-      throw new BadRequestException('O saque deve ser para o CPF cadastrado.');
+    const pixKey = String(user.pixKey ?? '').trim();
+    const pixKeyType = String(user.pixKeyType ?? '').trim();
+    const allowedTypes = new Set(['document', 'phoneNumber', 'email', 'randomKey', 'paymentCode']);
+    if (!pixKey || !pixKeyType || !allowedTypes.has(pixKeyType)) {
+      throw new BadRequestException('Chave PIX invalida ou nao cadastrada.');
     }
     const wallet = await this.walletService.getWallet(userId);
     if (!wallet || Number(wallet.balance) < dto.amount) {
@@ -636,7 +665,7 @@ export class PaymentsService {
     }
     const config = await this.suitpayConfig.getConfig();
     const autoLimit = Number(config.autoApprovalLimit ?? 0);
-    const shouldAutoApprove = autoLimit > 0 && dto.amount <= autoLimit;
+    const shouldAutoApprove = !isAdmin && autoLimit > 0 && dto.amount <= autoLimit;
     const payment = await this.prisma.payment.create({
       data: {
         userId,
@@ -656,7 +685,7 @@ export class PaymentsService {
     if (shouldAutoApprove) {
       const updated = await this.sendWithdrawToSuitpay(
         payment,
-        { cpf: cpfDigits, pixKey: user.pixKey ?? '', pixKeyType: user.pixKeyType ?? 'document' },
+        { cpf: cpfDigits, pixKey, pixKeyType },
       );
       return updated;
     }
@@ -699,7 +728,8 @@ export class PaymentsService {
     if (payment.status === PaymentStatus.CANCELED || payment.status === PaymentStatus.FAILED) {
       return payment;
     }
-    await this.walletService.release(payment.userId, Number(payment.amount), 'Saque estornado', payment.id);
+    const description = reason ? `Saque estornado: ${reason}` : 'Saque estornado';
+    await this.walletService.release(payment.userId, Number(payment.amount), description, payment.id);
     return this.prisma.payment.update({
       where: { id: paymentId },
       data: {
@@ -927,31 +957,35 @@ export class PaymentsService {
         });
       }
 
+      const preference = config.withdrawReceiptPreference ?? "SUITPAY";
       let receiptSaved = Boolean(payment.receiptPath);
-      try {
-        const receipt = await this.suitpay.getPixOutReceipt(String(payload.idTransaction ?? ''));
-        if (receipt?.pdfBase64 && !receiptSaved) {
-          const buffer = this.decodeBase64(receipt.pdfBase64);
-          const saved = await this.saveReceiptBuffer(payment.id, buffer, 'saque');
-          await this.prisma.payment.update({
-            where: { id: payment.id },
-            data: {
-              receiptPath: saved.path,
-              receiptMime: saved.mime,
-              receiptFilename: saved.filename,
-            },
-          });
-          receiptSaved = true;
+
+      if (preference === "SUITPAY") {
+        try {
+          const receipt = await this.suitpay.getPixOutReceipt(String(payload.idTransaction ?? ''));
+          if (receipt?.pdfBase64 && !receiptSaved) {
+            const buffer = this.decodeBase64(receipt.pdfBase64);
+            const saved = await this.saveReceiptBuffer(payment.id, buffer, 'saque');
+            await this.prisma.payment.update({
+              where: { id: payment.id },
+              data: {
+                receiptPath: saved.path,
+                receiptMime: saved.mime,
+                receiptFilename: saved.filename,
+              },
+            });
+            receiptSaved = true;
+          }
+        } catch {
+          // ignora erro do comprovante SuitPay
         }
-      } catch {
-        // ignora erro de comprovante
       }
 
-      if (!receiptSaved) {
+      if (preference === "MEGGA" && !receiptSaved) {
         try {
           const user = await this.prisma.user.findUnique({
             where: { id: payment.userId },
-            select: { fullName: true, cpf: true, pixKey: true },
+            select: { fullName: true, cpf: true, pixKey: true, pixKeyType: true },
           });
           const receiptBuffer = await this.buildWithdrawReceiptPdf({
             paymentId: payment.id,
@@ -959,6 +993,7 @@ export class PaymentsService {
             userName: user?.fullName ?? undefined,
             userCpf: user?.cpf ?? undefined,
             userPixKey: user?.pixKey ?? undefined,
+            userPixKeyType: user?.pixKeyType ?? undefined,
             generatedAt: new Date(),
             providerId: payload.idTransaction ?? payment.providerId,
             status,
@@ -976,7 +1011,7 @@ export class PaymentsService {
             },
           });
         } catch {
-          // ignora erro de comprovante alternativo
+          // ignora erro do comprovante Megga
         }
       }
 

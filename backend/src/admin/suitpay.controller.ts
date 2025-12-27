@@ -31,6 +31,8 @@ export class SuitpayAdminController {
       clientSecret: cfg.clientSecret,
       webhookSecret: cfg.webhookSecret,
       autoApprovalLimit: cfg.autoApprovalLimit,
+      enforceWithdrawCpfMatch: cfg.enforceWithdrawCpfMatch,
+      withdrawReceiptPreference: cfg.withdrawReceiptPreference,
     };
   }
 
@@ -45,6 +47,8 @@ export class SuitpayAdminController {
       clientSecret: saved.clientSecret,
       webhookSecret: saved.webhookSecret,
       autoApprovalLimit: saved.autoApprovalLimit,
+      enforceWithdrawCpfMatch: saved.enforceWithdrawCpfMatch,
+      withdrawReceiptPreference: saved.withdrawReceiptPreference,
     };
   }
 

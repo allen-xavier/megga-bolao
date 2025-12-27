@@ -35,6 +35,11 @@ type WithdrawPayment = {
   };
 };
 
+type SuitpayConfig = {
+  enforceWithdrawCpfMatch: boolean;
+  withdrawReceiptPreference?: "MEGGA" | "SUITPAY";
+};
+
 const fetcher = <T,>(url: string, token?: string) =>
   api.get<T>(url, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined).then((r) => r.data);
 
@@ -61,6 +66,12 @@ export default function SaquesClient() {
   const [historySearch, setHistorySearch] = useState("");
   const [historyFrom, setHistoryFrom] = useState("");
   const [historyTo, setHistoryTo] = useState("");
+  const [cpfValidationMessage, setCpfValidationMessage] = useState<string | null>(null);
+  const [cpfValidationSaving, setCpfValidationSaving] = useState(false);
+  const [cpfValidationValue, setCpfValidationValue] = useState<boolean | null>(null);
+  const [receiptPreferenceMessage, setReceiptPreferenceMessage] = useState<string | null>(null);
+  const [receiptPreferenceSaving, setReceiptPreferenceSaving] = useState(false);
+  const [receiptPreferenceValue, setReceiptPreferenceValue] = useState<"MEGGA" | "SUITPAY" | null>(null);
 
   const approvalsUrl = useMemo(() => {
     const params = new URLSearchParams();
@@ -79,6 +90,16 @@ export default function SaquesClient() {
   } = useSWR<WithdrawPayment[], any, [string, string] | null>(
     token && isAdmin ? [approvalsUrl, token] as [string, string] : null,
     ([url, t]) => fetcher<WithdrawPayment[]>(url, t),
+    { revalidateOnFocus: false },
+  );
+
+  const {
+    data: suitpayConfig,
+    error: suitpayConfigError,
+    mutate: mutateSuitpayConfig,
+  } = useSWR<SuitpayConfig, any, [string, string] | null>(
+    token && isAdmin ? ["/admin/suitpay/config", token] as [string, string] : null,
+    ([url, t]) => fetcher<SuitpayConfig>(url, t),
     { revalidateOnFocus: false },
   );
 
@@ -176,12 +197,60 @@ export default function SaquesClient() {
   const refreshAll = () => {
     mutateApprovals();
     mutateHistory();
+    mutateSuitpayConfig();
   };
 
   const approvalsList = useMemo(
     () => (approvals ?? []).filter((payment) => payment.metadata?.requiresApproval !== false),
     [approvals],
   );
+
+  const cpfValidationEnabled =
+    cpfValidationValue ?? suitpayConfig?.enforceWithdrawCpfMatch ?? true;
+  const receiptPreference =
+    receiptPreferenceValue ?? suitpayConfig?.withdrawReceiptPreference ?? "SUITPAY";
+
+  const handleCpfValidationToggle = async (nextValue: boolean) => {
+    if (!token) return;
+    setCpfValidationSaving(true);
+    setCpfValidationMessage(null);
+    setCpfValidationValue(nextValue);
+    try {
+      await api.patch(
+        "/admin/suitpay/config",
+        { enforceWithdrawCpfMatch: nextValue },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setCpfValidationMessage("Configuração atualizada.");
+      mutateSuitpayConfig();
+    } catch (err: any) {
+      setCpfValidationMessage(err?.response?.data?.message ?? "Falha ao atualizar configuração.");
+      setCpfValidationValue(suitpayConfig?.enforceWithdrawCpfMatch ?? true);
+    } finally {
+      setCpfValidationSaving(false);
+    }
+  };
+
+  const handleReceiptPreferenceChange = async (nextValue: "MEGGA" | "SUITPAY") => {
+    if (!token) return;
+    setReceiptPreferenceSaving(true);
+    setReceiptPreferenceMessage(null);
+    setReceiptPreferenceValue(nextValue);
+    try {
+      await api.patch(
+        "/admin/suitpay/config",
+        { withdrawReceiptPreference: nextValue },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setReceiptPreferenceMessage("Configuração atualizada.");
+      mutateSuitpayConfig();
+    } catch (err: any) {
+      setReceiptPreferenceMessage(err?.response?.data?.message ?? "Falha ao atualizar configuração.");
+      setReceiptPreferenceValue(suitpayConfig?.withdrawReceiptPreference ?? "SUITPAY");
+    } finally {
+      setReceiptPreferenceSaving(false);
+    }
+  };
 
   const handleHistoryScroll = (event: UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
@@ -288,6 +357,69 @@ export default function SaquesClient() {
         )}
 
         {actionMessage && <p className="rounded-2xl bg-white/10 px-2 py-3 text-sm text-megga-lime md:px-4">{actionMessage}</p>}
+        {cpfValidationMessage && (
+          <p className="rounded-2xl bg-white/10 px-2 py-3 text-sm text-white/70 md:px-4">{cpfValidationMessage}</p>
+        )}
+        {receiptPreferenceMessage && (
+          <p className="rounded-2xl bg-white/10 px-2 py-3 text-sm text-white/70 md:px-4">{receiptPreferenceMessage}</p>
+        )}
+        {suitpayConfigError && (
+          <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-megga-rose md:px-4">
+            Erro ao carregar configuração de validação: {suitpayConfigError?.message ?? "falha desconhecida"}
+          </p>
+        )}
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-xs text-white/70 md:px-4">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Validação de CPF</p>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-white/70">
+              Exigir que a chave PIX pertença ao CPF cadastrado para liberar saques.
+            </p>
+            <label className="inline-flex items-center gap-2 text-xs text-white/70">
+              <input
+                type="checkbox"
+                checked={cpfValidationEnabled}
+                onChange={(event) => handleCpfValidationToggle(event.target.checked)}
+                disabled={cpfValidationSaving}
+                className="h-4 w-4 rounded border-white/20 bg-white/10 text-megga-yellow focus:ring-megga-yellow"
+              />
+              {cpfValidationEnabled ? "Ativo" : "Desativado"}
+            </label>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-2 py-3 text-xs text-white/70 md:px-4">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">Comprovante de saque</p>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-white/70">Escolha o comprovante salvo no extrato após a aprovação.</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleReceiptPreferenceChange("MEGGA")}
+                disabled={receiptPreferenceSaving}
+                className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] transition ${
+                  receiptPreference === "MEGGA"
+                    ? "bg-megga-yellow text-megga-navy"
+                    : "border border-white/20 text-white/70 hover:border-megga-yellow hover:text-white"
+                }`}
+              >
+                Megga Bolao
+              </button>
+              <button
+                type="button"
+                onClick={() => handleReceiptPreferenceChange("SUITPAY")}
+                disabled={receiptPreferenceSaving}
+                className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] transition ${
+                  receiptPreference === "SUITPAY"
+                    ? "bg-megga-yellow text-megga-navy"
+                    : "border border-white/20 text-white/70 hover:border-megga-yellow hover:text-white"
+                }`}
+              >
+                SuitPay
+              </button>
+            </div>
+          </div>
+        </div>
         {approvalsLoading && (
           <p className="rounded-2xl bg-white/5 px-2 py-3 text-sm text-white/70 md:px-4">Carregando saques...</p>
         )}

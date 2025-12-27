@@ -3,6 +3,19 @@ export type PixKeyType = (typeof PIX_KEY_TYPES)[number];
 
 const normalizeDigits = (value: string) => value.replace(/\D/g, "");
 
+const normalizePixPhone = (value: string) => {
+  let digits = normalizeDigits(value);
+  if (!digits) return "";
+  digits = digits.replace(/^0+/, "");
+  if (digits.startsWith("55") && digits.length >= 12) {
+    digits = digits.slice(2);
+  }
+  if (digits.length === 10) {
+    digits = `${digits.slice(0, 2)}9${digits.slice(2)}`;
+  }
+  return digits;
+};
+
 export const normalizeEmail = (value?: string | null) => {
   if (!value) return undefined;
   const trimmed = value.trim();
@@ -76,8 +89,8 @@ export const normalizePixKey = (type: PixKeyType, key: string, opts?: { cpf?: st
   }
 
   if (type === "phoneNumber") {
-    const digits = normalizeDigits(trimmed);
-    if (digits.length < 10 || digits.length > 13) {
+    const digits = normalizePixPhone(trimmed);
+    if (digits.length !== 11) {
       return { valid: false, message: "Telefone da chave Pix invalido." };
     }
     return { valid: true, value: digits };

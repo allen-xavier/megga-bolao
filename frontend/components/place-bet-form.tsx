@@ -36,6 +36,7 @@ export function PlaceBetForm({ bolaoId, actionClassName }: PlaceBetFormProps) {
 
   const remainingNumbers = 10 - selectedNumbers.length;
   const canSubmit = (isSurprise || selectedNumbers.length === 10) && !isSubmitting;
+  const needsDeposit = (error ?? "").toLowerCase().includes("saldo insuficiente");
 
   function toggleNumber(value: number) {
     setIsSurprise(false);
@@ -178,7 +179,20 @@ export function PlaceBetForm({ bolaoId, actionClassName }: PlaceBetFormProps) {
           </div>
         </div>
 
-        {error && <p className="text-sm text-[#ff4d4f]">{error}</p>}
+        {error && (
+          <div className="space-y-3">
+            <p className="text-sm text-[#ff4d4f]">{error}</p>
+            {needsDeposit && (
+              <button
+                type="button"
+                onClick={() => router.push("/carteira")}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#2fdb7b] px-4 py-3 text-sm font-semibold text-[#0b1218] shadow hover:opacity-95 btn-shake-xy animate-shake-strong scale-100 hover:scale-105 transition-transform"
+              >
+                Colocar crédito
+              </button>
+            )}
+          </div>
+        )}
         {successMessage && <p className="text-sm text-[#3fdc7c]">{successMessage}</p>}
 
         <button

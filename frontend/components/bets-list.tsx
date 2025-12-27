@@ -49,6 +49,11 @@ export function BetsList({ bets, winningNumbers = [] }: { bets: Bet[]; winningNu
               <div>
                 <p className="font-medium text-white/90">{bet.user?.fullName?.split(' ')[0] ?? 'Apostador'}</p>
                 <p className="text-xs text-white/50">{formatLocation(bet)}</p>
+                {typeof bet.hits === 'number' && (
+                  <span className="mt-1 inline-flex items-center rounded-full bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-white/60">
+                    {bet.hits} acertos
+                  </span>
+                )}
               </div>
               <div className="flex flex-col items-end text-right text-xs text-white/60 md:hidden">
                 <span className="rounded-full bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.24em]">

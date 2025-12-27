@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsIn, IsNumber, IsOptional, IsString, IsUrl, Min } from "class-validator";
+import { IsBoolean, IsIn, IsNumber, IsOptional, IsString, IsUrl, Min } from "class-validator";
 
 export class UpdateSuitpayConfigDto {
   @IsOptional()
@@ -27,4 +27,13 @@ export class UpdateSuitpayConfigDto {
   @IsNumber()
   @Min(0)
   autoApprovalLimit?: number;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  enforceWithdrawCpfMatch?: boolean;
+
+  @IsOptional()
+  @IsIn(["MEGGA", "SUITPAY"])
+  withdrawReceiptPreference?: "MEGGA" | "SUITPAY";
 }

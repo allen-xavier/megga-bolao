@@ -49,6 +49,7 @@ export const authOptions: NextAuthOptions = {
           city: u.city,
           state: u.state,
           pixKey: u.pixKey,
+          pixKeyType: u.pixKeyType,
           fullName: u.fullName,
           accessToken: response.data.tokens.accessToken,
           refreshToken: response.data.tokens.refreshToken,
@@ -76,6 +77,7 @@ export const authOptions: NextAuthOptions = {
         token.city = (user as any).city;
         token.state = (user as any).state;
         token.pixKey = (user as any).pixKey;
+        token.pixKeyType = (user as any).pixKeyType;
         token.email = (user as any).email;
       }
       if (trigger === "update" && session) {
@@ -90,6 +92,7 @@ export const authOptions: NextAuthOptions = {
         token.city = updateData.city ?? token.city;
         token.state = updateData.state ?? token.state;
         token.pixKey = updateData.pixKey ?? token.pixKey;
+        token.pixKeyType = updateData.pixKeyType ?? token.pixKeyType;
         token.email = updateData.email ?? token.email;
       }
       if (!token.id && token.sub) {
@@ -114,6 +117,7 @@ export const authOptions: NextAuthOptions = {
         city: token.city as string | undefined,
         state: token.state as string | undefined,
         pixKey: token.pixKey as string | undefined,
+        pixKeyType: token.pixKeyType as string | undefined,
         email: token.email as string | undefined,
       } as any;
       return session;

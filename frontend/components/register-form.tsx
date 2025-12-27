@@ -36,6 +36,17 @@ const PIX_KEY_OPTIONS: Array<{ value: PixKeyType; label: string }> = [
 
 const normalizeDigits = (value: string) => value.replace(/\D/g, '');
 
+const normalizePixPhone = (value: string) => {
+  let digits = normalizeDigits(value);
+  if (digits.startsWith('0')) {
+    digits = digits.replace(/^0+/, '');
+  }
+  if (digits.length === 10) {
+    digits = `${digits.slice(0, 2)}9${digits.slice(2)}`;
+  }
+  return digits;
+};
+
 const isValidCpf = (value: string) => {
   const cpf = normalizeDigits(value);
   if (cpf.length !== 11) return false;
@@ -89,8 +100,8 @@ const validatePixKey = (
   }
 
   if (type === 'phoneNumber') {
-    const digits = normalizeDigits(trimmed);
-    if (digits.length < 10 || digits.length > 13) {
+    const digits = normalizePixPhone(trimmed);
+    if (digits.length !== 11) {
       return { valid: false, message: 'Telefone da chave Pix invalido.' };
     }
     return { valid: true, value: digits };
@@ -180,7 +191,9 @@ export function RegisterForm() {
           nextValue = value.toLowerCase();
         } else if (field === 'cpf' || field === 'cep') {
           nextValue = normalizeDigits(value);
-        } else if (field === 'pixKey' && (prev.pixKeyType === 'document' || prev.pixKeyType === 'phoneNumber')) {
+        } else if (field === 'pixKey' && prev.pixKeyType === 'document') {
+          nextValue = normalizeDigits(value);
+        } else if (field === 'pixKey' && prev.pixKeyType === 'phoneNumber') {
           nextValue = normalizeDigits(value);
         }
 
@@ -193,7 +206,7 @@ export function RegisterForm() {
           if (nextType === 'document') {
             nextState.pixKey = normalizeDigits(prev.cpf);
           } else if (nextType === 'phoneNumber') {
-            nextState.pixKey = normalizeDigits(prev.pixKey);
+            nextState.pixKey = normalizePixPhone(prev.pixKey);
           }
         }
         return nextState;
@@ -266,6 +279,17 @@ export function RegisterForm() {
 
   const handlePixKeyBlur = () => {
     if (!form.pixKey) return;
+    if (form.pixKeyType === 'phoneNumber') {
+      const rawDigits = normalizeDigits(form.pixKey);
+      const normalized = normalizePixPhone(form.pixKey);
+      if (normalized !== rawDigits) {
+        setForm((prev) => ({ ...prev, pixKey: normalized }));
+      }
+      if (rawDigits.length === 10) {
+        setMessage('Adicionamos o 9 ao celular. Confira se esta correto.');
+        return;
+      }
+    }
     const result = validatePixKey(form.pixKeyType, form.pixKey, {
       cpf: normalizeDigits(form.cpf),
       email: form.email?.toLowerCase(),

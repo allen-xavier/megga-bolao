@@ -34,7 +34,34 @@ const PIX_KEY_OPTIONS: Array<{ value: PixKeyType; label: string }> = [
   { value: "randomKey", label: "Chave aleatoria" },
 ];
 
+const resolvePixKeyType = (value?: string | null): PixKeyType => {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (!raw) return "document";
+  if (["document", "cpf", "cnpj", "cpf/cnpj", "cpfcnpj", "cpf_cnpj"].includes(raw)) {
+    return "document";
+  }
+  if (["phonenumber", "phone", "telefone", "tel", "celular", "mobile"].includes(raw)) {
+    return "phoneNumber";
+  }
+  if (raw === "email") return "email";
+  if (["randomkey", "random", "aleatoria", "chavealeatoria", "chave_aleatoria"].includes(raw)) {
+    return "randomKey";
+  }
+  return "document";
+};
+
 const normalizeDigits = (value: string) => value.replace(/\D/g, "");
+
+const normalizePixPhone = (value: string) => {
+  let digits = normalizeDigits(value);
+  if (digits.startsWith("0")) {
+    digits = digits.replace(/^0+/, "");
+  }
+  if (digits.length === 10) {
+    digits = `${digits.slice(0, 2)}9${digits.slice(2)}`;
+  }
+  return digits;
+};
 
 const isValidCpf = (value: string) => {
   const cpf = normalizeDigits(value);
@@ -106,7 +133,9 @@ export default function EditUserPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) setForm(user);
+    if (user) {
+      setForm({ ...user, pixKeyType: resolvePixKeyType(user.pixKeyType ?? null) });
+    }
   }, [user]);
 
   const handleChange = (field: keyof User) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -123,8 +152,10 @@ export default function EditUserPage() {
         nextValue = nextValue.toLowerCase();
       } else if (field === "cpf" || field === "cep") {
         nextValue = normalizeDigits(nextValue);
-      } else if (field === "pixKey" && (prev.pixKeyType === "document" || prev.pixKeyType === "phoneNumber")) {
+      } else if (field === "pixKey" && prev.pixKeyType === "document") {
         nextValue = normalizeDigits(nextValue);
+      } else if (field === "pixKey" && prev.pixKeyType === "phoneNumber") {
+        nextValue = normalizePixPhone(nextValue);
       }
 
       const nextState = { ...prev, [field]: nextValue };
@@ -137,7 +168,7 @@ export default function EditUserPage() {
         if (nextType === "document") {
           nextState.pixKey = normalizeDigits(prev.cpf ?? "");
         } else if (nextType === "phoneNumber") {
-          nextState.pixKey = normalizeDigits(prev.pixKey ?? "");
+          nextState.pixKey = normalizePixPhone(prev.pixKey ?? "");
         }
       }
       return nextState;

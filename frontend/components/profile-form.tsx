@@ -30,10 +30,34 @@ const PIX_KEY_OPTIONS: Array<{ value: PixKeyType; label: string }> = [
   { value: 'randomKey', label: 'Chave aleatoria' },
 ];
 
-const resolvePixKeyType = (value?: PixKeyType) =>
-  PIX_KEY_OPTIONS.some((option) => option.value === value) ? (value as PixKeyType) : 'document';
+const resolvePixKeyType = (value?: string | null) => {
+  const raw = String(value ?? '').trim().toLowerCase();
+  if (!raw) return 'document';
+  if (['document', 'cpf', 'cnpj', 'cpf/cnpj', 'cpfcnpj', 'cpf_cnpj'].includes(raw)) {
+    return 'document';
+  }
+  if (['phonenumber', 'phone', 'telefone', 'tel', 'celular', 'mobile'].includes(raw)) {
+    return 'phoneNumber';
+  }
+  if (raw === 'email') return 'email';
+  if (['randomkey', 'random', 'aleatoria', 'chavealeatoria', 'chave_aleatoria'].includes(raw)) {
+    return 'randomKey';
+  }
+  return 'document';
+};
 
 const normalizeDigits = (value: string) => value.replace(/\D/g, '');
+
+const normalizePixPhone = (value: string) => {
+  let digits = normalizeDigits(value);
+  if (digits.startsWith('0')) {
+    digits = digits.replace(/^0+/, '');
+  }
+  if (digits.length === 10) {
+    digits = `${digits.slice(0, 2)}9${digits.slice(2)}`;
+  }
+  return digits;
+};
 
 const isValidCpf = (value: string) => {
   const cpf = normalizeDigits(value);
@@ -88,8 +112,8 @@ const validatePixKey = (
   }
 
   if (type === 'phoneNumber') {
-    const digits = normalizeDigits(trimmed);
-    if (digits.length < 10 || digits.length > 13) {
+    const digits = normalizePixPhone(trimmed);
+    if (digits.length !== 11) {
       return { valid: false, message: 'Telefone da chave Pix invalido.' };
     }
     return { valid: true, value: digits };
@@ -231,7 +255,9 @@ export function ProfileForm({ user }: { user: UserProfile }) {
           nextValue = value.toLowerCase();
         } else if (key === 'cpf' || key === 'cep') {
           nextValue = normalizeDigits(value);
-        } else if (key === 'pixKey' && (current.pixKeyType === 'document' || current.pixKeyType === 'phoneNumber')) {
+        } else if (key === 'pixKey' && current.pixKeyType === 'document') {
+          nextValue = normalizeDigits(value);
+        } else if (key === 'pixKey' && current.pixKeyType === 'phoneNumber') {
           nextValue = normalizeDigits(value);
         }
 
@@ -241,8 +267,10 @@ export function ProfileForm({ user }: { user: UserProfile }) {
         }
         if (key === 'pixKeyType') {
           const nextType = nextValue as PixKeyType;
-          if (nextType === 'document' || nextType === 'phoneNumber') {
-            nextState.pixKey = normalizeDigits(nextType === 'document' ? current.cpf : current.pixKey);
+          if (nextType === 'document') {
+            nextState.pixKey = normalizeDigits(current.cpf);
+          } else if (nextType === 'phoneNumber') {
+            nextState.pixKey = normalizePixPhone(current.pixKey);
           }
         }
         return nextState;
@@ -315,6 +343,17 @@ export function ProfileForm({ user }: { user: UserProfile }) {
 
   const handlePixKeyBlur = () => {
     if (!form.pixKey) return;
+    if (form.pixKeyType === 'phoneNumber') {
+      const rawDigits = normalizeDigits(form.pixKey);
+      const normalized = normalizePixPhone(form.pixKey);
+      if (normalized !== rawDigits) {
+        setForm((prev) => (prev ? { ...prev, pixKey: normalized } : prev));
+      }
+      if (rawDigits.length === 10) {
+        setMessage('Adicionamos o 9 ao celular. Confira se esta correto.');
+        return;
+      }
+    }
     const result = validatePixKey(form.pixKeyType ?? 'document', form.pixKey, {
       cpf: normalizeDigits(form.cpf),
       email: form.email?.toLowerCase(),

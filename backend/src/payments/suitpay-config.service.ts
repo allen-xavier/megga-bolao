@@ -8,6 +8,8 @@ export type SuitpayConfigState = {
   clientSecret: string;
   webhookSecret?: string | null;
   autoApprovalLimit: number;
+  enforceWithdrawCpfMatch: boolean;
+  withdrawReceiptPreference: "MEGGA" | "SUITPAY";
 };
 
 @Injectable()
@@ -24,6 +26,8 @@ export class SuitpayConfigService {
         clientSecret: db.clientSecret,
         webhookSecret: db.webhookSecret,
         autoApprovalLimit: Number(db.autoApprovalLimit ?? 0),
+        enforceWithdrawCpfMatch: db.enforceWithdrawCpfMatch ?? true,
+        withdrawReceiptPreference: (db.withdrawReceiptPreference as "MEGGA" | "SUITPAY") ?? "SUITPAY",
       };
     }
     // fallback to env
@@ -34,6 +38,8 @@ export class SuitpayConfigService {
       clientSecret: process.env.SUITPAY_CLIENT_SECRET ?? "",
       webhookSecret: process.env.SUITPAY_WEBHOOK_SECRET ?? null,
       autoApprovalLimit: 0,
+      enforceWithdrawCpfMatch: true,
+      withdrawReceiptPreference: "SUITPAY",
     };
   }
 
@@ -46,6 +52,8 @@ export class SuitpayConfigService {
       clientSecret: input.clientSecret ?? current.clientSecret,
       webhookSecret: input.webhookSecret ?? current.webhookSecret,
       autoApprovalLimit: input.autoApprovalLimit ?? current.autoApprovalLimit,
+      enforceWithdrawCpfMatch: input.enforceWithdrawCpfMatch ?? current.enforceWithdrawCpfMatch,
+      withdrawReceiptPreference: input.withdrawReceiptPreference ?? current.withdrawReceiptPreference,
     };
 
     const saved = await this.prisma.suitpayConfig.upsert({
@@ -61,6 +69,8 @@ export class SuitpayConfigService {
       clientSecret: saved.clientSecret,
       webhookSecret: saved.webhookSecret,
       autoApprovalLimit: Number(saved.autoApprovalLimit ?? 0),
+      enforceWithdrawCpfMatch: saved.enforceWithdrawCpfMatch ?? true,
+      withdrawReceiptPreference: (saved.withdrawReceiptPreference as "MEGGA" | "SUITPAY") ?? "SUITPAY",
     };
   }
 }

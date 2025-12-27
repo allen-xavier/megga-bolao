@@ -74,10 +74,14 @@ export function TopBar() {
             </div>
 
           {isAuthed ? (
-            <div className="ml-auto flex flex-col items-start gap-0.5 text-[10px] text-white/75 md:inline-flex md:flex-row md:items-center md:gap-3 md:rounded-2xl md:border md:border-white/10 md:bg-white/5 md:px-4 md:py-2 md:text-xs">
+            <Link
+              href="/carteira"
+              className="ml-auto flex flex-col items-start gap-0.5 text-[10px] text-white/75 transition hover:text-white md:inline-flex md:flex-row md:items-center md:gap-3 md:rounded-2xl md:border md:border-white/10 md:bg-white/5 md:px-4 md:py-2 md:text-xs hover:md:border-[#f7b500]"
+              aria-label="Abrir carteira"
+            >
               <span className="uppercase tracking-[0.24em] text-white/45">Saldo</span>
               <span className="text-sm font-semibold text-[#f7b500] md:text-sm">R$ {balance}</span>
-            </div>
+            </Link>
           ) : (
             <div className="ml-auto flex items-center gap-2">
               <Link
