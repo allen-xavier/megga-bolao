@@ -19,6 +19,8 @@ interface DefaultPrizeConfig {
   enabled: boolean;
 }
 
+const DEFAULT_BOLAO_MESSAGE = "V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!";
+
 const basePrizes: PrizeOption[] = [
   { id: "pe-quente", name: "Pe Quente", description: "Ganha quem acertar 10 numeros primeiro", percentage: 40, enabled: true },
   { id: "pe-frio", name: "Pe Frio", description: "Ganha quem acertar menos numeros no final", percentage: 12, enabled: true },
@@ -53,6 +55,7 @@ export default function AdminConfiguracoesGeraisClient() {
   const isAdmin = role === "ADMIN" || role === "SUPERVISOR";
 
   const [senaRollPercent, setSenaRollPercent] = useState(10);
+  const [bolaoMessage, setBolaoMessage] = useState(DEFAULT_BOLAO_MESSAGE);
   const [prizes, setPrizes] = useState<PrizeOption[]>(() => mapPrizeDefaults());
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -74,6 +77,7 @@ export default function AdminConfiguracoesGeraisClient() {
         });
         if (cancelled) return;
         setSenaRollPercent(Number(data?.senaRollPercent ?? 10));
+        setBolaoMessage(String(data?.bolaoMessage ?? DEFAULT_BOLAO_MESSAGE));
         setPrizes(mapPrizeDefaults(data?.defaultPrizes as DefaultPrizeConfig[] | undefined));
       } catch (error: any) {
         if (cancelled) return;
@@ -107,6 +111,7 @@ export default function AdminConfiguracoesGeraisClient() {
 
   const resetDefaults = () => {
     setSenaRollPercent(10);
+    setBolaoMessage(DEFAULT_BOLAO_MESSAGE);
     setPrizes(mapPrizeDefaults());
   };
 
@@ -119,6 +124,7 @@ export default function AdminConfiguracoesGeraisClient() {
         "/admin/general-config",
         {
           senaRollPercent,
+          bolaoMessage,
           defaultPrizes: prizes.map(({ id, percentage, enabled }) => ({ id, percentage, enabled })),
         },
         { headers: { Authorization: `Bearer ${token}` } },
@@ -168,6 +174,25 @@ export default function AdminConfiguracoesGeraisClient() {
       </header>
 
       {message && <p className="rounded-2xl bg-white/10 px-4 py-2 text-sm text-megga-lime">{message}</p>}
+
+      <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
+        <header className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/50">Mensagem do bolao</p>
+          <h2 className="text-lg font-semibold">Texto exibido em relatorios</h2>
+          <p className="text-sm text-white/70">
+            Defina a mensagem padrao que aparece no cabecalho da transparencia e como sugestao ao criar novos boloes.
+          </p>
+        </header>
+        <label className="space-y-2 text-sm text-white/80">
+          <span className="text-xs uppercase tracking-[0.3em] text-white/40">Mensagem</span>
+          <textarea
+            value={bolaoMessage}
+            onChange={(event) => setBolaoMessage(event.target.value)}
+            rows={2}
+            className="w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
+          />
+        </label>
+      </section>
 
       <section className="space-y-4 rounded-3xl bg-megga-navy/80 p-5 shadow-lg ring-1 ring-white/5">
         <header className="space-y-2">

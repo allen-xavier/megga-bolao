@@ -8,6 +8,7 @@ import { UserProfile } from "../users/entities/user.entity";
 
 @Injectable()
 export class BoloesService {
+  private readonly defaultBolaoMessage = "V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!";
   constructor(private readonly prisma: PrismaService, private readonly events: EventsService) {}
 
   private normalizeBolaoName(name: string | undefined | null) {
@@ -126,9 +127,22 @@ export class BoloesService {
 
   async create(dto: CreateBolaoDto, adminId: string) {
     this.ensurePrizeDistribution(dto);
+    const trimmedMessage = typeof dto.bolaoMessage === "string" ? dto.bolaoMessage.trim() : "";
+    let bolaoMessage = trimmedMessage;
+    if (!bolaoMessage) {
+      const config = await this.prisma.generalConfig.findUnique({
+        where: { id: "global" },
+        select: { bolaoMessage: true },
+      });
+      bolaoMessage = (config?.bolaoMessage ?? this.defaultBolaoMessage).trim();
+      if (!bolaoMessage) {
+        bolaoMessage = this.defaultBolaoMessage;
+      }
+    }
     const bolao = await this.prisma.bolao.create({
       data: {
         name: this.normalizeBolaoName(dto.name),
+        bolaoMessage,
         startsAt: toSaoPauloDate(dto.startsAt),
         ticketPrice: dto.ticketPrice,
         minimumQuotas: dto.minimumQuotas,
@@ -154,12 +168,15 @@ export class BoloesService {
     if (dto.prizes) {
       this.ensurePrizeDistribution(dto as CreateBolaoDto);
     }
+    const bolaoMessage =
+      typeof dto.bolaoMessage === "string" ? dto.bolaoMessage.trim() : undefined;
     const bolao = await this.prisma.bolao.update({
       where: { id },
       data: {
         ...dto,
         name: dto.name ? this.normalizeBolaoName(dto.name) : undefined,
         startsAt: dto.startsAt ? toSaoPauloDate(dto.startsAt) : undefined,
+        bolaoMessage,
         prizes: dto.prizes
           ? {
               deleteMany: {},

@@ -19,6 +19,10 @@ export class CreateBolaoDto {
   @IsNotEmpty()
   name!: string;
 
+  @IsOptional()
+  @IsString()
+  bolaoMessage?: string;
+
   @IsDateString()
   startsAt!: string;
 

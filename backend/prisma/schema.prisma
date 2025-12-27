@@ -95,6 +95,7 @@ model WalletStatement {
 model Bolao {
   id                String             @id @default(cuid())
   name              String
+  bolaoMessage      String?
   startsAt          DateTime
   ticketPrice       Decimal            @db.Decimal(12, 2)
   minimumQuotas     Int
@@ -220,6 +221,7 @@ model GeneralConfig {
   id                 String   @id @default("global")
   senaRollPercent    Decimal  @default(10.0) @db.Decimal(5, 2)
   defaultPrizeConfig Json?
+  bolaoMessage       String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }

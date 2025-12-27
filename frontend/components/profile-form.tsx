@@ -30,19 +30,35 @@ const PIX_KEY_OPTIONS: Array<{ value: PixKeyType; label: string }> = [
   { value: 'randomKey', label: 'Chave aleatoria' },
 ];
 
-const resolvePixKeyType = (value?: string | null) => {
+const resolvePixKeyType = (value?: string | null, pixKey?: string | null, cpf?: string | null) => {
   const raw = String(value ?? '').trim().toLowerCase();
-  if (!raw) return 'document';
-  if (['document', 'cpf', 'cnpj', 'cpf/cnpj', 'cpfcnpj', 'cpf_cnpj'].includes(raw)) {
-    return 'document';
+  if (raw) {
+    if (['document', 'cpf', 'cnpj', 'cpf/cnpj', 'cpfcnpj', 'cpf_cnpj'].includes(raw)) {
+      return 'document';
+    }
+    if (['phonenumber', 'phone', 'telefone', 'tel', 'celular', 'mobile'].includes(raw)) {
+      return 'phoneNumber';
+    }
+    if (raw === 'email') return 'email';
+    if (['randomkey', 'random', 'aleatoria', 'chavealeatoria', 'chave_aleatoria'].includes(raw)) {
+      return 'randomKey';
+    }
   }
-  if (['phonenumber', 'phone', 'telefone', 'tel', 'celular', 'mobile'].includes(raw)) {
-    return 'phoneNumber';
+
+  const key = String(pixKey ?? '').trim();
+  if (key) {
+    if (/^\S+@\S+\.\S+$/.test(key)) return 'email';
+    if (/^[0-9a-fA-F-]{32,36}$/.test(key)) return 'randomKey';
+    const digits = normalizeDigits(key);
+    if (digits.length === 14) return 'document';
+    if (digits.length === 10) return 'phoneNumber';
+    if (digits.length === 11) {
+      const cpfDigits = normalizeDigits(cpf ?? '');
+      if (cpfDigits && digits === cpfDigits) return 'document';
+      return 'phoneNumber';
+    }
   }
-  if (raw === 'email') return 'email';
-  if (['randomkey', 'random', 'aleatoria', 'chavealeatoria', 'chave_aleatoria'].includes(raw)) {
-    return 'randomKey';
-  }
+
   return 'document';
 };
 
@@ -157,7 +173,7 @@ export function ProfileForm({ user }: { user: UserProfile }) {
     city: user.city ?? '',
     state: user.state ?? '',
     pixKey: user.pixKey ?? '',
-    pixKeyType: resolvePixKeyType(user.pixKeyType ?? 'document'),
+    pixKeyType: resolvePixKeyType(user.pixKeyType ?? null, user.pixKey ?? null, user.cpf ?? null),
     email: user.email ?? '',
   });
   const [loading, setLoading] = useState(false);

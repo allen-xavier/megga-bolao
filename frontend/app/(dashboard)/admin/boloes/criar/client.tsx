@@ -30,6 +30,8 @@ const basePrizes: PrizeOption[] = [
   { id: "indicacao", name: "Indique e Ganhe", description: "Comissão direta e indireta", percentage: 3, enabled: true },
 ];
 
+const DEFAULT_BOLAO_MESSAGE = "Vários Sorteios - até sair um ganhador de 10 Pontos!";
+
 const mapPrizeDefaults = (defaults?: DefaultPrizeConfig[]) => {
   if (!Array.isArray(defaults) || defaults.length === 0) {
     return basePrizes.map((prize) => ({ ...prize }));
@@ -104,6 +106,7 @@ export default function CreatebolãoClient() {
   const [prizes, setPrizes] = useState<PrizeOption[]>(() => mapPrizeDefaults());
   const [guaranteedPrize, setGuaranteedPrize] = useState("10000,00");
   const [name, setName] = useState("Bolão promocional");
+  const [bolaoMessage, setBolaoMessage] = useState(DEFAULT_BOLAO_MESSAGE);
   const [startsAt, setStartsAt] = useState(() => formatInputDate(new Date())); // data/hora atual SP
   const [ticketPrice, setTicketPrice] = useState(35);
   const [minimumQuotas, setMinimumQuotas] = useState(500);
@@ -130,6 +133,7 @@ export default function CreatebolãoClient() {
         });
 
         setName(data.name ?? "");
+        setBolaoMessage(data.bolaoMessage ?? DEFAULT_BOLAO_MESSAGE);
         setGuaranteedPrize(String(data.guaranteedPrize ?? ""));
         setTicketPrice(Number(data.ticketPrice ?? 0));
         setMinimumQuotas(Number(data.minimumQuotas ?? 0));
@@ -171,6 +175,7 @@ export default function CreatebolãoClient() {
         setDefaultPrizes(mapped);
         if (!bolãoId) {
           setPrizes(mapped);
+          setBolaoMessage(data?.bolaoMessage ?? DEFAULT_BOLAO_MESSAGE);
         }
       } catch (error: any) {
         const backendMessage =
@@ -218,6 +223,7 @@ export default function CreatebolãoClient() {
 
       const payload = {
         name,
+        bolaoMessage,
         startsAt: toIsoFromInput(startsAt),
         ticketPrice: Number(ticketPrice),
         minimumQuotas: Number(minimumQuotas),
@@ -343,6 +349,15 @@ export default function CreatebolãoClient() {
               value={name}
               onChange={(event) => setName(event.target.value)}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 focus:border-megga-magenta focus:outline-none"
+            />
+          </label>
+          <label className="space-y-2 text-sm text-white/80 md:col-span-2">
+            <span className="text-xs uppercase tracking-[0.3em] text-white/40">Mensagem do bol?o</span>
+            <textarea
+              value={bolaoMessage}
+              onChange={(event) => setBolaoMessage(event.target.value)}
+              rows={2}
+              className="w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-megga-magenta focus:outline-none"
             />
           </label>
           <label className="space-y-2 text-sm text-white/80">

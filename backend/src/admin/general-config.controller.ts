@@ -13,6 +13,7 @@ type DefaultPrizeConfig = {
 type GeneralConfigDto = {
   senaRollPercent: number;
   defaultPrizes?: DefaultPrizeConfig[];
+  bolaoMessage?: string;
 };
 
 const DEFAULT_PRIZES: DefaultPrizeConfig[] = [
@@ -24,6 +25,8 @@ const DEFAULT_PRIZES: DefaultPrizeConfig[] = [
   { id: "oito", percentage: 8, enabled: true },
   { id: "indicacao", percentage: 3, enabled: true },
 ];
+
+const DEFAULT_BOLAO_MESSAGE = "V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!";
 
 @Controller("admin/general-config")
 @UseGuards(JwtAuthGuard)
@@ -63,6 +66,7 @@ export class GeneralConfigController {
         id: "global",
         senaRollPercent: 10,
         defaultPrizeConfig: DEFAULT_PRIZES,
+        bolaoMessage: DEFAULT_BOLAO_MESSAGE,
       },
     });
   }
@@ -80,6 +84,7 @@ export class GeneralConfigController {
     return {
       senaRollPercent: Number(config.senaRollPercent),
       defaultPrizes: normalized,
+      bolaoMessage: config.bolaoMessage ?? DEFAULT_BOLAO_MESSAGE,
     };
   }
 
@@ -96,14 +101,20 @@ export class GeneralConfigController {
     const normalizedPrizes = dto.defaultPrizes
       ? this.normalizePrizeConfig(dto.defaultPrizes)
       : this.normalizePrizeConfig(currentPrizes);
+    const trimmedMessage = typeof dto.bolaoMessage === "string" ? dto.bolaoMessage.trim() : undefined;
+    const bolaoMessage =
+      trimmedMessage !== undefined
+        ? trimmedMessage || DEFAULT_BOLAO_MESSAGE
+        : current.bolaoMessage ?? DEFAULT_BOLAO_MESSAGE;
     const updated = await this.prisma.generalConfig.upsert({
       where: { id: "global" },
-      update: { senaRollPercent, defaultPrizeConfig: normalizedPrizes },
-      create: { id: "global", senaRollPercent, defaultPrizeConfig: normalizedPrizes },
+      update: { senaRollPercent, defaultPrizeConfig: normalizedPrizes, bolaoMessage },
+      create: { id: "global", senaRollPercent, defaultPrizeConfig: normalizedPrizes, bolaoMessage },
     });
     return {
       senaRollPercent: Number(updated.senaRollPercent),
       defaultPrizes: normalizedPrizes,
+      bolaoMessage: updated.bolaoMessage ?? bolaoMessage,
     };
   }
 }

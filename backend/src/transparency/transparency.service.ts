@@ -77,6 +77,7 @@ const chunkNumbers = (numbers: string[], size: number) => {
 
 @Injectable()
 export class TransparencyService {
+  private readonly defaultBolaoMessage = "V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!";
   private readonly storageRoot = join(process.cwd(), 'storage');
   private readonly transparencyDir = join(this.storageRoot, 'transparency');
 
@@ -86,11 +87,15 @@ export class TransparencyService {
     const config = await this.prisma.generalConfig.upsert({
       where: { id: 'global' },
       update: {},
-      create: { id: 'global', senaRollPercent: 10 },
+      create: { id: 'global', senaRollPercent: 10, bolaoMessage: this.defaultBolaoMessage },
     });
     const rollPercent = Number(config.senaRollPercent ?? 10);
     const rollFactor = Math.max(0, 1 - rollPercent / 100);
-    return { rollPercent, rollFactor };
+    return {
+      rollPercent,
+      rollFactor,
+      bolaoMessage: config.bolaoMessage ?? this.defaultBolaoMessage,
+    };
   }
 
   async ensureRecord(
@@ -238,7 +243,7 @@ export class TransparencyService {
     const totalFixed = prizeList.reduce((acc: number, prize: any) => acc + toNumber(prize.fixedValue), 0);
     const totalPct = prizeList.reduce((acc: number, prize: any) => acc + toNumber(prize.percentage), 0);
     const variablePool = Math.max(prizePool - totalFixed, 0);
-    const { rollFactor } = await this.getSenaRollConfig();
+    const { rollFactor, bolaoMessage: defaultBolaoMessage } = await this.getSenaRollConfig();
     const senaPotReserved = toNumber(bolao.senaPotReserved ?? 0);
     const senaPotRolled = toNumber(bolao.senaPotRolled ?? 0);
 
@@ -383,10 +388,10 @@ export class TransparencyService {
     const titleWidth = rightBoxX - titleX - scale(12);
 
     doc.text(`${bolao.name}  #${bolaoCode}`, titleX, y + infoPadding, { width: titleWidth });
+    const rawBolaoMessage = String(bolao.bolaoMessage ?? defaultBolaoMessage ?? this.defaultBolaoMessage).trim();
+    const bolaoMessage = rawBolaoMessage.length > 0 ? rawBolaoMessage : this.defaultBolaoMessage;
     doc.font('Helvetica-Oblique').fontSize(scale(10)).fillColor('#374151');
-    doc.text('V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!', titleX, y + infoPadding + scale(18), {
-      width: titleWidth,
-    });
+    doc.text(bolaoMessage, titleX, y + infoPadding + scale(18), { width: titleWidth });
 
     const drawRightBox = (label: string, value: string, boxY: number) => {
       doc.roundedRect(rightBoxX, boxY, rightBoxWidth, rightBoxHeight, 8).fill('#ffffff');

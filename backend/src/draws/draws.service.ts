@@ -9,6 +9,7 @@ import { EventsService } from "../events/events.service";
 
 @Injectable()
 export class DrawsService {
+  private readonly defaultBolaoMessage = "V\u00e1rios Sorteios - at\u00e9 sair um ganhador de 10 Pontos!";
   constructor(
     private readonly prisma: PrismaService,
     private readonly rankings: RankingsService,
@@ -86,7 +87,7 @@ export class DrawsService {
     const config = await this.prisma.generalConfig.upsert({
       where: { id: "global" },
       update: {},
-      create: { id: "global", senaRollPercent: 10 },
+      create: { id: "global", senaRollPercent: 10, bolaoMessage: this.defaultBolaoMessage },
     });
     const rollPercent = Number(config.senaRollPercent ?? 10);
     const rollFactor = Math.max(0, 1 - rollPercent / 100);
